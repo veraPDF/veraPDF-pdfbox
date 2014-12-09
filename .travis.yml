@@ -26,3 +26,8 @@ jdk:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq fonts-liberation
+
+# Blacklist the gh-pages branch
+branches:
+  -except:
+    -gh-pages
