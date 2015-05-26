@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>pdfbox</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
     <name>Apache PDFBox</name>
     <description>
