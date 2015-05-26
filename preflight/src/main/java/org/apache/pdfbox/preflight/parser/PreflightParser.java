@@ -41,11 +41,8 @@ import static org.apache.pdfbox.preflight.PreflightConstants.MAX_NEGATIVE_FLOAT;
 import static org.apache.pdfbox.preflight.PreflightConstants.MAX_POSITIVE_FLOAT;
 import static org.apache.pdfbox.preflight.PreflightConstants.MAX_STRING_LENGTH;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
@@ -69,14 +66,11 @@ import org.apache.pdfbox.cos.COSNumber;
 import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.io.IOUtils;
-import org.apache.pdfbox.pdfparser.BaseParser;
-import org.apache.pdfbox.pdfparser.NonSequentialPDFParser;
 import org.apache.pdfbox.pdfparser.PDFObjectStreamParser;
 import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdfparser.XrefTrailerResolver.XRefType;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.persistence.util.COSObjectKey;
+import org.apache.pdfbox.cos.COSObjectKey;
 import org.apache.pdfbox.preflight.Format;
 import org.apache.pdfbox.preflight.PreflightConfiguration;
 import org.apache.pdfbox.preflight.PreflightConstants;
@@ -86,7 +80,7 @@ import org.apache.pdfbox.preflight.ValidationResult;
 import org.apache.pdfbox.preflight.ValidationResult.ValidationError;
 import org.apache.pdfbox.preflight.exception.SyntaxValidationException;
 
-public class PreflightParser extends NonSequentialPDFParser
+public class PreflightParser extends PDFParser
 {
     /**
      * Define a one byte encoding that hasn't specific encoding in UTF-8 charset. Avoid unexpected error when the
@@ -215,7 +209,7 @@ public class PreflightParser extends NonSequentialPDFParser
         this.ctx = new PreflightContext(this.originalDocument);
         ctx.setDocument(preflightDocument);
         preflightDocument.setContext(ctx);
-        ctx.setXrefTableResolver(xrefTrailerResolver);
+        ctx.setXrefTrailerResolver(xrefTrailerResolver);
     }
 
     @Override
@@ -242,10 +236,6 @@ public class PreflightParser extends NonSequentialPDFParser
     protected void initialParse() throws IOException
     {
         super.initialParse();
-
-        // fill xref table
-        document.addXRefTable(xrefTrailerResolver.getXrefTable());
-
         // For each ObjectKey, we check if the object has been loaded
         // useful for linearized PDFs
         Map<COSObjectKey, Long> xrefTable = document.getXrefTable();
@@ -261,67 +251,69 @@ public class PreflightParser extends NonSequentialPDFParser
     }
 
     /**
-     * Check that the PDF header match rules of the PDF/A specification. First line (offset 0) must be a comment with
-     * the PDF version (version 1.0 isn't conform to the PDF/A specification) Second line is a comment with at least 4
-     * bytes greater than 0x80
+     * Check that the PDF header match rules of the PDF/A specification. First line (offset 0) must
+     * be a comment with the PDF version (version 1.0 isn't conform to the PDF/A specification)
+     * Second line is a comment with at least 4 bytes greater than 0x80
      */
     protected void checkPdfHeader()
     {
-        BufferedReader reader = null;
         try
         {
-            reader = new BufferedReader(new InputStreamReader(new FileInputStream(getPdfFile()), encoding));
-            String firstLine = reader.readLine();
+            pdfSource.seek(0);
+            String firstLine = readLine();
             if (firstLine == null || !firstLine.matches("%PDF-1\\.[1-9]"))
             {
                 addValidationError(new ValidationError(PreflightConstants.ERROR_SYNTAX_HEADER,
                         "First line must match %PDF-1.\\d"));
             }
-
-            String secondLine = reader.readLine();
+            String secondLine = readLine();
             if (secondLine != null)
             {
                 byte[] secondLineAsBytes = secondLine.getBytes(encoding.name());
                 if (secondLineAsBytes.length >= 5)
                 {
-                    for (int i = 0; i < secondLineAsBytes.length; ++i)
+                    if (secondLineAsBytes[0] != '%')
                     {
-                        byte b = secondLineAsBytes[i];
-                        if (i == 0 && ((char) b != '%'))
+                        addValidationError(new ValidationError(PreflightConstants.ERROR_SYNTAX_HEADER,
+                                "Second line must begin with '%' followed by at least 4 bytes greater than 127"));
+                    }
+                    else
+                    {
+                        for (int i = 1; i < 5; ++i)
                         {
-                            addValidationError(new ValidationError(PreflightConstants.ERROR_SYNTAX_HEADER,
-                                    "Second line must contains at least 4 bytes greater than 127"));
-                            break;
-                        }
-                        else if (i > 0 && ((b & 0xFF) < 0x80))
-                        {
-                            addValidationError(new ValidationError(PreflightConstants.ERROR_SYNTAX_HEADER,
-                                    "Second line must contains at least 4 bytes greater than 127"));
-                            break;
+                            byte b = secondLineAsBytes[i];
+                            if ((b & 0xFF) < 0x80)
+                            {
+                                addValidationError(new ValidationError(PreflightConstants.ERROR_SYNTAX_HEADER,
+                                        "Second line must begin with '%' followed by at least 4 bytes greater than 127"));
+                                break;
+                            }
                         }
                     }
                 }
                 else
                 {
                     addValidationError(new ValidationError(PreflightConstants.ERROR_SYNTAX_HEADER,
-                            "Second line must contains at least 4 bytes greater than 127"));
+                            "Second line must begin with '%' followed by at least 4 bytes greater than 127"));
                 }
             }
+            pdfSource.seek(0);
         }
         catch (IOException e)
         {
             addValidationError(new ValidationError(PreflightConstants.ERROR_SYNTAX_HEADER,
                     "Unable to read the PDF file : " + e.getMessage(), e));
         }
-        finally
-        {
-            IOUtils.closeQuietly(reader);
-        }
     }
 
     /**
-     * Same method than the {@linkplain PDFParser#parseXrefTable(long)} with additional controls : - EOL mandatory after
-     * the 'xref' keyword - Cross reference subsection header uses single white space as separator - and so on
+     * Same method than the {@linkplain PDFParser#parseXrefTable(long)} with additional controls : -
+     * EOL mandatory after the 'xref' keyword - Cross reference subsection header uses single white
+     * space as separator - and so on
+     *
+     * @param startByteOffset the offset to start at
+     * @return false on parsing error
+     * @throws IOException If an IO error occurs.
      */
     @Override
     protected boolean parseXrefTable(long startByteOffset) throws IOException
@@ -346,14 +338,14 @@ public class PreflightParser extends NonSequentialPDFParser
         // signal start of new XRef
         xrefTrailerResolver.nextXrefObj(startByteOffset,XRefType.TABLE);
 
-        /*
-         * Xref tables can have multiple sections. Each starts with a starting object id and a count.
-         */
+        // Xref tables can have multiple sections. Each starts with a starting object id and a count.
         while (true)
         {
             // just after the xref<EOL> there are an integer
-            long currObjID; // first obj id
-            long count; // the number of objects in the xref table
+            // first obj id
+            long currObjID;
+            // the number of objects in the xref table
+            int count; 
 
             long offset = pdfSource.getOffset();
             String line = readLine();
@@ -361,17 +353,19 @@ public class PreflightParser extends NonSequentialPDFParser
             Matcher matcher = pattern.matcher(line);
             if (matcher.matches())
             {
-                currObjID = Integer.parseInt(matcher.group(1));
+                currObjID = Long.parseLong(matcher.group(1));
                 count = Integer.parseInt(matcher.group(2));
             }
             else
             {
                 addValidationError(new ValidationError(ERROR_SYNTAX_CROSS_REF,
-                        "Cross reference subsection header is invalid"));
+                        "Cross reference subsection header is invalid: '" + line + "' at position " + pdfSource.getOffset()));
                 // reset pdfSource cursor to read xref information
                 pdfSource.seek(offset);
-                currObjID = readObjectNumber(); // first obj id
-                count = readLong(); // the number of objects in the xref table
+                // first obj id
+                currObjID = readObjectNumber();
+                // the number of objects in the xref table
+                count = readInt();
             }
 
             skipSpaces();
@@ -396,9 +390,7 @@ public class PreflightParser extends NonSequentialPDFParser
                             "invalid xref line: " + currentLine));
                     break;
                 }
-                /*
-                 * This supports the corrupt table as reported in PDFBOX-474 (XXXX XXX XX n)
-                 */
+                // This supports the corrupt table as reported in PDFBOX-474 (XXXX XXX XX n)
                 if (splitString[splitString.length - 1].equals("n"))
                 {
                     try
@@ -423,8 +415,7 @@ public class PreflightParser extends NonSequentialPDFParser
                 skipSpaces();
             }
             skipSpaces();
-            char c = (char) pdfSource.peek();
-            if (c < '0' || c > '9')
+            if (!isDigit())
             {
                 break;
             }
@@ -433,8 +424,15 @@ public class PreflightParser extends NonSequentialPDFParser
     }
 
     /**
-     * Wraps the {@link NonSequentialPDFParser#parseCOSStream} to check rules on 'stream' and 'endstream' keywords.
-     * {@link #checkStreamKeyWord()} and {@link #checkEndstreamKeyWord()}
+     * Wraps the {@link PDFParser#parseCOSStream} to check rules on 'stream' and 'endstream'
+     * keywords. {@link #checkStreamKeyWord()} and {@link #checkEndstreamKeyWord()}
+     *
+     * @param dic dictionary that goes with this stream.
+     *
+     * @return parsed pdf stream.
+     *
+     * @throws IOException if an error occurred reading the stream, like problems with reading
+     * length attribute, stream does not end with 'endstream' after data read, stream too short etc.
      */
     @Override
     protected COSStream parseCOSStream(COSDictionary dic) throws IOException
@@ -446,7 +444,7 @@ public class PreflightParser extends NonSequentialPDFParser
     }
 
     /**
-     * 'stream' must be followed by <CR><LF> or only <LF>
+     * 'stream' must be followed by &lt;CR&gt;&lt;LF&gt; or only &lt;LF&gt;
      * 
      * @throws IOException
      */
@@ -489,29 +487,20 @@ public class PreflightParser extends NonSequentialPDFParser
         }
     }
 
-    protected boolean nextIsEOL() throws IOException
+    private boolean nextIsEOL() throws IOException
     {
         boolean succeed = false;
         int nextChar = pdfSource.read();
-        if (nextChar == 13 && pdfSource.peek() == 10)
+        if (ASCII_CR == nextChar && ASCII_LF == pdfSource.peek())
         {
             pdfSource.read();
             succeed = true;
         }
-        else if (nextChar == 13 || nextChar == 10)
+        else if (ASCII_CR == nextChar || ASCII_LF == nextChar)
         {
             succeed = true;
         }
         return succeed;
-    }
-
-    /**
-     * @return true if the next character is a space. (The character is consumed)
-     * @throws IOException
-     */
-    protected boolean nextIsSpace() throws IOException
-    {
-        return ' ' == pdfSource.read();
     }
 
     @Override
@@ -537,26 +526,19 @@ public class PreflightParser extends NonSequentialPDFParser
         COSName result = super.parseCOSName();
         if (result != null && result.getName().getBytes().length > MAX_NAME_SIZE)
         {
-            addValidationError(new ValidationError(ERROR_SYNTAX_NAME_TOO_LONG, "Name too long"));
+            addValidationError(new ValidationError(ERROR_SYNTAX_NAME_TOO_LONG, "Name too long: " + result.getName()));
         }
         return result;
     }
 
     /**
-     * Check that the hexa string contains only an even number of Hexadecimal characters. Once it is done, reset the
-     * offset at the beginning of the string and call {@link BaseParser#parseCOSString()}
-     * @deprecated Not needed anymore. Use {@link #parseCOSString()} instead. PDFBOX-1437
-     */
-    @Override
-    @Deprecated
-    protected COSString parseCOSString(boolean isDictionary) throws IOException
-    {
-        return parseCOSString();
-    }
-    
-    /**
-     * Check that the hexa string contains only an even number of Hexadecimal characters. Once it is done, reset the
-     * offset at the beginning of the string and call {@link BaseParser#parseCOSString()}
+     * Check that the hexa string contains only an even number of
+     * Hexadecimal characters. Once it is done, reset the offset at the beginning of the string and
+     * call {@link PDFParser#parseCOSString()}
+     *
+     * @return The parsed PDF string.
+     *
+     * @throws IOException If there is an error reading from the stream.
      */
     @Override
     protected COSString parseCOSString() throws IOException
@@ -572,6 +554,11 @@ public class PreflightParser extends NonSequentialPDFParser
                 nextChar = (char) pdfSource.read();
                 if (nextChar != '>')
                 {
+                    if (isWhitespace(nextChar))
+                    {
+                        // ignore space characters
+                        continue;
+                    }
                     if (Character.digit(nextChar, 16) >= 0)
                     {
                         count++;
@@ -583,7 +570,8 @@ public class PreflightParser extends NonSequentialPDFParser
                         break;
                     }
                 }
-            } while (nextChar != '>');
+            } 
+            while (nextChar != '>');
         }
 
         if (count % 2 != 0)
@@ -604,7 +592,11 @@ public class PreflightParser extends NonSequentialPDFParser
     }
 
     /**
-     * Call {@link BaseParser#parseDirObject()} check limit range for Float, Integer and number of Dictionary entries.
+     * Call {@link PDFParser#parseDirObject()} check limit range for Float, Integer and number of
+     * Dictionary entries.
+     *
+     * @return The parsed object.
+     * @throws java.io.IOException if there is an error during parsing.
      */
     @Override
     protected COSBase parseDirObject() throws IOException
@@ -646,7 +638,7 @@ public class PreflightParser extends NonSequentialPDFParser
     }
 
     @Override
-    protected COSBase parseObjectDynamically(int objNr, int objGenNr, boolean requireExistingNotCompressedObj)
+    protected COSBase parseObjectDynamically(long objNr, int objGenNr, boolean requireExistingNotCompressedObj)
             throws IOException
     {
         // ---- create object key and get object (container) from pool
@@ -683,7 +675,7 @@ public class PreflightParser extends NonSequentialPDFParser
             {
                 // offset of indirect object in file
                 // ---- go to object start
-                setPdfSource(offsetOrObjstmObNr);
+                pdfSource.seek(offsetOrObjstmObNr);
                 // ---- we must have an indirect object
                 long readObjNr;
                 int readObjGen;
@@ -694,7 +686,7 @@ public class PreflightParser extends NonSequentialPDFParser
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.matches())
                 {
-                    readObjNr = Integer.parseInt(matcher.group(1));
+                    readObjNr = Long.parseLong(matcher.group(1));
                     readObjGen = Integer.parseInt(matcher.group(2));
                 }
                 else
@@ -770,7 +762,7 @@ public class PreflightParser extends NonSequentialPDFParser
                 }
                 else if (securityHandler != null)
                 {
-                    decrypt(pb, objNr, objGenNr);
+                    securityHandler.decrypt(pb, objNr, objGenNr);
                 }
 
                 pdfObject.setObject(pb);
@@ -797,8 +789,6 @@ public class PreflightParser extends NonSequentialPDFParser
                     addValidationError(new ValidationError(PreflightConstants.ERROR_SYNTAX_OBJ_DELIMITER,
                             "EOL expected after the 'endobj' keyword at offset "+pdfSource.getOffset()));
                 }
-
-                releasePdfSourceInputStream();
             }
             else
             {
@@ -809,9 +799,9 @@ public class PreflightParser extends NonSequentialPDFParser
                 if (objstmBaseObj instanceof COSStream)
                 {
                     // parse object stream
-                    PDFObjectStreamParser parser = new PDFObjectStreamParser((COSStream) objstmBaseObj, document,
-                            forceParsing);
+                    PDFObjectStreamParser parser = new PDFObjectStreamParser((COSStream) objstmBaseObj, document);
                     parser.parse();
+                    parser.close();
 
                     // get set of object numbers referenced for this object stream
                     final Set<Long> refObjNrs = xrefTrailerResolver.getContainedObjectNumbers(objstmObjNr);
@@ -846,7 +836,7 @@ public class PreflightParser extends NonSequentialPDFParser
                 // EOL is authorized
                 if ((buf.length - tmpOffset) > 2
                         || (buf.length - tmpOffset == 2 && (buf[tmpOffset] != 13 || buf[tmpOffset + 1] != 10))
-                        || (buf.length - tmpOffset == 1 && buf[tmpOffset] != 10))
+                        || (buf.length - tmpOffset == 1 && (buf[tmpOffset] != 13 && buf[tmpOffset] != 10)))
                 {
                     addValidationError(new ValidationError(ERROR_SYNTAX_TRAILER_EOF,
                             "File contains data after the last %%EOF sequence at offset " + pdfSource.getOffset()));

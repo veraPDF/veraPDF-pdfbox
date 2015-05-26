@@ -16,26 +16,20 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.pattern;
 
-import java.awt.geom.AffineTransform;
 import java.io.IOException;
 
-import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSFloat;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNumber;
-import org.apache.pdfbox.pdmodel.graphics.state.PDExternalGraphicsState;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
-import org.apache.pdfbox.util.Matrix;
 
 /**
  * A shading pattern dictionary.
  *
- * @author Andreas Lehmkühler
  */
 public class PDShadingPattern extends PDAbstractPattern
 {
-    private PDExternalGraphicsState externalGraphicsState;
+    private PDExtendedGraphicsState extendedGraphicsState;
     private PDShading shading;
 
     /**
@@ -44,7 +38,7 @@ public class PDShadingPattern extends PDAbstractPattern
     public PDShadingPattern()
     {
         super();
-        getCOSDictionary().setInt(COSName.PATTERN_TYPE, PDAbstractPattern.TYPE_SHADING_PATTERN);
+        getCOSObject().setInt(COSName.PATTERN_TYPE, PDAbstractPattern.TYPE_SHADING_PATTERN);
     }
 
     /**
@@ -63,80 +57,32 @@ public class PDShadingPattern extends PDAbstractPattern
     }
 
     /**
-     * Returns the pattern matrix.
-     */
-    public Matrix getMatrix()
-    {
-        Matrix matrix = null;
-        COSArray array = (COSArray)getCOSDictionary().getDictionaryObject(COSName.MATRIX);
-        if (array != null)
-        {
-            matrix = new Matrix();
-            matrix.setValue(0, 0, ((COSNumber) array.get(0)).floatValue());
-            matrix.setValue(0, 1, ((COSNumber) array.get(1)).floatValue());
-            matrix.setValue(1, 0, ((COSNumber) array.get(2)).floatValue());
-            matrix.setValue(1, 1, ((COSNumber) array.get(3)).floatValue());
-            matrix.setValue(2, 0, ((COSNumber) array.get(4)).floatValue());
-            matrix.setValue(2, 1, ((COSNumber) array.get(5)).floatValue());
-        }
-        else
-        {
-            // default value is the identity matrix
-            matrix = new Matrix();
-        }
-        return matrix;
-    }
-
-    /**
-     * Sets the optional Matrix entry for the Pattern.
-     * @param transform the transformation matrix
-     */
-    public void setMatrix(AffineTransform transform)
-    {
-        COSArray matrix = new COSArray();
-        double[] values = new double[6];
-        transform.getMatrix(values);
-        for (double v : values)
-        {
-            matrix.add(new COSFloat((float)v));
-        }
-        getCOSDictionary().setItem(COSName.MATRIX, matrix);
-    }
-
-    /**
      * This will get the external graphics state for this pattern.
      * @return The extended graphics state for this pattern.
      */
-    public PDExternalGraphicsState getExternalGraphicsState()
+    public PDExtendedGraphicsState getExtendedGraphicsState()
     {
-        if (externalGraphicsState == null)
+        if (extendedGraphicsState == null)
         {
-            COSDictionary dictionary = (COSDictionary)getCOSDictionary()
+            COSDictionary dictionary = (COSDictionary)getCOSObject()
                     .getDictionaryObject(COSName.EXT_G_STATE);
 
             if( dictionary != null )
             {
-                externalGraphicsState = new PDExternalGraphicsState( dictionary );
+                extendedGraphicsState = new PDExtendedGraphicsState( dictionary );
             }
         }
-        return externalGraphicsState;
+        return extendedGraphicsState;
     }
 
     /**
      * This will set the external graphics state for this pattern.
-     * @param externalGraphicsState The new extended graphics state for this pattern.
+     * @param extendedGraphicsState The new extended graphics state for this pattern.
      */
-    public void setExternalGraphicsState( PDExternalGraphicsState externalGraphicsState )
+    public void setExtendedGraphicsState(PDExtendedGraphicsState extendedGraphicsState)
     {
-        this.externalGraphicsState = externalGraphicsState;
-        if (externalGraphicsState != null)
-        {
-            getCOSDictionary().setItem( COSName.EXT_G_STATE, externalGraphicsState );
-        }
-        else
-        {
-            getCOSDictionary().removeItem(COSName.EXT_G_STATE);
-        }
+        this.extendedGraphicsState = extendedGraphicsState;
+        getCOSObject().setItem(COSName.EXT_G_STATE, extendedGraphicsState);
     }
 
     /**
@@ -148,9 +94,7 @@ public class PDShadingPattern extends PDAbstractPattern
     {
         if (shading == null) 
         {
-            COSDictionary dictionary = (COSDictionary)getCOSDictionary()
-                    .getDictionaryObject(COSName.SHADING);
-
+            COSDictionary dictionary = (COSDictionary) getCOSObject().getDictionaryObject(COSName.SHADING);
             if( dictionary != null )
             {
                 shading = PDShading.create(dictionary);
@@ -166,13 +110,6 @@ public class PDShadingPattern extends PDAbstractPattern
     public void setShading( PDShading shadingResources )
     {
         shading = shadingResources;
-        if (shadingResources != null)
-        {
-            getCOSDictionary().setItem( COSName.SHADING, shadingResources );
-        }
-        else
-        {
-            getCOSDictionary().removeItem(COSName.SHADING);
-        }
+        getCOSObject().setItem(COSName.SHADING, shadingResources);
     }
 }

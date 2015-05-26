@@ -38,8 +38,12 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
  *
  * @author Tilman Hausherr
  */
-public class LosslessFactory
+public final class LosslessFactory
 {
+    private LosslessFactory()
+    {
+    }
+    
     /**
      * Creates a new lossless encoded Image XObject from a Buffered Image.
      *
@@ -58,9 +62,8 @@ public class LosslessFactory
         int height = image.getHeight();
         int width = image.getWidth();
 
-        if ((image.getType() == BufferedImage.TYPE_BYTE_GRAY
-                || image.getType() == BufferedImage.TYPE_BYTE_BINARY)
-                && image.getColorModel().getPixelSize() <= 8)
+        if ((image.getType() == BufferedImage.TYPE_BYTE_GRAY && image.getColorModel().getPixelSize() <= 8)
+                || (image.getType() == BufferedImage.TYPE_BYTE_BINARY && image.getColorModel().getPixelSize() == 1))
         {
             MemoryCacheImageOutputStream mcios = new MemoryCacheImageOutputStream(bos);
 
@@ -136,6 +139,11 @@ public class LosslessFactory
 
         // extract the alpha information
         WritableRaster alphaRaster = image.getAlphaRaster();
+        if (alphaRaster == null)
+        {
+            // happens sometimes (PDFBOX-2654) despite colormodel claiming to have alpha
+            return createAlphaFromARGBImage2(document, image);
+        }
 
         int[] pixels = alphaRaster.getPixels(0, 0,
                 alphaRaster.getSampleModel().getWidth(),
@@ -178,6 +186,50 @@ public class LosslessFactory
 
         return pdImage;
     }
+
+    // create alpha image the hard way: get the alpha through getRGB()
+    private static PDImageXObject createAlphaFromARGBImage2(PDDocument document, BufferedImage bi)
+            throws IOException
+    {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        int bpc;
+        if (bi.getTransparency() == Transparency.BITMASK)
+        {
+            bpc = 1;
+            MemoryCacheImageOutputStream mcios = new MemoryCacheImageOutputStream(bos);
+            for (int y = 0, h = bi.getHeight(); y < h; ++y)
+            {
+                for (int x = 0, w = bi.getWidth(); x < w; ++x)
+                {
+                    int alpha = bi.getRGB(x, y) >>> 24;
+                    mcios.writeBit(alpha);
+                }
+                while (mcios.getBitOffset() != 0)
+                {
+                    mcios.writeBit(0);
+                }
+            }
+            mcios.flush();
+            mcios.close();
+        }
+        else
+        {
+            bpc = 8;
+            for (int y = 0, h = bi.getHeight(); y < h; ++y)
+            {
+                for (int x = 0, w = bi.getWidth(); x < w; ++x)
+                {
+                    int alpha = bi.getRGB(x, y) >>> 24;
+                    bos.write(alpha);
+                }
+            }
+        }
+
+        PDImageXObject pdImage = prepareImageXObject(document, bos.toByteArray(), 
+                bi.getWidth(), bi.getHeight(), bpc, PDDeviceGray.INSTANCE);
+
+        return pdImage;
+    }            
 
     /**
      * Create a PDImageXObject while making a decision whether not to 

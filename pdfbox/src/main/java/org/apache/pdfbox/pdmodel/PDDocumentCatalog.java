@@ -24,6 +24,7 @@ import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.common.COSArrayList;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
@@ -168,7 +169,7 @@ public class PDDocumentCatalog implements COSObjectable
     }
 
     /**
-     * Returns the document?s article threads.
+     * Returns the document's article threads.
      */
     public List<PDThread> getThreads()
     {
@@ -292,6 +293,20 @@ public class PDDocumentCatalog implements COSObjectable
     }
 
     /**
+     * @return The named destinations dictionary for this document or null if none exists.
+     */
+    public PDDocumentNameDestinationDictionary getDests()
+    {
+        PDDocumentNameDestinationDictionary nameDic = null;
+        COSDictionary dests = (COSDictionary) root.getDictionaryObject(COSName.DESTS);
+        if (dests != null)
+        {
+            nameDic = new PDDocumentNameDestinationDictionary(dests);
+        }
+        return nameDic;
+    }
+    
+    /**
      * Sets the names dictionary for the document.
      *
      * @param names The names dictionary that is associated with this document.
@@ -328,15 +343,19 @@ public class PDDocumentCatalog implements COSObjectable
      *
      * @return The list of PDOutputIntent
      */
-    public List<PDOutputIntent> getOutputIntent ()
+    public List<PDOutputIntent> getOutputIntents()
     {
         List<PDOutputIntent> retval = new ArrayList<PDOutputIntent>();
-        COSArray array = (COSArray)root.getItem(COSName.OUTPUT_INTENTS);
+        COSArray array = (COSArray)root.getDictionaryObject(COSName.OUTPUT_INTENTS);
         if (array != null)
         {
             for (COSBase cosBase : array)
             {
-                PDOutputIntent oi = new PDOutputIntent((COSStream)cosBase);
+                if (cosBase instanceof COSObject)
+                {
+                    cosBase = ((COSObject)cosBase).getObject();
+                }
+                PDOutputIntent oi = new PDOutputIntent((COSDictionary) cosBase);
                 retval.add(oi);
             }
         }
@@ -349,9 +368,9 @@ public class PDDocumentCatalog implements COSObjectable
      *
      * @param outputIntent the OutputIntent to add.
      */
-    public void addOutputIntent (PDOutputIntent outputIntent)
+    public void addOutputIntent(PDOutputIntent outputIntent)
     {
-        COSArray array = (COSArray)root.getItem(COSName.OUTPUT_INTENTS);
+        COSArray array = (COSArray)root.getDictionaryObject(COSName.OUTPUT_INTENTS);
         if (array == null)
         {
             array = new COSArray();
@@ -366,7 +385,8 @@ public class PDDocumentCatalog implements COSObjectable
      * @param outputIntents the list of OutputIntents, if the list is empty all OutputIntents are
      * removed.
      */
-    public void setOutputIntents (List<PDOutputIntent> outputIntents) {
+    public void setOutputIntents(List<PDOutputIntent> outputIntents) 
+    {
         COSArray array = new COSArray();
         for (PDOutputIntent intent : outputIntents)
         {
@@ -544,5 +564,11 @@ public class PDDocumentCatalog implements COSObjectable
     public void setOCProperties(PDOptionalContentProperties ocProperties)
     {
         root.setItem(COSName.OCPROPERTIES, ocProperties);
+
+        // optional content groups require PDF 1.5
+        if (ocProperties != null && document.getVersion() < 1.5)
+        {
+            document.setVersion(1.5f);
+        }
     }
 }

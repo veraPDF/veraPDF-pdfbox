@@ -28,9 +28,8 @@ import java.util.Arrays;
 /**
  * Parser for a pfb-file.
  *
- * @author Ben Litchfield (ben@benlitchfield.com)
- * @author <a href="mailto:m.g.n@gmx.de">Michael Niedermair</a>
- * @version $Revision: 1.1 $
+ * @author Ben Litchfield
+ * @author Michael Niedermair
  */
 public class PfbParser 
 {
@@ -101,6 +100,16 @@ public class PfbParser
     {
         byte[] pfb = readPfbInput(in);
         parsePfb(pfb);
+    }
+
+    /**
+     * Create a new object.
+     * @param bytes   The input.
+     * @throws IOException if an IO-error occurs.
+     */
+    public PfbParser(final byte[] bytes) throws IOException
+    {
+        parsePfb(bytes);
     }
 
     /**

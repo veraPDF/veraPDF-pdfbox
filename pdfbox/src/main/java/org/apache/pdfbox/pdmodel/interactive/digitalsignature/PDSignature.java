@@ -22,12 +22,10 @@ import java.io.InputStream;
 import java.util.Calendar;
 
 import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSInteger;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.pdfwriter.COSFilterInputStream;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 
 /**
@@ -38,7 +36,7 @@ import org.apache.pdfbox.pdmodel.common.COSObjectable;
  */
 public class PDSignature implements COSObjectable
 {
-    private COSDictionary dictionary;
+    private final COSDictionary dictionary;
 
     /**
      * A signature filter value.
@@ -100,21 +98,11 @@ public class PDSignature implements COSObjectable
     }
 
     /**
-     * Convert this standard java object to a COS object.
-     *
-     * @return The cos object that matches this Java object.
-     */
-    public COSBase getCOSObject()
-    {
-        return getDictionary();
-    }
-
-    /**
      * Convert this standard java object to a COS dictionary.
      *
      * @return The COS dictionary that matches this Java object.
      */
-    public COSDictionary getDictionary()
+    public COSDictionary getCOSObject()
     {
         return dictionary;
     }
@@ -146,7 +134,7 @@ public class PDSignature implements COSObjectable
      */
     public void setSubFilter(COSName subfilter)
     {
-        dictionary.setItem(COSName.SUBFILTER, subfilter);
+        dictionary.setItem(COSName.SUB_FILTER, subfilter);
     }
 
     /**
@@ -213,7 +201,7 @@ public class PDSignature implements COSObjectable
      */
     public String getSubFilter()
     {
-        return dictionary.getNameAsString(COSName.SUBFILTER);
+        return dictionary.getNameAsString(COSName.SUB_FILTER);
     }
 
     /**
@@ -358,7 +346,7 @@ public class PDSignature implements COSObjectable
         }
         fis.close();
 
-        return COSString.createFromHexString(byteOS.toString()).getBytes();
+        return COSString.parseHex(byteOS.toString()).getBytes();
     }
 
     /**

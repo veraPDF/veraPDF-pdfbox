@@ -34,12 +34,6 @@ import java.util.Arrays;
  */
 public final class PDColor
 {
-    /** The color black in the DeviceGray color space. */
-    public static PDColor DEVICE_GRAY_BLACK = new PDColor(new float[] { 0 }, PDDeviceGray.INSTANCE);
-
-    /** A pattern which leaves no marks on the page. */
-    public static PDColor EMPTY_PATTERN = new PDColor(new float[] { }, null);
-
     private final float[] components;
     private final COSName patternName;
     private final PDColorSpace colorSpace;
@@ -51,7 +45,7 @@ public final class PDColor
      */
     public PDColor(COSArray array, PDColorSpace colorSpace)
     {
-        if (array.get(array.size() - 1) instanceof COSName)
+        if (array.size() > 0 && array.get(array.size() - 1) instanceof COSName)
         {
             // color components (optional)
             components = new float[array.size() - 1];

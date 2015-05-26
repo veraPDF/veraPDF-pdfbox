@@ -99,11 +99,24 @@ public class TTFParser
     /**
      * Parse a file and get a true type font.
      *
+     * @param ttfData The TTF data to parse.
+     * @return A true type font.
+     * @throws IOException If there is an error parsing the true type font.
+     */
+    public TrueTypeFont parseEmbedded(InputStream ttfData) throws IOException
+    {
+        this.isEmbedded = true;
+        return parse(new MemoryTTFDataStream(ttfData));
+    }
+
+    /**
+     * Parse a file and get a true type font.
+     *
      * @param raf The TTF file.
      * @return A true type font.
      * @throws IOException If there is an error parsing the true type font.
      */
-    public TrueTypeFont parse(TTFDataStream raf) throws IOException
+    TrueTypeFont parse(TTFDataStream raf) throws IOException
     {
         TrueTypeFont font = newFont(raf);
         font.setVersion(raf.read32Fixed());
@@ -125,7 +138,7 @@ public class TTFParser
         return font;
     }
 
-    protected TrueTypeFont newFont(TTFDataStream raf)
+    TrueTypeFont newFont(TTFDataStream raf)
     {
         return new TrueTypeFont(raf);
     }

@@ -117,9 +117,9 @@ public abstract class FontContainer<T extends PDFontLike>
             // check for missing glyphs
             if (!hasGlyph(code))
             {
-                GlyphException e = new GlyphException(PreflightConstants.ERROR_FONTS_GLYPH_MISSING, code, "The character \""
-                        + code + "\" in the font program \"" + font.getName()
-                        + "\" is missing from the Character Encoding.");
+                GlyphException e = new GlyphException(PreflightConstants.ERROR_FONTS_GLYPH_MISSING, code, "The character code "
+                        + code + " in the font program \"" + font.getName()
+                        + "\" is missing from the Character Encoding");
                 markAsInvalid(code, e);
                 throw e;
             }
@@ -133,7 +133,7 @@ public abstract class FontContainer<T extends PDFontLike>
         {
             throw new GlyphException(PreflightConstants.ERROR_FONTS_GLYPH, code,
                     "Unexpected error during the width validation for the character code " + code +
-                    " : " + e.getMessage());
+                    " : " + e.getMessage(), e);
         }
     }
 

@@ -29,7 +29,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
-import org.apache.pdfbox.pdmodel.edit.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentProperties.BaseState;
@@ -57,11 +57,6 @@ public class TestOptionalContentGroups extends TestCase
         PDDocument doc = new PDDocument();
         try
         {
-            //OCGs have been introduced with PDF 1.5
-            doc.getDocument().setHeaderString("%PDF-1.5");
-            PDDocumentCatalog catalog = doc.getDocumentCatalog();
-            catalog.setVersion("1.5");
-
             //Create new page
             PDPage page = new PDPage();
             doc.addPage(page);
@@ -74,7 +69,7 @@ public class TestOptionalContentGroups extends TestCase
 
             //Prepare OCG functionality
             PDOptionalContentProperties ocprops = new PDOptionalContentProperties();
-            catalog.setOCProperties(ocprops);
+            doc.getDocumentCatalog().setOCProperties(ocprops);
             //ocprops.setBaseState(BaseState.ON); //ON=default
 
             //Create OCG for background
@@ -96,52 +91,44 @@ public class TestOptionalContentGroups extends TestCase
             assertTrue(ocprops.setGroupEnabled("disabled", false));
             assertFalse(ocprops.isGroupEnabled("disabled"));
 
-            //Add property lists to page resources
-            COSName mc0 = COSName.getPDFName("MC0");
-            COSName mc1 = COSName.getPDFName("MC1");
-            COSName mc2 = COSName.getPDFName("MC2");
-            resources.put(mc0, background);
-            resources.put(mc1, enabled);
-            resources.put(mc2, disabled);
-
             //Setup page content stream and paint background/title
             PDPageContentStream contentStream = new PDPageContentStream(doc, page, false, false);
             PDFont font = PDType1Font.HELVETICA_BOLD;
-            contentStream.beginMarkedContentSequence(COSName.OC, mc0);
+            contentStream.beginMarkedContent(COSName.OC, background);
             contentStream.beginText();
             contentStream.setFont(font, 14);
-            contentStream.moveTextPositionByAmount(80, 700);
-            contentStream.drawString("PDF 1.5: Optional Content Groups");
+            contentStream.newLineAtOffset(80, 700);
+            contentStream.showText("PDF 1.5: Optional Content Groups");
             contentStream.endText();
             font = PDType1Font.HELVETICA;
             contentStream.beginText();
             contentStream.setFont(font, 12);
-            contentStream.moveTextPositionByAmount(80, 680);
-            contentStream.drawString("You should see a green textline, but no red text line.");
+            contentStream.newLineAtOffset(80, 680);
+            contentStream.showText("You should see a green textline, but no red text line.");
             contentStream.endText();
-            contentStream.endMarkedContentSequence();
+            contentStream.endMarkedContent();
 
             //Paint enabled layer
-            contentStream.beginMarkedContentSequence(COSName.OC, mc1);
+            contentStream.beginMarkedContent(COSName.OC, enabled);
             contentStream.setNonStrokingColor(Color.GREEN);
             contentStream.beginText();
             contentStream.setFont(font, 12);
-            contentStream.moveTextPositionByAmount(80, 600);
-            contentStream.drawString(
+            contentStream.newLineAtOffset(80, 600);
+            contentStream.showText(
                     "This is from an enabled layer. If you see this, that's good.");
             contentStream.endText();
-            contentStream.endMarkedContentSequence();
+            contentStream.endMarkedContent();
 
             //Paint disabled layer
-            contentStream.beginMarkedContentSequence(COSName.OC, mc2);
+            contentStream.beginMarkedContent(COSName.OC, disabled);
             contentStream.setNonStrokingColor(Color.RED);
             contentStream.beginText();
             contentStream.setFont(font, 12);
-            contentStream.moveTextPositionByAmount(80, 500);
-            contentStream.drawString(
+            contentStream.newLineAtOffset(80, 500);
+            contentStream.showText(
                     "This is from a disabled layer. If you see this, that's NOT good!");
             contentStream.endText();
-            contentStream.endMarkedContentSequence();
+            contentStream.endMarkedContent();
 
             contentStream.close();
 
@@ -169,17 +156,18 @@ public class TestOptionalContentGroups extends TestCase
         PDDocument doc = PDDocument.load(pdfFile);
         try
         {
-            assertEquals("%PDF-1.5", doc.getDocument().getHeaderString());
+            assertEquals(1.5f, doc.getVersion());
             PDDocumentCatalog catalog = doc.getDocumentCatalog();
-            assertEquals("1.5", catalog.getVersion());
 
             PDPage page = doc.getPage(0);
-            PDOptionalContentGroup ocg = (PDOptionalContentGroup)page.getResources()
-                    .getProperties(COSName.getPDFName("MC0"));
+            PDResources resources = page.getResources();
+
+            COSName mc0 = COSName.getPDFName("oc1");
+            PDOptionalContentGroup ocg = (PDOptionalContentGroup)resources.getProperties(mc0);
             assertNotNull(ocg);
             assertEquals("background", ocg.getName());
 
-            assertNull(page.getResources().getProperties(COSName.getPDFName("inexistent")));
+            assertNull(resources.getProperties(COSName.getPDFName("inexistent")));
 
             PDOptionalContentProperties ocgs = catalog.getOCProperties();
             assertEquals(BaseState.ON, ocgs.getBaseState());

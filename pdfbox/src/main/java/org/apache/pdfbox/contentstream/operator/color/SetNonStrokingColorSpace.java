@@ -19,8 +19,6 @@ package org.apache.pdfbox.contentstream.operator.color;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
@@ -35,23 +33,14 @@ import org.apache.pdfbox.contentstream.operator.OperatorProcessor;
  */
 public class SetNonStrokingColorSpace extends OperatorProcessor
 {
-    private static final Log LOG = LogFactory.getLog(SetNonStrokingColorSpace.class);
-
     @Override
     public void process(Operator operator, List<COSBase> arguments) throws IOException
     {
         COSName name = (COSName)arguments.get(0);
 
-        try
-        {
-            PDColorSpace cs = context.getResources().getColorSpace(name);
-            context.getGraphicsState().setNonStrokingColorSpace(cs);
-            context.getGraphicsState().setNonStrokingColor(cs.getInitialColor());
-        }
-        catch (PDColorSpace.MissingException e)
-        {
-            LOG.error("Missing color space: " + name.getName());
-        }
+        PDColorSpace cs = context.getResources().getColorSpace(name);
+        context.getGraphicsState().setNonStrokingColorSpace(cs);
+        context.getGraphicsState().setNonStrokingColor(cs.getInitialColor());
     }
 
     @Override

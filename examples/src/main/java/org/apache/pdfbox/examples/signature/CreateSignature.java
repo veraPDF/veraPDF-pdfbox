@@ -32,7 +32,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -44,8 +43,6 @@ import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1EncodableVector;
-import org.bouncycastle.asn1.ASN1InputStream;
-import org.bouncycastle.asn1.ASN1Object;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1Primitive;
 import org.bouncycastle.asn1.DERSet;
@@ -53,22 +50,20 @@ import org.bouncycastle.asn1.cms.Attribute;
 import org.bouncycastle.asn1.cms.AttributeTable;
 import org.bouncycastle.asn1.cms.Attributes;
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cms.CMSException;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.CMSSignedDataGenerator;
-import org.bouncycastle.cms.SignerInfoGeneratorBuilder;
 import org.bouncycastle.cms.SignerInformation;
 import org.bouncycastle.cms.SignerInformationStore;
-import org.bouncycastle.crypto.params.RSAKeyParameters;
+import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder;
 import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.DefaultDigestAlgorithmIdentifierFinder;
-import org.bouncycastle.operator.DefaultSignatureAlgorithmIdentifierFinder;
 import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.operator.bc.BcDigestCalculatorProvider;
-import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
 import org.bouncycastle.tsp.TSPException;
+import org.bouncycastle.util.Store;
 
 /**
  * An example for singing a PDF with bouncy castle.
@@ -83,8 +78,8 @@ import org.bouncycastle.tsp.TSPException;
  */
 public class CreateSignature implements SignatureInterface
 {
-    private PrivateKey privateKey;
-    private Certificate[] certificateChain;
+    private final PrivateKey privateKey;
+    private final Certificate certificate;
     private TSAClient tsaClient;
 
     /**
@@ -112,7 +107,8 @@ public class CreateSignature implements SignatureInterface
             throw new KeyStoreException("Keystore is empty");
         }
         privateKey = (PrivateKey) keystore.getKey(alias, password);
-        certificateChain = keystore.getCertificateChain(alias);
+        Certificate[] certificateChain = keystore.getCertificateChain(alias);
+        certificate = certificateChain[0];
     }
 
     /**
@@ -127,7 +123,8 @@ public class CreateSignature implements SignatureInterface
 
     /**
      * Signs the given PDF file.
-     * @param inFile is the PDF file
+     * @param inFile input PDF file
+     * @param outFile output PDF file
      * @throws IOException if the input file could not be read
      */
     public void signDetached(File inFile, File outFile) throws IOException
@@ -137,8 +134,9 @@ public class CreateSignature implements SignatureInterface
 
     /**
      * Signs the given PDF file.
-     * @param inFile is the PDF file
-     * @param tsaClient TSA client
+     * @param inFile input PDF file
+     * @param outFile output PDF file
+     * @param tsaClient optional TSA client
      * @throws IOException if the input file could not be read
      */
     public void signDetached(File inFile, File outFile, TSAClient tsaClient) throws IOException
@@ -151,7 +149,7 @@ public class CreateSignature implements SignatureInterface
         FileOutputStream fos = new FileOutputStream(outFile);
 
         // sign
-        PDDocument doc = PDDocument.loadLegacy(inFile);
+        PDDocument doc = PDDocument.load(inFile);
         signDetached(doc, fos, tsaClient);
         doc.close();
     }
@@ -220,7 +218,7 @@ public class CreateSignature implements SignatureInterface
 
         byte[] token = tsaClient.getTimeStampToken(signer.getSignature());
         ASN1ObjectIdentifier oid = PKCSObjectIdentifiers.id_aa_signatureTimeStampToken;
-        ASN1Encodable signatureTimeStamp = new Attribute(oid, new DERSet(byteToASN1Object(token)));
+        ASN1Encodable signatureTimeStamp = new Attribute(oid, new DERSet(ASN1Primitive.fromByteArray(token)));
 
         vector.add(signatureTimeStamp);
         Attributes signedAttributes = new Attributes(vector);
@@ -238,25 +236,6 @@ public class CreateSignature implements SignatureInterface
     }
 
     /**
-     * Bytes to ASN.1
-     * @param data time stamp token byte
-     * @return ASN1Object which is created by the ASN1InputStream of the time stamp token
-     * @throws IOException if we can't cast ASN1Primitive to ASN1Object
-     */
-    private ASN1Object byteToASN1Object(byte[] data) throws IOException
-    {
-        ASN1InputStream in = new ASN1InputStream(data);
-        try
-        {
-            return in.readObject();
-        }
-        finally
-        {
-            in.close();
-        }
-    }
-
-    /**
      * SignatureInterface implementation.
      *
      * This method will be called from inside of the pdfbox and create the PKCS #7 signature.
@@ -271,22 +250,18 @@ public class CreateSignature implements SignatureInterface
     {
         try
         {
-            org.bouncycastle.asn1.x509.Certificate certificate =
-                    org.bouncycastle.asn1.x509.Certificate.getInstance(ASN1Primitive.fromByteArray(certificateChain[0].getEncoded()));
+            List<Certificate> certList = new ArrayList<Certificate>();
+            certList.add(certificate);
+            Store certs = new JcaCertStore(certList);
             CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
-
-            
-            AlgorithmIdentifier sigAlgId = new DefaultSignatureAlgorithmIdentifierFinder().find("SHA256WITHRSAENCRYPTION");
-            AlgorithmIdentifier digAlgId = new DefaultDigestAlgorithmIdentifierFinder().find(sigAlgId);
-            RSAPrivateKey privateRSAKey = (RSAPrivateKey)privateKey; 
-            RSAKeyParameters keyParams = new RSAKeyParameters(true, privateRSAKey.getModulus(), privateRSAKey.getPrivateExponent()); 
-            ContentSigner sigGen = new BcRSAContentSignerBuilder(sigAlgId, digAlgId).build(keyParams);
-
-            gen.addSignerInfoGenerator(
-                    new SignerInfoGeneratorBuilder(new BcDigestCalculatorProvider())
-                        .build(sigGen, new X509CertificateHolder(certificate)));
-            CMSProcessableInputStream processable = new CMSProcessableInputStream(content);
-            CMSSignedData signedData = gen.generate(processable, false);
+            org.bouncycastle.asn1.x509.Certificate cert =
+                    org.bouncycastle.asn1.x509.Certificate.getInstance(ASN1Primitive.fromByteArray(certificate.getEncoded()));
+            ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA256WithRSA").build(privateKey);
+            gen.addSignerInfoGenerator(new JcaSignerInfoGeneratorBuilder(
+                    new JcaDigestCalculatorProviderBuilder().build()).build(sha1Signer, new X509CertificateHolder(cert)));
+            gen.addCertificates(certs);
+            CMSProcessableInputStream msg = new CMSProcessableInputStream(content);
+            CMSSignedData signedData = gen.generate(msg, false);
             if (tsaClient != null)
             {
                 signedData = signTimeStamps(signedData);
@@ -352,7 +327,7 @@ public class CreateSignature implements SignatureInterface
 
         File inFile = new File(args[2]);
         String name = inFile.getName();
-        String substring = name.substring(0, name.lastIndexOf("."));
+        String substring = name.substring(0, name.lastIndexOf('.'));
 
         File outFile = new File(inFile.getParent(), substring + "_signed.pdf");
         signing.signDetached(inFile, outFile, tsaClient);

@@ -63,10 +63,10 @@ import org.bouncycastle.operator.bc.BcRSAContentSignerBuilder;
  */
 public class CreateVisibleSignature implements SignatureInterface
 {
-    private static BouncyCastleProvider provider = new BouncyCastleProvider();
+    private static final BouncyCastleProvider BCPROVIDER = new BouncyCastleProvider();
 
-    private PrivateKey privKey;
-    private Certificate[] cert;
+    private final PrivateKey privKey;
+    private final Certificate[] cert;
     private SignatureOptions options;
 
     /**
@@ -77,7 +77,7 @@ public class CreateVisibleSignature implements SignatureInterface
      * @param pin is the pin for the keystore / private key
      */
     public CreateVisibleSignature(KeyStore keystore, char[] pin)
-            throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException
+            throws KeyStoreException, UnrecoverableKeyException, NoSuchAlgorithmException, IOException
     {
         // grabs the first alias from the keystore and get the private key. An
         // alternative method or constructor could be used for setting a specific
@@ -90,7 +90,7 @@ public class CreateVisibleSignature implements SignatureInterface
         }
         else
         {
-            throw new RuntimeException("Could not find alias");
+            throw new IOException("Could not find alias");
         }
         privKey = (PrivateKey) keystore.getKey(alias, pin);
         cert = keystore.getCertificateChain(alias);
@@ -109,12 +109,12 @@ public class CreateVisibleSignature implements SignatureInterface
         byte[] buffer = new byte[8 * 1024];
         if (document == null || !document.exists())
         {
-            new RuntimeException("Document for signing does not exist");
+            throw new IOException("Document for signing does not exist");
         }
 
         // creating output document and prepare the IO streams.
         String name = document.getName();
-        String substring = name.substring(0, name.lastIndexOf("."));
+        String substring = name.substring(0, name.lastIndexOf('.'));
 
         File outputDocument = new File(document.getParent(), substring + "_signed.pdf");
         FileInputStream fis = new FileInputStream(document);
@@ -126,10 +126,9 @@ public class CreateVisibleSignature implements SignatureInterface
             fos.write(buffer, 0, c);
         }
         fis.close();
-        fis = new FileInputStream(outputDocument);
 
         // load document
-        PDDocument doc = PDDocument.loadLegacy(document);
+        PDDocument doc = PDDocument.load(document);
 
         // create signature dictionary
         PDSignature signature = new PDSignature();
@@ -151,8 +150,6 @@ public class CreateVisibleSignature implements SignatureInterface
             {
                 options = new SignatureOptions();
                 options.setVisualSignature(signatureProperties);
-                // options.setPage(signatureProperties.getPage());
-                // options.setPreferedSignatureSize(signatureProperties.getPreferredSize());
                 doc.addSignature(signature, this, options);
             }
             finally
@@ -169,7 +166,7 @@ public class CreateVisibleSignature implements SignatureInterface
         }
 
         // write incremental (only for signing purpose)
-        doc.saveIncremental(fis, fos);
+        doc.saveIncremental(fos);
 
         return outputDocument;
     }
@@ -238,7 +235,7 @@ public class CreateVisibleSignature implements SignatureInterface
         else
         {
             File ksFile = new File(args[0]);
-            KeyStore keystore = KeyStore.getInstance("PKCS12", provider);
+            KeyStore keystore = KeyStore.getInstance("PKCS12", BCPROVIDER);
             char[] pin = args[1].toCharArray();
             keystore.load(new FileInputStream(ksFile), pin);
 
@@ -265,7 +262,7 @@ public class CreateVisibleSignature implements SignatureInterface
      */
     private static void usage()
     {
-        System.err.println("Usage: java " + CreateSignature.class.getName()
+        System.err.println("Usage: java " + CreateVisibleSignature.class.getName()
                 + " <pkcs12-keystore-file> <pin> <input-pdf> <sign-image>");
     }
 }

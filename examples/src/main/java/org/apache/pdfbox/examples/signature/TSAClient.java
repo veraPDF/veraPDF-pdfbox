@@ -29,6 +29,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.io.IOUtils;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.nist.NISTObjectIdentifiers;
+import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
 import org.bouncycastle.tsp.TSPException;
 import org.bouncycastle.tsp.TimeStampRequest;
 import org.bouncycastle.tsp.TimeStampRequestGenerator;
@@ -42,7 +45,7 @@ import org.bouncycastle.tsp.TimeStampToken;
  */
 public class TSAClient
 {
-    private static final Log log = LogFactory.getLog(TSAClient.class);
+    private static final Log LOG = LogFactory.getLog(TSAClient.class);
 
     private final URL url;
     private final String username;
@@ -113,7 +116,7 @@ public class TSAClient
     // throws IOException if a connection to the TSA cannot be established
     private byte[] getTSAResponse(byte[] request) throws IOException
     {
-        log.debug("Opening connection to TSA server");
+        LOG.debug("Opening connection to TSA server");
 
         // todo: support proxy servers
         URLConnection connection = url.openConnection();
@@ -121,14 +124,11 @@ public class TSAClient
         connection.setDoInput(true);
         connection.setRequestProperty("Content-Type", "application/timestamp-query");
 
-        log.debug("Established connection to TSA server");
+        LOG.debug("Established connection to TSA server");
 
-        if (username != null && password != null)
+        if (username != null && password != null && !username.isEmpty() && !password.isEmpty())
         {
-            if (!username.isEmpty() && !password.isEmpty())
-            {
-                connection.setRequestProperty(username, password);
-            }
+            connection.setRequestProperty(username, password);
         }
 
         // read response
@@ -143,7 +143,7 @@ public class TSAClient
             IOUtils.closeQuietly(output);
         }
 
-        log.debug("Waiting for response from TSA server");
+        LOG.debug("Waiting for response from TSA server");
 
         InputStream input = null;
         byte[] response;
@@ -157,7 +157,7 @@ public class TSAClient
             IOUtils.closeQuietly(input);
         }
 
-        log.debug("Received response from TSA server");
+        LOG.debug("Received response from TSA server");
 
         return response;
     }
@@ -165,34 +165,33 @@ public class TSAClient
     // returns the ASN.1 OID of the given hash algorithm
     private ASN1ObjectIdentifier getHashObjectIdentifier(String algorithm)
     {
-        // TODO can bouncy castle or Java provide this information?
         if (algorithm.equals("MD2"))
         {
-            return new ASN1ObjectIdentifier("1.2.840.113549.2.2");
+            return new ASN1ObjectIdentifier(PKCSObjectIdentifiers.md2.getId());
         }
         else if (algorithm.equals("MD5"))
         {
-            return new ASN1ObjectIdentifier("1.2.840.113549.2.5");
+            return new ASN1ObjectIdentifier(PKCSObjectIdentifiers.md5.getId());
         }
         else if (algorithm.equals("SHA-1"))
         {
-            return new ASN1ObjectIdentifier("1.3.14.3.2.26");
+            return new ASN1ObjectIdentifier(OIWObjectIdentifiers.idSHA1.getId());
         }
         else if (algorithm.equals("SHA-224"))
         {
-            return new ASN1ObjectIdentifier("2.16.840.1.101.3.4.2.4");
+            return new ASN1ObjectIdentifier(NISTObjectIdentifiers.id_sha224.getId());
         }
         else if (algorithm.equals("SHA-256"))
         {
-            return new ASN1ObjectIdentifier("2.16.840.1.101.3.4.2.1");
+            return new ASN1ObjectIdentifier(NISTObjectIdentifiers.id_sha256.getId());
         }
-        else if (algorithm.equals("SHA-394"))
+        else if (algorithm.equals("SHA-384"))
         {
-            return new ASN1ObjectIdentifier("2.16.840.1.101.3.4.2.2");
+            return new ASN1ObjectIdentifier(NISTObjectIdentifiers.id_sha384.getId());
         }
         else if (algorithm.equals("SHA-512"))
         {
-            return new ASN1ObjectIdentifier("2.16.840.1.101.3.4.2.3");
+            return new ASN1ObjectIdentifier(NISTObjectIdentifiers.id_sha512.getId());
         }
         else
         {

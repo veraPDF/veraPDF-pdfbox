@@ -21,17 +21,8 @@
 
 package org.apache.pdfbox.preflight.process;
 
-import static org.apache.pdfbox.preflight.PreflightConfiguration.ANNOTATIONS_PROCESS;
-import static org.apache.pdfbox.preflight.PreflightConstants.ACROFORM_DICTIONARY_KEY_NEED_APPEARANCES;
-import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_ACTION_FORBIDDEN_ADDITIONAL_ACTIONS_FIELD;
-import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_ACTION_FORBIDDEN_WIDGET_ACTION_FIELD;
-import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_SYNTAX_DICT_INVALID;
-import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_SYNTAX_NOCATALOG;
-import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_SYNTAX_BODY;
-
 import java.io.IOException;
 import java.util.List;
-
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -39,11 +30,21 @@ import org.apache.pdfbox.pdmodel.interactive.action.PDFormFieldAdditionalActions
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
-import org.apache.pdfbox.pdmodel.interactive.form.PDFieldTreeNode;
+import org.apache.pdfbox.pdmodel.interactive.form.PDNonTerminalField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTerminalField;
 import org.apache.pdfbox.preflight.PreflightContext;
 import org.apache.pdfbox.preflight.ValidationResult.ValidationError;
 import org.apache.pdfbox.preflight.exception.ValidationException;
 import org.apache.pdfbox.preflight.utils.ContextHelper;
+
+
+import static org.apache.pdfbox.preflight.PreflightConfiguration.ANNOTATIONS_PROCESS;
+import static org.apache.pdfbox.preflight.PreflightConstants.ACROFORM_DICTIONARY_KEY_NEED_APPEARANCES;
+import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_ACTION_FORBIDDEN_ADDITIONAL_ACTIONS_FIELD;
+import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_ACTION_FORBIDDEN_WIDGET_ACTION_FIELD;
+import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_SYNTAX_BODY;
+import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_SYNTAX_DICT_INVALID;
+import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_SYNTAX_NOCATALOG;
 
 public class AcroFormValidationProcess extends AbstractProcess
 {
@@ -70,7 +71,7 @@ public class AcroFormValidationProcess extends AbstractProcess
         }
         else
         {
-            ctx.addValidationError(new ValidationError(ERROR_SYNTAX_NOCATALOG, "There is no Catalog entry in the Document."));
+            ctx.addValidationError(new ValidationError(ERROR_SYNTAX_NOCATALOG, "There is no Catalog entry in the Document"));
         }
     }
 
@@ -84,7 +85,7 @@ public class AcroFormValidationProcess extends AbstractProcess
      */
     protected void checkNeedAppearences(PreflightContext ctx, PDAcroForm acroForm)
     {
-        if (acroForm.getDictionary().getBoolean(ACROFORM_DICTIONARY_KEY_NEED_APPEARANCES, false))
+        if (acroForm.getCOSObject().getBoolean(ACROFORM_DICTIONARY_KEY_NEED_APPEARANCES, false))
         {
             addValidationError(ctx, new ValidationError(ERROR_SYNTAX_DICT_INVALID,
                     "NeedAppearance is present with the value \"true\""));
@@ -101,16 +102,16 @@ public class AcroFormValidationProcess extends AbstractProcess
      * @return the result of the validation.
      * @throws IOException
      */
-    protected boolean exploreFields(PreflightContext ctx, List<?> lFields) throws IOException
+    protected boolean exploreFields(PreflightContext ctx, List<PDField> lFields) throws IOException
     {
         if (lFields != null)
         {
             // the list can be null if the field doesn't have children
             for (Object obj : lFields)
             {
-                if (obj instanceof PDFieldTreeNode)
+                if (obj instanceof PDField)
                 {
-                    if (!validateField(ctx, (PDFieldTreeNode) obj))
+                    if (!validateField(ctx, (PDField) obj))
                     {
                         return false;
                     }
@@ -118,7 +119,7 @@ public class AcroFormValidationProcess extends AbstractProcess
                 else if (obj instanceof PDAnnotationWidget)
                 {
                     // "A field's children in the hierarchy may also include widget annotations"
-                    ContextHelper.validateElement(ctx, ((PDAnnotationWidget) obj).getDictionary(), ANNOTATIONS_PROCESS);
+                    ContextHelper.validateElement(ctx, ((PDAnnotationWidget) obj).getCOSObject(), ANNOTATIONS_PROCESS);
                 }
                 else
                 {
@@ -131,6 +132,26 @@ public class AcroFormValidationProcess extends AbstractProcess
     }
 
     /**
+     * This function explores all fields and their children to validate them.
+     *
+     * @see #validateField(PreflightContext, PDField)
+     *
+     * @param ctx the preflight context.
+     * @param widgets the list of widgets
+     * @return the result of the validation.
+     * @throws IOException
+     */
+    protected boolean exploreWidgets(PreflightContext ctx, List<PDAnnotationWidget> widgets) throws IOException
+    {
+        for (PDAnnotationWidget widget : widgets)
+        {
+            // "A field's children in the hierarchy may also include widget annotations"
+            ContextHelper.validateElement(ctx, widget.getCOSObject(), ANNOTATIONS_PROCESS);
+        }
+        return true;
+    }
+
+    /**
      * A and AA field are forbidden, this method checks if they are present and checks all children of this field. If the
      * an Additional Action is present the error code ERROR_ACTION_FORBIDDEN_ADDITIONAL_ACTIONS_FIELD (6.2.3) is added
      * to the error list If the an Action is present (in the Widget Annotation) the error
@@ -138,14 +159,14 @@ public class AcroFormValidationProcess extends AbstractProcess
      * will be done by the AnnotationValidationHelper, but some actions are authorized in a standard Widget)
      * 
      * @param ctx the preflight context.
-     * @param aField an acro forms field.
+     * @param field an acro forms field.
      * @return the result of the check for A or AA entries.
      * @throws IOException
      */
-    protected boolean validateField(PreflightContext ctx, PDFieldTreeNode aField) throws IOException
+    protected boolean validateField(PreflightContext ctx, PDField field) throws IOException
     {
         boolean res = true;
-        PDFormFieldAdditionalActions aa = aField.getActions();
+        PDFormFieldAdditionalActions aa = field.getActions();
         if (aa != null)
         {
             addValidationError(ctx, new ValidationError(ERROR_ACTION_FORBIDDEN_ADDITIONAL_ACTIONS_FIELD,
@@ -153,24 +174,26 @@ public class AcroFormValidationProcess extends AbstractProcess
             res = false;
         }
 
-        /*
-         * The widget validation will be done by the widget annotation, a widget contained in a Field can't have action.
-         */
-        PDAnnotationWidget widget = aField.getWidget();
-        if (res && widget != null)
+        if (field instanceof PDTerminalField)
         {
-            ContextHelper.validateElement(ctx, widget.getDictionary(), ANNOTATIONS_PROCESS);
-            COSBase act = widget.getDictionary().getDictionaryObject(COSName.A);
-            if (act != null)
+            // The widget validation will be done by the widget annotation, a widget contained in a Field can't have action. 
+            PDAnnotationWidget widget = ((PDTerminalField)field).getWidgets().get(0); // fixme: fails to check multiple widgets
+            if (res && widget != null)
             {
-                addValidationError(ctx, new ValidationError(ERROR_ACTION_FORBIDDEN_WIDGET_ACTION_FIELD,
-                        "\"A\" must not be used in a widget annotation"));
-                res = false;
+                ContextHelper.validateElement(ctx, widget.getCOSObject(), ANNOTATIONS_PROCESS);
+                COSBase act = widget.getCOSObject().getDictionaryObject(COSName.A);
+                if (act != null)
+                {
+                    addValidationError(ctx, new ValidationError(ERROR_ACTION_FORBIDDEN_WIDGET_ACTION_FIELD,
+                            "\"A\" must not be used in a widget annotation"));
+                    return false;
+                }
             }
+            return exploreWidgets(ctx, ((PDTerminalField)field).getWidgets());
         }
-
-        res = res && exploreFields(ctx, aField.getKids());
-        return res;
+        else
+        {
+            return res && exploreFields(ctx, ((PDNonTerminalField)field).getChildren());
+        }
     }
-
 }

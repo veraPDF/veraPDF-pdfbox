@@ -16,118 +16,61 @@
  */
 package org.apache.pdfbox.examples.pdmodel;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import javax.imageio.ImageIO;
-
-import org.apache.pdfbox.io.RandomAccessFile;
-
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-
-import org.apache.pdfbox.pdmodel.edit.PDPageContentStream;
-
-import org.apache.pdfbox.pdmodel.graphics.image.CCITTFactory;
-import org.apache.pdfbox.pdmodel.graphics.image.JPEGFactory;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
 
 /**
- * This is an example that creates a simple document.
+ * Creates a PDF document from an image.
  *
  * The example is taken from the pdf file format specification.
- *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.7 $
  */
 public class ImageToPDF
 {
-    /**
-     * create the second sample document from the PDF file format specification.
-     *
-     * @param file The file to write the PDF to.
-     * @param image The filename of the image to put in the PDF.
-     *
-     * @throws IOException If there is an error writing the data.
-     */
-    public void createPDFFromImage( String file, String image) throws IOException
+    public static void main(String[] args) throws IOException
     {
-        // the document
-        PDDocument doc = null;
+        if (args.length != 2)
+        {
+            System.err.println("usage: " + ImageToPDF.class.getName() + " <image> <output-file>");
+            System.exit(1);
+        }
+        
+        String imagePath = args[0];
+        String pdfPath = args[1];
+        
+        if (!pdfPath.endsWith(".pdf"))
+        {
+            System.err.println("Last argument must be the destination .pdf file");
+            System.exit(1);
+        }
+
+        PDDocument doc = new PDDocument();
         try
         {
-            doc = new PDDocument();
-
             PDPage page = new PDPage();
-            doc.addPage( page );
+            doc.addPage(page);
 
-            PDImageXObject pdImage;
-            if( image.toLowerCase().endsWith( ".jpg" ) )
-            {
-                pdImage = JPEGFactory.createFromStream(doc, new FileInputStream(image));
-            }
-            else if (image.toLowerCase().endsWith(".tif") || 
-                    image.toLowerCase().endsWith(".tiff"))
-            {
-                pdImage = CCITTFactory.createFromRandomAccess(doc, new RandomAccessFile(new File(image),"r"));
-            }
-            else if (image.toLowerCase().endsWith(".gif") || 
-                    image.toLowerCase().endsWith(".bmp") || 
-                    image.toLowerCase().endsWith(".png"))
-            {
-                BufferedImage bim = ImageIO.read(new File(image));
-                pdImage = LosslessFactory.createFromImage(doc, bim);
-            }
-            else
-            {
-                throw new IOException( "Image type not supported: " + image );
-            }
-            PDPageContentStream contentStream = new PDPageContentStream(doc, page);
-
-            //contentStream.drawImage(pdImage, 20, 20 );
-            // better method inspired by http://stackoverflow.com/a/22318681/535646
-            float scale = 1f; // reduce this value if the image is too large
-            contentStream.drawXObject(pdImage, 20, 20, pdImage.getWidth()*scale, pdImage.getHeight()*scale);
-
-            contentStream.close();
-            doc.save( file );
+            // createFromFile is the easiest way with an image file
+            // if you already have the image in a BufferedImage, 
+            // call LosslessFactory.createFromImage() instead
+            PDImageXObject pdImage = PDImageXObject.createFromFile(imagePath, doc);
+            
+            PDPageContentStream contents = new PDPageContentStream(doc, page);
+            
+            // draw the image at full size at (x=20, y=20)
+            contents.drawImage(pdImage, 20, 20);
+            
+            // to draw the image at half size at (x=20, y=20) use
+            // contents.drawImage(pdImage, 20, 20, pdImage.getWidth() / 2, pdImage.getHeight() / 2);
+            
+            contents.close();
+            doc.save(pdfPath);
         }
         finally
         {
-            if( doc != null )
-            {
-                doc.close();
-            }
+            doc.close();
         }
-    }
-
-    /**
-     * This will create a PDF document with a single image on it.
-     * <br />
-     * see usage() for commandline
-     *
-     * @param args Command line arguments.
-     */
-    public static void main(String[] args) throws IOException
-    {
-        ImageToPDF app = new ImageToPDF();
-        if( args.length != 2 )
-        {
-            app.usage();
-        }
-        else
-        {
-            app.createPDFFromImage( args[0], args[1] );
-        }
-    }
-
-    /**
-     * This will print out a message telling how to use this example.
-     */
-    private void usage()
-    {
-        System.err.println( "usage: " + this.getClass().getName() + " <output-file> <image>" );
     }
 }

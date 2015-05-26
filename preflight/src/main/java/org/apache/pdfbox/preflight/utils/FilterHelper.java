@@ -21,6 +21,8 @@
 
 package org.apache.pdfbox.preflight.utils;
 
+import java.util.HashSet;
+import java.util.Set;
 import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_SYNTAX_STREAM_INVALID_FILTER;
 import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_SYNTAX_STREAM_UNDEFINED_FILTER;
 import static org.apache.pdfbox.preflight.PreflightConstants.INLINE_DICTIONARY_VALUE_FILTER_ASCII_85;
@@ -43,9 +45,32 @@ import org.apache.pdfbox.preflight.PreflightContext;
 import org.apache.pdfbox.preflight.PreflightDocument;
 import org.apache.pdfbox.preflight.ValidationResult.ValidationError;
 
-public class FilterHelper
+public final class FilterHelper
 {
+    
+    private static final Set<String> ALLOWED_FILTERS = new HashSet<String>();
+    
+    static
+    {
+        ALLOWED_FILTERS.add(STREAM_DICTIONARY_VALUE_FILTER_FLATE_DECODE);
+        ALLOWED_FILTERS.add(STREAM_DICTIONARY_VALUE_FILTER_ASCII_HEX);
+        ALLOWED_FILTERS.add(STREAM_DICTIONARY_VALUE_FILTER_ASCII_85);
+        ALLOWED_FILTERS.add(STREAM_DICTIONARY_VALUE_FILTER_CCITTFF);
+        ALLOWED_FILTERS.add(STREAM_DICTIONARY_VALUE_FILTER_DCT);
+        ALLOWED_FILTERS.add(STREAM_DICTIONARY_VALUE_FILTER_JBIG);
+        ALLOWED_FILTERS.add(STREAM_DICTIONARY_VALUE_FILTER_RUN);
+        ALLOWED_FILTERS.add(INLINE_DICTIONARY_VALUE_FILTER_FLATE_DECODE);
+        ALLOWED_FILTERS.add(INLINE_DICTIONARY_VALUE_FILTER_ASCII_HEX);
+        ALLOWED_FILTERS.add(INLINE_DICTIONARY_VALUE_FILTER_ASCII_85);
+        ALLOWED_FILTERS.add(INLINE_DICTIONARY_VALUE_FILTER_CCITTFF);
+        ALLOWED_FILTERS.add(INLINE_DICTIONARY_VALUE_FILTER_DCT);
+        ALLOWED_FILTERS.add(INLINE_DICTIONARY_VALUE_FILTER_RUN);
+    }
 
+    private FilterHelper()
+    {
+    }
+    
     /**
      * This method checks if the filter is authorized for the PDF file according to the preflight document specification
      * attribute. For example according to the PDF/A-1 specification, only the LZW filter is forbidden due to Copyright
@@ -55,7 +80,7 @@ public class FilterHelper
      * @param context
      *            the preflight context
      * @param filter
-     *            the filter to checks
+     *            the filter to check
      */
     public static void isAuthorizedFilter(PreflightContext context, String filter)
     {
@@ -90,26 +115,12 @@ public class FilterHelper
             {
                 context.addValidationError(new ValidationError(ERROR_SYNTAX_STREAM_INVALID_FILTER,
                         "LZWDecode is forbidden"));
+                return;
             }
 
             // --- Filters declared in the PDF Reference for PDF 1.4
             // --- Other Filters are considered as invalid to avoid not consistent behaviour
-            boolean definedFilter = STREAM_DICTIONARY_VALUE_FILTER_FLATE_DECODE.equals(filter);
-            definedFilter = definedFilter || STREAM_DICTIONARY_VALUE_FILTER_ASCII_HEX.equals(filter);
-            definedFilter = definedFilter || STREAM_DICTIONARY_VALUE_FILTER_ASCII_85.equals(filter);
-            definedFilter = definedFilter || STREAM_DICTIONARY_VALUE_FILTER_CCITTFF.equals(filter);
-            definedFilter = definedFilter || STREAM_DICTIONARY_VALUE_FILTER_DCT.equals(filter);
-            definedFilter = definedFilter || STREAM_DICTIONARY_VALUE_FILTER_JBIG.equals(filter);
-            definedFilter = definedFilter || STREAM_DICTIONARY_VALUE_FILTER_RUN.equals(filter);
-
-            definedFilter = definedFilter || INLINE_DICTIONARY_VALUE_FILTER_FLATE_DECODE.equals(filter);
-            definedFilter = definedFilter || INLINE_DICTIONARY_VALUE_FILTER_ASCII_HEX.equals(filter);
-            definedFilter = definedFilter || INLINE_DICTIONARY_VALUE_FILTER_ASCII_85.equals(filter);
-            definedFilter = definedFilter || INLINE_DICTIONARY_VALUE_FILTER_CCITTFF.equals(filter);
-            definedFilter = definedFilter || INLINE_DICTIONARY_VALUE_FILTER_DCT.equals(filter);
-            definedFilter = definedFilter || INLINE_DICTIONARY_VALUE_FILTER_RUN.equals(filter);
-
-            if (!definedFilter)
+            if (!ALLOWED_FILTERS.contains(filter))
             {
                 context.addValidationError(new ValidationError(ERROR_SYNTAX_STREAM_UNDEFINED_FILTER,
                         "This filter isn't defined in the PDF Reference Third Edition : " + filter));

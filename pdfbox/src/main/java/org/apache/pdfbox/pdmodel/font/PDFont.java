@@ -16,11 +16,12 @@
  */
 package org.apache.pdfbox.pdmodel.font;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.fontbox.afm.FontMetrics;
@@ -32,10 +33,10 @@ import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSNumber;
 import org.apache.pdfbox.cos.COSStream;
-import org.apache.pdfbox.pdmodel.font.encoding.GlyphList;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.common.COSArrayList;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
+import org.apache.pdfbox.pdmodel.font.encoding.GlyphList;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.Vector;
 
@@ -57,7 +58,6 @@ public abstract class PDFont implements COSObjectable, PDFontLike
     private List<Integer> widths;
     private float avgFontWidth;
     private float fontWidthOfSpace = -1f;
-    private Boolean isSymbolic;
 
     /**
      * Constructor for embedding.
@@ -237,10 +237,24 @@ public abstract class PDFont implements COSObjectable, PDFontLike
             }
         }
 
+        // standard 14 font widths are specified by an AFM
+        if (isStandard14())
+        {
+            return getStandard14Width(code);
+        }
+        
         // if there's nothing to override with, then obviously we fall back to the font
         return getWidthFromFont(code);
     }
 
+    /**
+     * Returns the glyph width from the AFM if this is a Standard 14 font.
+     * 
+     * @param code character code
+     * @return width in 1/1000 text space
+     */
+    protected abstract float getStandard14Width(int code);
+    
     @Override
     public abstract float getWidthFromFont(int code) throws IOException;
 
@@ -251,22 +265,59 @@ public abstract class PDFont implements COSObjectable, PDFontLike
     public abstract float getHeight(int code) throws IOException;
 
     /**
+     * Encodes the given string for use in a PDF content stream.
+     *
+     * @param text Any Unicode text.
+     * @return Array of PDF content stream bytes.
+     * @throws IOException If the text could not be encoded.
+     */
+    public final byte[] encode(String text) throws IOException
+    {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        for (int offset = 0; offset < text.length(); )
+        {
+            int codePoint = text.codePointAt(offset);
+
+            // multi-byte encoding with 1 to 4 bytes
+            byte[] bytes = encode(codePoint);
+            out.write(bytes);
+
+            offset += Character.charCount(codePoint);
+        }
+        return out.toByteArray();
+    }
+
+    /**
+     * Encodes the given Unicode code point for use in a PDF content stream.
+     * Content streams use a multi-byte encoding with 1 to 4 bytes.
+     *
+     * <p>This method is called when embedding text in PDFs and when filling in fields.
+     *
+     * @param unicode Unicode code point.
+     * @return Array of 1 to 4 PDF content stream bytes.
+     * @throws IOException If the text could not be encoded.
+     */
+    protected abstract byte[] encode(int unicode) throws IOException;
+
+    /**
      * Returns the width of the given Unicode string.
      *
      * @param text The text to get the width of.
-     * @return The width of the string in 1000 units of text space, ie 333 567...
+     * @return The width of the string in 1/1000 units of text space.
      * @throws IOException If there is an error getting the width information.
      */
     public float getStringWidth(String text) throws IOException
     {
+        byte[] bytes = encode(text);
+        ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+        
         float width = 0;
-        int offset = 0, length = text.length();
-        while (offset < length)
+        while (in.available() > 0)
         {
-            int codePoint = text.codePointAt(offset);
-            offset += Character.charCount(codePoint);
-            width += getWidth(codePoint); // todo: *no* getWidth expects a PDF char code, not a Unicode code point
+            int code = readCode(in);
+            width += getWidth(code);
         }
+        
         return width;
     }
 
@@ -276,6 +327,7 @@ public abstract class PDFont implements COSObjectable, PDFontLike
      * @return The width is in 1000 unit of text space, ie 333 or 777
      */
     // todo: this method is highly suspicious, the average glyph width is not usually a good metric
+    @Override
     public float getAverageFontWidth()
     {
         float average;
@@ -383,51 +435,6 @@ public abstract class PDFont implements COSObjectable, PDFontLike
         return dict.getNameAsString(COSName.SUBTYPE);
     }
 
-    /**
-     * Returns true the font is a symbolic (that is, it does not use the Adobe Standard Roman
-     * character set).
-     */
-    public final boolean isSymbolic()
-    {
-        if (isSymbolic == null)
-        {
-            Boolean result = isFontSymbolic();
-            if (result != null)
-            {
-                isSymbolic = result;
-            }
-            else
-            {
-                // unless we can prove that the font is symbolic, we assume that it is not
-                isSymbolic = true;
-            }
-        }
-        return isSymbolic;
-    }
-
-    /**
-     * Internal implementation of isSymbolic, allowing for the fact that the result may be
-     * indeterminate.
-     */
-    protected Boolean isFontSymbolic()
-    {
-        return getSymbolicFlag();
-    }
-
-    /**
-     * Returns the value of the symbolic flag,  allowing for the fact that the result may be
-     * indeterminate.
-     */
-    protected final Boolean getSymbolicFlag()
-    {
-        if (getFontDescriptor() != null)
-        {
-            // fixme: isSymbolic() defaults to false if the flag is missing so we can't trust this
-            return getFontDescriptor().isSymbolic();
-        }
-        return null;
-    }
-
     @Override
     public abstract String getName();
 
@@ -513,12 +520,6 @@ public abstract class PDFont implements COSObjectable, PDFontLike
     {
         // this logic is based on Acrobat's behaviour, see see PDFBOX-2372
 
-        // symbolic fonts are never standard: they don't use the Adobe Standard Roman character set
-        if (isSymbolic())
-        {
-            return false;
-        }
-
         // embedded fonts never get special treatment
         if (isEmbedded())
         {
@@ -529,6 +530,25 @@ public abstract class PDFont implements COSObjectable, PDFontLike
         return Standard14Fonts.containsName(getName());
     }
 
+    /**
+     * Adds the given Unicode point to the subset.
+     * 
+     * @param codePoint Unicode code point
+     */
+    public abstract void addToSubset(int codePoint);
+    
+    /**
+     * Replaces this font with a subset containing only the given Unicode characters.
+     *
+     * @throws IOException if the subset could not be written
+     */
+    public abstract void subset() throws IOException;
+
+    /**
+     * Returns true if this font will be subset when embedded.
+     */
+    public abstract boolean willBeSubset();
+    
     @Override
     public abstract boolean isDamaged();
 

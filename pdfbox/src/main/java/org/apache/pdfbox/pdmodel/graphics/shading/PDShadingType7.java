@@ -16,17 +16,16 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
+import java.awt.Paint;
+
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.util.Matrix;
-
-import java.awt.Paint;
 
 /**
  * Resources for a shading type 7 (Tensor-Product Patch Mesh).
  */
 public class PDShadingType7 extends PDShadingType6
 {
-
     /**
      * Constructor using the given shading dictionary.
      *

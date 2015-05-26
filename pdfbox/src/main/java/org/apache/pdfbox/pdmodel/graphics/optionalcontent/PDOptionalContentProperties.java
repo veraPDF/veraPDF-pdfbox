@@ -29,7 +29,6 @@ import org.apache.pdfbox.pdmodel.common.COSObjectable;
  * This class represents the optional content properties dictionary.
  *
  * @since PDF 1.5
- * @version $Revision$
  */
 public class PDOptionalContentProperties implements COSObjectable
 {
@@ -47,7 +46,7 @@ public class PDOptionalContentProperties implements COSObjectable
         /** The "Unchanged" value. */
         UNCHANGED(COSName.UNCHANGED);
 
-        private COSName name;
+        private final COSName name;
 
         private BaseState(COSName value)
         {
@@ -79,7 +78,7 @@ public class PDOptionalContentProperties implements COSObjectable
 
     }
 
-    private COSDictionary dict;
+    private final COSDictionary dict;
 
     /**
      * Creates a new optional content properties dictionary.
@@ -101,6 +100,7 @@ public class PDOptionalContentProperties implements COSObjectable
     }
 
     /** {@inheritDoc} */
+    @Override
     public COSBase getCOSObject()
     {
         return this.dict;
@@ -215,7 +215,7 @@ public class PDOptionalContentProperties implements COSObjectable
         String[] groups = new String[size];
         for (int i = 0; i < size; i++)
         {
-            COSBase obj = (COSBase)ocgs.get(i);
+            COSBase obj = ocgs.get(i);
             COSDictionary ocg = toDictionary(obj);
             groups[i] = ocg.getString(COSName.NAME);
         }
@@ -329,8 +329,8 @@ public class PDOptionalContentProperties implements COSObjectable
                 if (name.equals(groupName))
                 {
                     //enable group
-                    off.remove(group);
-                    on.add(group);
+                    off.remove(o);
+                    on.add(o);
                     found = true;
                     break;
                 }
@@ -345,8 +345,8 @@ public class PDOptionalContentProperties implements COSObjectable
                 if (name.equals(groupName))
                 {
                     //disable group
-                    on.remove(group);
-                    off.add(group);
+                    on.remove(o);
+                    off.add(o);
                     found = true;
                     break;
                 }

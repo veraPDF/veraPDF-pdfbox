@@ -26,9 +26,8 @@ import org.apache.pdfbox.pdmodel.common.filespecification.PDFileSpecification;
 /**
  * This represents a remote go-to action that can be executed in a PDF document.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @author Panagiotis Toumasis (ptoumasis@mail.gr)
- * @version $Revision: 1.4 $
+ * @author Ben Litchfield
+ * @author Panagiotis Toumasis
  */
 public class PDActionRemoteGoTo extends PDAction
 {
@@ -54,26 +53,6 @@ public class PDActionRemoteGoTo extends PDAction
     public PDActionRemoteGoTo( COSDictionary a )
     {
         super( a );
-    }
-
-    /**
-     * Convert this standard java object to a COS object.
-     *
-     * @return The cos object that matches this Java object.
-     */
-    public COSBase getCOSObject()
-    {
-        return action;
-    }
-
-    /**
-     * Convert this standard java object to a COS object.
-     *
-     * @return The cos object that matches this Java object.
-     */
-    public COSDictionary getCOSDictionary()
-    {
-        return action;
     }
 
     /**

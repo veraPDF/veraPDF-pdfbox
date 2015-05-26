@@ -44,13 +44,13 @@ import org.apache.pdfbox.util.Matrix;
 /**
  * AWT Paint for a tiling pattern, which consists of a small repeating graphical figure.
  *
- * @author Andreas Lehmkühler
  * @author John Hewson
  */
 class TilingPaint implements Paint
 {
     private final PDTilingPattern pattern;
     private final TexturePaint paint;
+    private final PageDrawer drawer;
 
     /**
      * Creates a new colored tiling Paint.
@@ -61,12 +61,12 @@ class TilingPaint implements Paint
      * @throws java.io.IOException if something goes wrong while drawing the
      * pattern
      */
-    public TilingPaint(PageDrawer drawer, PDTilingPattern pattern, AffineTransform xform)
+    TilingPaint(PageDrawer drawer, PDTilingPattern pattern, AffineTransform xform)
             throws IOException
     {
-        this.paint = new TexturePaint(getImage(drawer, pattern, null, null, xform),
-                getAnchorRect(pattern));
+        this.drawer = drawer;
         this.pattern = pattern;
+        this.paint = new TexturePaint(getImage(null, null, xform), getAnchorRect());
     }
 
     /**
@@ -79,12 +79,12 @@ class TilingPaint implements Paint
      *
      * @throws java.io.IOException if something goes wrong while drawing the pattern
      */
-    public TilingPaint(PageDrawer drawer, PDTilingPattern pattern, PDColorSpace colorSpace,
+    TilingPaint(PageDrawer drawer, PDTilingPattern pattern, PDColorSpace colorSpace,
                        PDColor color, AffineTransform xform) throws IOException
     {
-        this.paint = new TexturePaint(getImage(drawer, pattern, colorSpace, color, xform),
-                getAnchorRect(pattern));
+        this.drawer = drawer;
         this.pattern = pattern;
+        this.paint = new TexturePaint(getImage(colorSpace, color, xform), getAnchorRect());
     }
 
     /**
@@ -96,9 +96,13 @@ class TilingPaint implements Paint
     {
         AffineTransform xformPattern = (AffineTransform)xform.clone();
 
+        // pattern space -> user space
+        Matrix patternMatrix = Matrix.concatenate(drawer.getInitialMatrix(), pattern.getMatrix());
+
         // applies the pattern matrix with scaling removed
-        AffineTransform patternNoScale = pattern.getMatrix().createAffineTransform();
-        patternNoScale.scale(1 / patternNoScale.getScaleX(), 1 / patternNoScale.getScaleY());
+        AffineTransform patternNoScale = patternMatrix.createAffineTransform();
+        patternNoScale.scale(1 / patternMatrix.getScalingFactorX(),
+                             1 / patternMatrix.getScalingFactorY());
         xformPattern.concatenate(patternNoScale);
 
         return paint.createContext(cm, deviceBounds, userBounds, xformPattern, hints);
@@ -107,21 +111,21 @@ class TilingPaint implements Paint
     /**
      * Returns the pattern image in parent stream coordinates.
      */
-    private static BufferedImage getImage(PageDrawer drawer, PDTilingPattern pattern,
-                                          PDColorSpace colorSpace, PDColor color,
+    private BufferedImage getImage(PDColorSpace colorSpace, PDColor color,
                                           AffineTransform xform) throws IOException
     {
         ColorSpace outputCS = ColorSpace.getInstance(ColorSpace.CS_sRGB);
         ColorModel cm = new ComponentColorModel(outputCS, true, false,
                 Transparency.TRANSLUCENT, DataBuffer.TYPE_BYTE);
 
-        Rectangle2D anchor = getAnchorRect(pattern);
+        Rectangle2D anchor = getAnchorRect();
         float width = (float)Math.abs(anchor.getWidth());
         float height = (float)Math.abs(anchor.getHeight());
 
-        // device transform (i.e. DPI)
-        width *= (float)xform.getScaleX();
-        height *= (float)xform.getScaleY();
+        // device scale transform (i.e. DPI) (see PDFBOX-1466.pdf)
+        Matrix xformMatrix = new Matrix(xform);
+        width *= xformMatrix.getScalingFactorX();
+        height *= xformMatrix.getScalingFactorY();
 
         int rasterWidth = Math.max(1, ceiling(width));
         int rasterHeight = Math.max(1, ceiling(height));
@@ -146,18 +150,21 @@ class TilingPaint implements Paint
             graphics.scale(-1, 1);
         }
 
-        // device transform (i.e. DPI)
-        graphics.transform(xform);
+        // device scale transform (i.e. DPI)
+        graphics.scale(xformMatrix.getScalingFactorX(), xformMatrix.getScalingFactorY());
+
+        // pattern space -> user space
+        Matrix patternMatrix = Matrix.concatenate(drawer.getInitialMatrix(), pattern.getMatrix());
 
         // apply only the scaling from the pattern transform, doing scaling here improves the
         // image quality and prevents large scale-down factors from creating huge tiling cells.
-        Matrix patternMatrix = Matrix.getScaleInstance(
-                Math.abs(pattern.getMatrix().getScaleX()),
-                Math.abs(pattern.getMatrix().getScaleY()));
+        patternMatrix = Matrix.getScaleInstance(
+                Math.abs(patternMatrix.getScalingFactorX()),
+                Math.abs(patternMatrix.getScalingFactorY()));
 
         // move origin to (0,0)
         patternMatrix.concatenate(
-                Matrix.getTranslatingInstance(-pattern.getBBox().getLowerLeftX(),
+                Matrix.getTranslateInstance(-pattern.getBBox().getLowerLeftX(),
                         -pattern.getBBox().getLowerLeftY()));
 
         // render using PageDrawer
@@ -168,13 +175,13 @@ class TilingPaint implements Paint
     }
 
     /**
-     * Returns the closest integer which is //larger than the given number.
+     * Returns the closest integer which is larger than the given number.
      * Uses BigDecimal to avoid floating point error which would cause gaps in the tiling.
      */
     private static int ceiling(double num)
     {
         BigDecimal decimal = new BigDecimal(num);
-        decimal.setScale(5, RoundingMode.CEILING); // 5 decimal places of accuracy
+        decimal = decimal.setScale(5, RoundingMode.CEILING); // 5 decimal places of accuracy
         return decimal.intValue();
     }
 
@@ -187,7 +194,7 @@ class TilingPaint implements Paint
     /**
      * Returns the anchor rectangle, which includes the XStep/YStep and scaling.
      */
-    private static Rectangle2D getAnchorRect(PDTilingPattern pattern)
+    private Rectangle2D getAnchorRect()
     {
         float xStep = pattern.getXStep();
         if (xStep == 0)
@@ -201,13 +208,16 @@ class TilingPaint implements Paint
             yStep = pattern.getBBox().getHeight();
         }
 
-        float xScale = pattern.getMatrix().getScaleX();
-        float yScale = pattern.getMatrix().getScaleY();
+        // pattern space -> user space
+        Matrix patternMatrix = Matrix.concatenate(drawer.getInitialMatrix(), pattern.getMatrix());
+
+        float xScale = patternMatrix.getScalingFactorX();
+        float yScale = patternMatrix.getScalingFactorY();
 
         // returns the anchor rect with scaling applied
         PDRectangle anchor = pattern.getBBox();
         return new Rectangle2D.Float(anchor.getLowerLeftX() * xScale,
-                anchor.getLowerLeftY() * yScale,
-                xStep * xScale, yStep * yScale);
+                                     anchor.getLowerLeftY() * yScale,
+                                     xStep * xScale, yStep * yScale);
     }
 }

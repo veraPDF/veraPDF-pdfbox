@@ -16,6 +16,7 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
+import java.awt.Color;
 import java.awt.Paint;
 import java.awt.PaintContext;
 import java.awt.Rectangle;
@@ -24,7 +25,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.ColorModel;
 import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.util.Matrix;
@@ -36,19 +36,19 @@ class Type1ShadingPaint implements Paint
 {
     private static final Log LOG = LogFactory.getLog(Type1ShadingPaint.class);
 
-    private PDShadingType1 shading;
-    private Matrix ctm;
+    private final PDShadingType1 shading;
+    private final Matrix matrix;
 
     /**
      * Constructor.
      *
      * @param shading the shading resources
-     * @param ctm current transformation matrix
+     * @param matrix the pattern matrix concatenated with that of the parent content stream
      */
-    Type1ShadingPaint(PDShadingType1 shading, Matrix ctm)
+    Type1ShadingPaint(PDShadingType1 shading, Matrix matrix)
     {
         this.shading = shading;
-        this.ctm = ctm;
+        this.matrix = matrix;
     }
 
     @Override
@@ -59,16 +59,16 @@ class Type1ShadingPaint implements Paint
 
     @Override
     public PaintContext createContext(ColorModel cm, Rectangle deviceBounds, Rectangle2D userBounds,
-            AffineTransform xform, RenderingHints hints)
+                                      AffineTransform xform, RenderingHints hints)
     {
         try
         {
-            return new Type1ShadingContext(shading, cm, xform, ctm, deviceBounds);
+            return new Type1ShadingContext(shading, cm, xform, matrix);
         }
-        catch (IOException ex)
+        catch (IOException e)
         {
-            LOG.error(ex);
-            return null;
+            LOG.error("An error occurred while painting", e);
+            return new Color(0, 0, 0, 0).createContext(cm, deviceBounds, userBounds, xform, hints);
         }
     }
 }

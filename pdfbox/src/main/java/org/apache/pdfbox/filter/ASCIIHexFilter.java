@@ -23,16 +23,16 @@ import java.io.OutputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.cos.COSDictionary;
-
-import org.apache.pdfbox.persistence.util.COSHEXTable;
+import org.apache.pdfbox.util.Hex;
 
 /**
  * Decodes data encoded in an ASCII hexadecimal form, reproducing the original binary data.
+ *
  * @author Ben Litchfield
  */
 final class ASCIIHexFilter extends Filter
 {
-    private static final Log log = LogFactory.getLog(ASCIIHexFilter.class);
+    private static final Log LOG = LogFactory.getLog(ASCIIHexFilter.class);
 
     private static final int[] REVERSE_HEX = {
       /*   0 */  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -49,7 +49,7 @@ final class ASCIIHexFilter extends Filter
     };
 
     @Override
-    public final DecodeResult decode(InputStream encoded, OutputStream decoded,
+    public DecodeResult decode(InputStream encoded, OutputStream decoded,
                                          COSDictionary parameters, int index) throws IOException
     {
         int value, firstByte, secondByte;
@@ -67,7 +67,7 @@ final class ASCIIHexFilter extends Filter
        
             if (REVERSE_HEX[firstByte] == -1)
             {
-                log.error("Invalid hex, int: " + firstByte + " char: " + (char)firstByte);
+                LOG.error("Invalid hex, int: " + firstByte + " char: " + (char)firstByte);
             }
             value = REVERSE_HEX[firstByte] * 16;
             secondByte = encoded.read();
@@ -82,7 +82,7 @@ final class ASCIIHexFilter extends Filter
             {
                 if (REVERSE_HEX[secondByte] == -1)
                 {
-                    log.error("Invalid hex, int: " + secondByte + " char: " + (char)secondByte);
+                    LOG.error("Invalid hex, int: " + secondByte + " char: " + (char)secondByte);
                 }
                 value += REVERSE_HEX[secondByte];
             }
@@ -106,7 +106,7 @@ final class ASCIIHexFilter extends Filter
 
     private boolean isEOD(int c)
     {
-        return (c == 62); // '>' - EOD
+        return c == '>';
     }
 
     @Override
@@ -116,8 +116,7 @@ final class ASCIIHexFilter extends Filter
         int byteRead;
         while ((byteRead = input.read()) != -1)
         {
-            int value = (byteRead + 256) % 256;
-            encoded.write(COSHEXTable.TABLE[value]);
+            encoded.write(Hex.getBytes((byte)byteRead));
         }
         encoded.flush();
     }

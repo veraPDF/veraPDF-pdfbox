@@ -37,7 +37,6 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
-import org.apache.pdfbox.pdmodel.graphics.image.TIFFInputStream;
 import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 import org.apache.pdfbox.contentstream.PDFGraphicsStreamEngine;
 
@@ -61,7 +60,7 @@ public class ExtractImages
     private boolean directJPEG;
     private String prefix;
 
-    private Set<COSStream> seen = new HashSet<COSStream>();
+    private final Set<COSStream> seen = new HashSet<COSStream>();
     private int imageCounter = 1;
 
     private ExtractImages()
@@ -149,7 +148,8 @@ public class ExtractImages
         System.err.println("Usage: java org.apache.pdfbox.tools.ExtractImages [OPTIONS] <PDF file>\n" +
                 "  -password  <password>        Password to decrypt document\n" +
                 "  -prefix  <image-prefix>      Image prefix(default to pdf name)\n" +
-                "  -directJPEG                  Forces the direct extraction of JPEG images regardless of colorspace\n" +
+                "  -directJPEG                  Forces the direct extraction of JPEG images "
+                + "regardless of colorspace\n" +
                 "  <PDF file>                   The PDF document to use\n");
         System.exit(1);
     }
@@ -312,11 +312,7 @@ public class ExtractImages
             BufferedImage image = pdImage.getImage();
             if (image != null)
             {
-                if ("tiff".equals(suffix))
-                {
-                    TIFFInputStream.writeToOutputStream(pdImage, out);
-                }
-                else if ("jpg".equals(suffix))
+                if ("jpg".equals(suffix))
                 {
                     String colorSpaceName = pdImage.getColorSpace().getName();
                     if (directJPEG || PDDeviceGray.INSTANCE.getName().equals(colorSpaceName) ||

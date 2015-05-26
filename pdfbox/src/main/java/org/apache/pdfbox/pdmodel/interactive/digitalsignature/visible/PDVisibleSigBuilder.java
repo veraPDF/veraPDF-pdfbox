@@ -39,7 +39,7 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceDictionary;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceStream;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.PDSignature;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
-import org.apache.pdfbox.pdmodel.interactive.form.PDFieldTreeNode;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 
 /**
@@ -49,7 +49,7 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
  */
 public class PDVisibleSigBuilder implements PDFTemplateBuilder
 {
-    private PDFTemplateStructure pdfStructure;
+    private final PDFTemplateStructure pdfStructure;
     private static final Log log = LogFactory.getLog(PDVisibleSigBuilder.class);
 
     @Override
@@ -103,14 +103,14 @@ public class PDVisibleSigBuilder implements PDFTemplateBuilder
                                 String signatureName) throws IOException
     {
         PDSignature pdSignature = new PDSignature();
-        pdSignatureField.setSignature(pdSignature);
+        pdSignatureField.setValue(pdSignature);
         pdSignatureField.getWidget().setPage(page);
         page.getAnnotations().add(pdSignatureField.getWidget());
         pdSignature.setName(signatureName);
         pdSignature.setByteRange(new int[] { 0, 0, 0, 0 });
         pdSignature.setContents(new byte[4096]);
         pdfStructure.setPdSignature(pdSignature);
-        log.info("PDSignatur has been created");
+        log.info("PDSignature has been created");
     }
 
     @Override
@@ -118,8 +118,8 @@ public class PDVisibleSigBuilder implements PDFTemplateBuilder
             throws IOException
     {
         @SuppressWarnings("unchecked")
-        List<PDFieldTreeNode> acroFormFields = acroForm.getFields();
-        COSDictionary acroFormDict = acroForm.getDictionary();
+        List<PDField> acroFormFields = acroForm.getFields();
+        COSDictionary acroFormDict = acroForm.getCOSObject();
         acroForm.setSignaturesExist(true);
         acroForm.setAppendOnly(true);
         acroFormDict.setDirect(true);
@@ -294,24 +294,14 @@ public class PDVisibleSigBuilder implements PDFTemplateBuilder
                                 PDStream imageFormStream, PDRectangle formrect, AffineTransform at,
                                 PDImageXObject img) throws IOException
     {
-        // if you need text on the visible signature:
-        //
-        // PDFont font = PDTrueTypeFont.loadTTF(this.pdfStructure.getTemplate(),
-        //                                      new File("D:\\arial.ttf"));
-        // font.setFontEncoding(new WinAnsiEncoding());
-        //
-        // Map<String, PDFont> fonts = new HashMap<String, PDFont>(); fonts.put("arial", font);
-
         PDFormXObject imageForm = new PDFormXObject(imageFormStream);
         imageForm.setBBox(formrect);
         imageForm.setMatrix(at);
         imageForm.setResources(imageFormResources);
         imageForm.setFormType(1);
 
-        // imageForm.getResources().addFont(font);
-        // imageForm.getResources().setFonts(fonts);
-
         imageFormResources.getCOSObject().setDirect(true);
+
         COSName imageFormName = innerFormResource.add(imageForm, "n");
         COSName imageName = imageFormResources.add(img, "img");
         pdfStructure.setImageForm(imageForm);
@@ -373,8 +363,8 @@ public class PDVisibleSigBuilder implements PDFTemplateBuilder
     public void createWidgetDictionary(PDSignatureField signatureField,
                                        PDResources holderFormResources) throws IOException
     {
-        COSDictionary widgetDict = signatureField.getWidget().getDictionary();
-        widgetDict.setNeedToBeUpdate(true);
+        COSDictionary widgetDict = signatureField.getWidget().getCOSObject();
+        widgetDict.setNeedToBeUpdated(true);
         widgetDict.setItem(COSName.DR, holderFormResources.getCOSObject());
 
         pdfStructure.setWidgetDictionary(widgetDict);

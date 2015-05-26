@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
  * Creates the appropriate font subtype based on information in the dictionary.
  * @author Ben Litchfield
  */
-public class PDFontFactory
+public final class PDFontFactory
 {
     private static final Log LOG = LogFactory.getLog(PDFontFactory.class);
 
@@ -41,38 +41,32 @@ public class PDFontFactory
      *
      * @param dictionary a font dictionary
      * @return a PDFont instance, based on the SubType entry of the dictionary
-     * @throws IOException
+     * @throws IOException if something goes wrong
      */
     public static PDFont createFont(COSDictionary dictionary) throws IOException
     {
         COSName type = dictionary.getCOSName(COSName.TYPE, COSName.FONT);
         if (!COSName.FONT.equals(type))
         {
-            throw new IOException("Expected 'Font' dictionary but found '" + type.getName() + "'");
+            LOG.error("Expected 'Font' dictionary but found '" + type.getName() + "'");
         }
 
         COSName subType = dictionary.getCOSName(COSName.SUBTYPE);
         if (COSName.TYPE1.equals(subType))
         {
             COSBase fd = dictionary.getDictionaryObject(COSName.FONT_DESC);
-            if (fd != null && fd instanceof COSDictionary)
+            if (fd instanceof COSDictionary && ((COSDictionary) fd).containsKey(COSName.FONT_FILE3))
             {
-                if (((COSDictionary)fd).containsKey(COSName.FONT_FILE3))
-                {
-                    return new PDType1CFont(dictionary);
-                }
+                return new PDType1CFont(dictionary);
             }
             return new PDType1Font(dictionary);
         }
         else if (COSName.MM_TYPE1.equals(subType))
         {
             COSBase fd = dictionary.getDictionaryObject(COSName.FONT_DESC);
-            if (fd != null && fd instanceof COSDictionary)
+            if (fd instanceof COSDictionary && ((COSDictionary) fd).containsKey(COSName.FONT_FILE3))
             {
-                if (((COSDictionary)fd).containsKey(COSName.FONT_FILE3))
-                {
-                    return new PDType1CFont(dictionary);
-                }
+                return new PDType1CFont(dictionary);
             }
             return new PDMMType1Font(dictionary);
         }
@@ -94,7 +88,7 @@ public class PDFontFactory
         }
         else if (COSName.CID_FONT_TYPE2.equals(subType))
         {
-            throw new IllegalArgumentException("Type 0 descendant font not allowed");
+            throw new IllegalArgumentException("Type 2 descendant font not allowed");
         }
         else
         {
@@ -110,7 +104,7 @@ public class PDFontFactory
      *
      * @param dictionary descendant font dictionary
      * @return a PDCIDFont instance, based on the SubType entry of the dictionary
-     * @throws IOException
+     * @throws IOException if something goes wrong
      */
     static PDCIDFont createDescendantFont(COSDictionary dictionary, PDType0Font parent)
             throws IOException
@@ -137,7 +131,7 @@ public class PDFontFactory
     }
 
     /**
-     * Create a default font
+     * Create a default font.
      * 
      * @return a default font
      * @throws IOException if something goes wrong
@@ -146,7 +140,7 @@ public class PDFontFactory
     {
         COSDictionary dict = new COSDictionary();
         dict.setItem(COSName.TYPE, COSName.FONT);
-        dict.setItem (COSName.SUBTYPE, COSName.TRUE_TYPE);
+        dict.setItem(COSName.SUBTYPE, COSName.TRUE_TYPE);
         dict.setString(COSName.BASE_FONT, "Arial");
         return createFont(dict);
     }

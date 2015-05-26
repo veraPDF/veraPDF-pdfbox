@@ -23,7 +23,6 @@ import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSFloat;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNumber;
 import org.apache.pdfbox.util.Matrix;
 
 /**
@@ -56,19 +55,16 @@ public class PDShadingType1 extends PDShading
      */
     public Matrix getMatrix()
     {
-        Matrix matrix = null;
-        COSArray array = (COSArray) getCOSDictionary().getDictionaryObject(COSName.MATRIX);
+        COSArray array = (COSArray) getCOSObject().getDictionaryObject(COSName.MATRIX);
         if (array != null)
         {
-            matrix = new Matrix();
-            matrix.setValue(0, 0, ((COSNumber) array.get(0)).floatValue());
-            matrix.setValue(0, 1, ((COSNumber) array.get(1)).floatValue());
-            matrix.setValue(1, 0, ((COSNumber) array.get(2)).floatValue());
-            matrix.setValue(1, 1, ((COSNumber) array.get(3)).floatValue());
-            matrix.setValue(2, 0, ((COSNumber) array.get(4)).floatValue());
-            matrix.setValue(2, 1, ((COSNumber) array.get(5)).floatValue());
+            return new Matrix(array);
         }
-        return matrix;
+        else
+        {
+            // identity matrix is the default
+            return new Matrix();
+        }
     }
 
     /**
@@ -85,7 +81,7 @@ public class PDShadingType1 extends PDShading
         {
             matrix.add(new COSFloat((float) v));
         }
-        getCOSDictionary().setItem(COSName.MATRIX, matrix);
+        getCOSObject().setItem(COSName.MATRIX, matrix);
     }
 
     /**
@@ -97,7 +93,7 @@ public class PDShadingType1 extends PDShading
     {
         if (domain == null)
         {
-            domain = (COSArray) getCOSDictionary().getDictionaryObject(COSName.DOMAIN);
+            domain = (COSArray) getCOSObject().getDictionaryObject(COSName.DOMAIN);
         }
         return domain;
     }
@@ -110,7 +106,7 @@ public class PDShadingType1 extends PDShading
     public void setDomain(COSArray newDomain)
     {
         domain = newDomain;
-        getCOSDictionary().setItem(COSName.DOMAIN, newDomain);
+        getCOSObject().setItem(COSName.DOMAIN, newDomain);
     }
 
     @Override

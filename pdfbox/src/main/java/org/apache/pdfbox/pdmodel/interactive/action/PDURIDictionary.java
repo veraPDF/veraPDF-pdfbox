@@ -16,20 +16,17 @@
  */
 package org.apache.pdfbox.pdmodel.interactive.action;
 
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 
 /**
  * This is the implementation of an URI dictionary.
  *
- * @version $Revision: 1.0 $
- *
  */
 public class PDURIDictionary implements COSObjectable
 {
 
-    private COSDictionary uriDictionary;
+    private final COSDictionary uriDictionary;
 
     /**
      * Constructor.
@@ -51,18 +48,11 @@ public class PDURIDictionary implements COSObjectable
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public COSBase getCOSObject()
-    {
-        return this.uriDictionary;
-    }
-
-    /**
      * Returns the corresponding dictionary.
      * @return the dictionary
      */
-    public COSDictionary getDictionary()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return this.uriDictionary;
     }
@@ -79,7 +69,7 @@ public class PDURIDictionary implements COSObjectable
      */
     public String getBase()
     {
-        return this.getDictionary().getString("Base");
+        return this.getCOSObject().getString("Base");
     }
 
     /**
@@ -94,7 +84,7 @@ public class PDURIDictionary implements COSObjectable
      */
     public void setBase(String base)
     {
-        this.getDictionary().setString("Base", base);
+        this.getCOSObject().setString("Base", base);
     }
 
 }

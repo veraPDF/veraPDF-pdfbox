@@ -21,13 +21,14 @@
 
 package org.apache.pdfbox.preflight.annotation;
 
-import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_ANNOT_FORBIDDEN_COLOR;
-
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationSquareCircle;
 import org.apache.pdfbox.preflight.PreflightContext;
 import org.apache.pdfbox.preflight.ValidationResult.ValidationError;
 import org.apache.pdfbox.preflight.exception.ValidationException;
+
+
+import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_ANNOT_FORBIDDEN_COLOR;
 
 /**
  * Validation class for the Square/Circle Annotation
@@ -47,7 +48,7 @@ public class SquareCircleAnnotationValidator extends AnnotationValidator
     }
 
     /**
-     * In addition of the AnnotationValidator.validate() method, this method executes the the checkIColors method.
+     * In addition of the AnnotationValidator.validate() method, this method executes the checkIColors method.
      * 
      * @see AnnotationValidator#validate()
      */
@@ -67,14 +68,11 @@ public class SquareCircleAnnotationValidator extends AnnotationValidator
      */
     protected boolean checkIColors() throws ValidationException
     {
-        if (this.pdSquareCircle.getInteriorColour() != null)
+        if (this.pdSquareCircle.getInteriorColor() != null && !searchRGBProfile())
         {
-            if (!searchRGBProfile())
-            {
-                ctx.addValidationError(new ValidationError(ERROR_ANNOT_FORBIDDEN_COLOR,
-                        "Annotation uses a Color profile which isn't the same than the profile contained by the OutputIntent"));
-                return false;
-            }
+            ctx.addValidationError(new ValidationError(ERROR_ANNOT_FORBIDDEN_COLOR,
+                    "Annotation uses a Color profile which isn't the same than the profile contained by the OutputIntent"));
+            return false;
         }
         return true;
     }

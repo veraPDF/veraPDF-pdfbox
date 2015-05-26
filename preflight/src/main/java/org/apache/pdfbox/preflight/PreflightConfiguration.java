@@ -44,11 +44,12 @@ import org.apache.pdfbox.preflight.process.ValidationProcess;
 import org.apache.pdfbox.preflight.process.XRefValidationProcess;
 import org.apache.pdfbox.preflight.process.reflect.ActionsValidationProcess;
 import org.apache.pdfbox.preflight.process.reflect.AnnotationValidationProcess;
+import org.apache.pdfbox.preflight.process.reflect.DestinationValidationProcess;
 import org.apache.pdfbox.preflight.process.reflect.ExtGStateValidationProcess;
 import org.apache.pdfbox.preflight.process.reflect.FontValidationProcess;
 import org.apache.pdfbox.preflight.process.reflect.GraphicObjectPageValidationProcess;
 import org.apache.pdfbox.preflight.process.reflect.ResourcesValidationProcess;
-import org.apache.pdfbox.preflight.process.reflect.ShaddingPatternValidationProcess;
+import org.apache.pdfbox.preflight.process.reflect.ShadingPatternValidationProcess;
 import org.apache.pdfbox.preflight.process.reflect.SinglePageValidationProcess;
 import org.apache.pdfbox.preflight.process.reflect.TilingPatternValidationProcess;
 
@@ -74,8 +75,9 @@ public class PreflightConfiguration
     public static final String GRAPHIC_PROCESS = "graphic-process";
     public static final String FONT_PROCESS = "font-process";
     public static final String EXTGSTATE_PROCESS = "extgstate-process";
-    public static final String SHADDING_PATTERN_PROCESS = "shadding-pattern-process";
+    public static final String SHADING_PATTERN_PROCESS = "shadding-pattern-process";
     public static final String TILING_PATTERN_PROCESS = "tiling-pattern-process";
+    public static final String DESTINATION_PROCESS = "destination-process";
 
     /*
      * TODO other configuration option should be possible : - skip some validation process ? - ???
@@ -92,9 +94,9 @@ public class PreflightConfiguration
      */
     private boolean lazyValidation = false;
 
-    private Map<String, Class<? extends ValidationProcess>> processes = new LinkedHashMap<String, Class<? extends ValidationProcess>>();
+    private final Map<String, Class<? extends ValidationProcess>> processes = new LinkedHashMap<String, Class<? extends ValidationProcess>>();
     // TODO use annotation to mark these validation processes as inner page validation and factorize the access method
-    private Map<String, Class<? extends ValidationProcess>> innerProcesses = new LinkedHashMap<String, Class<? extends ValidationProcess>>();
+    private final Map<String, Class<? extends ValidationProcess>> innerProcesses = new LinkedHashMap<String, Class<? extends ValidationProcess>>();
 
     /**
      * Define the AnnotationFactory used by ValidationProcess
@@ -128,13 +130,14 @@ public class PreflightConfiguration
 
         configuration.replacePageProcess(PAGE_PROCESS, SinglePageValidationProcess.class);
         configuration.replacePageProcess(EXTGSTATE_PROCESS, ExtGStateValidationProcess.class);
-        configuration.replacePageProcess(SHADDING_PATTERN_PROCESS, ShaddingPatternValidationProcess.class);
+        configuration.replacePageProcess(SHADING_PATTERN_PROCESS, ShadingPatternValidationProcess.class);
         configuration.replacePageProcess(GRAPHIC_PROCESS, GraphicObjectPageValidationProcess.class);
         configuration.replacePageProcess(TILING_PATTERN_PROCESS, TilingPatternValidationProcess.class);
         configuration.replacePageProcess(RESOURCES_PROCESS, ResourcesValidationProcess.class);
         configuration.replacePageProcess(FONT_PROCESS, FontValidationProcess.class);
         configuration.replacePageProcess(ACTIONS_PROCESS, ActionsValidationProcess.class);
         configuration.replacePageProcess(ANNOTATIONS_PROCESS, AnnotationValidationProcess.class);
+        configuration.replacePageProcess(DESTINATION_PROCESS, DestinationValidationProcess.class);
 
         configuration.actionFact = new ActionManagerFactory();
         configuration.annotFact = new PDFAbAnnotationFactory();
@@ -149,14 +152,15 @@ public class PreflightConfiguration
 
     /**
      * Return the validation process linked with the given name
-     * 
+     *
      * @param processName
-     * @return an instance of validationProcess, null if it doesn't exist and if the errorOnMissingProcess is false
-     * @throws MissingValidationProcessException
-     *             if the Process doesn't exist (errorOnMissingProcess is true)
+     * @return an instance of validationProcess, null if it doesn't exist and if
+     * the errorOnMissingProcess is false.
+     * @throws MissingValidationProcessException if the Process doesn't exist
+     * (errorOnMissingProcess is true).
+     * @throws ValidationException if the process instance can't be created.
      */
-    public ValidationProcess getInstanceOfProcess(String processName) throws MissingValidationProcessException,
-            ValidationException
+    public ValidationProcess getInstanceOfProcess(String processName) throws ValidationException
     {
         Class<? extends ValidationProcess> clazz = null;
         if (processes.containsKey(processName))
@@ -188,7 +192,6 @@ public class PreflightConfiguration
         {
             throw new ValidationException(processName + " can't be created", e);
         }
-
     }
 
     public void replaceProcess(String processName, Class<? extends ValidationProcess> process)
@@ -215,10 +218,12 @@ public class PreflightConfiguration
 
     public void replacePageProcess(String processName, Class<? extends ValidationProcess> process)
     {
-        if (process == null) {
+        if (process == null)
+        {
             removePageProcess(processName);    
         }
-        else {
+        else
+        {
             this.innerProcesses.put(processName, process);
         }
     }

@@ -17,7 +17,6 @@
 package org.apache.pdfbox.pdmodel.interactive.measurement;
 
 import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
@@ -26,8 +25,6 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 /**
  * This class represents a viewport dictionary.
  * 
- * @version $Revision: 1.0 $
- *
  */
 public class PDViewportDictionary implements COSObjectable
 {
@@ -58,19 +55,12 @@ public class PDViewportDictionary implements COSObjectable
     }
 
     /**
-     * {@inheritDoc} 
-     */
-    public COSBase getCOSObject()
-    {
-        return this.viewportDictionary;
-    }
-
-    /**
      * This will return the corresponding dictionary.
      * 
      * @return the viewport dictionary
      */
-    public COSDictionary getDictionary()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return this.viewportDictionary;
     }
@@ -93,7 +83,7 @@ public class PDViewportDictionary implements COSObjectable
      */
     public PDRectangle getBBox()
     {
-        COSArray bbox = (COSArray)this.getDictionary().getDictionaryObject("BBox");
+        COSArray bbox = (COSArray)this.getCOSObject().getDictionaryObject("BBox");
         if (bbox != null)
         {
             return new PDRectangle(bbox);
@@ -108,7 +98,7 @@ public class PDViewportDictionary implements COSObjectable
      */
     public void setBBox(PDRectangle rectangle)
     {
-        this.getDictionary().setItem("BBox", rectangle);
+        this.getCOSObject().setItem("BBox", rectangle);
     }
 
     /**
@@ -118,7 +108,7 @@ public class PDViewportDictionary implements COSObjectable
      */
     public String getName()
     {
-        return this.getDictionary().getNameAsString(COSName.NAME);
+        return this.getCOSObject().getNameAsString(COSName.NAME);
     }
 
    /**
@@ -128,7 +118,7 @@ public class PDViewportDictionary implements COSObjectable
     */
     public void setName(String name)
     {
-        this.getDictionary().setName(COSName.NAME, name);
+        this.getCOSObject().setName(COSName.NAME, name);
     }
 
     /**
@@ -138,7 +128,7 @@ public class PDViewportDictionary implements COSObjectable
      */
     public PDMeasureDictionary getMeasure()
     {
-        COSDictionary measure = (COSDictionary)this.getDictionary().getDictionaryObject("Measure");
+        COSDictionary measure = (COSDictionary)this.getCOSObject().getDictionaryObject("Measure");
         if (measure != null)
         {
             return new PDMeasureDictionary(measure);
@@ -153,7 +143,7 @@ public class PDViewportDictionary implements COSObjectable
      */
     public void setMeasure(PDMeasureDictionary measure)
     {
-        this.getDictionary().setItem("Measure", measure);
+        this.getCOSObject().setItem("Measure", measure);
     }
 
 }

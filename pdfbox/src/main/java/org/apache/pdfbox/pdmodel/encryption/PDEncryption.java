@@ -75,7 +75,7 @@ public class PDEncryption
      */
     public static final int DEFAULT_VERSION = VERSION0_UNDOCUMENTED_UNSUPPORTED;
 
-    private COSDictionary dictionary;
+    private final COSDictionary dictionary;
     private SecurityHandler securityHandler;
 
     /**
@@ -93,7 +93,7 @@ public class PDEncryption
     public PDEncryption(COSDictionary dictionary)
     {
         this.dictionary = dictionary;
-        securityHandler = SecurityHandlerFactory.INSTANCE.newSecurityHandler(getFilter());
+        securityHandler = SecurityHandlerFactory.INSTANCE.newSecurityHandlerForFilter(getFilter());
     }
 
     /**
@@ -154,7 +154,7 @@ public class PDEncryption
      *
      * @return The filter name contained in this encryption dictionary.
      */
-    public String getFilter()
+    public final String getFilter()
     {
         return dictionary.getNameAsString( COSName.FILTER );
     }
@@ -258,9 +258,7 @@ public class PDEncryption
      */
     public void setOwnerKey(byte[] o) throws IOException
     {
-        COSString owner = new COSString();
-        owner.append( o );
-        dictionary.setItem(COSName.O, owner);
+        dictionary.setItem(COSName.O, new COSString(o));
     }
 
     /**
@@ -290,9 +288,7 @@ public class PDEncryption
      */
     public void setUserKey(byte[] u) throws IOException
     {
-        COSString user = new COSString();
-        user.append( u );
-        dictionary.setItem(COSName.U, user);
+        dictionary.setItem(COSName.U, new COSString(u));
     }
 
     /**
@@ -322,9 +318,7 @@ public class PDEncryption
      */
     public void setOwnerEncryptionKey(byte[] oe) throws IOException
     {
-        COSString ownerEncryptionKey = new COSString();
-        ownerEncryptionKey.append(oe);
-        dictionary.setItem( COSName.OE, ownerEncryptionKey );
+        dictionary.setItem( COSName.OE, new COSString(oe) );
     }
 
     /**
@@ -354,9 +348,7 @@ public class PDEncryption
      */
     public void setUserEncryptionKey(byte[] ue) throws IOException
     {
-        COSString userEncryptionKey = new COSString();
-        userEncryptionKey.append(ue);
-        dictionary.setItem( COSName.UE, userEncryptionKey );
+        dictionary.setItem( COSName.UE, new COSString(ue) );
     }
 
     /**
@@ -409,7 +401,8 @@ public class PDEncryption
         
         COSBase value = dictionary.getDictionaryObject(COSName.ENCRYPT_META_DATA);
         
-        if (value instanceof COSBoolean) {
+        if (value instanceof COSBoolean)
+        {
             encryptMetaData = ((COSBoolean)value).getValue();
         }
         
@@ -427,9 +420,7 @@ public class PDEncryption
         COSArray array = new COSArray();
         for (byte[] recipient : recipients)
         {
-            COSString recip = new COSString();
-            recip.append(recipient);
-            recip.setForceLiteralForm(true);
+            COSString recip = new COSString(recipient);
             array.add(recip);
         }
         dictionary.setItem(COSName.RECIPIENTS, array);
@@ -579,9 +570,7 @@ public class PDEncryption
      */
     public void setPerms(byte[] perms) throws IOException
     {
-        COSString user = new COSString();
-        user.append( perms );
-        dictionary.setItem( COSName.PERMS, user );
+        dictionary.setItem( COSName.PERMS, new COSString(perms) );
     }
 
     /**
@@ -594,14 +583,21 @@ public class PDEncryption
     public byte[] getPerms() throws IOException
     {
         byte[] perms = null;
-        COSString cos_perms = (COSString)dictionary.getDictionaryObject( COSName.PERMS );
-        if( cos_perms != null )
+        COSString permsCosString = (COSString)dictionary.getDictionaryObject( COSName.PERMS );
+        if( permsCosString != null )
         {
-            perms = cos_perms.getBytes();
+            perms = permsCosString.getBytes();
         }
         return perms;
     }
 
+    /**
+     * remove CF, StmF, and StrF entries. This is to be called if V is not 4 or 5.
+     */
+    public void removeV45filters()
+    {
+        dictionary.setItem(COSName.CF, null);
+        dictionary.setItem(COSName.STM_F, null);
+        dictionary.setItem(COSName.STR_F, null);
+    }
 }
-
-    

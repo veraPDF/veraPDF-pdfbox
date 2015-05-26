@@ -17,8 +17,6 @@
 package org.apache.pdfbox.pdmodel.graphics.color;
 
 import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSFloat;
 import org.apache.pdfbox.cos.COSName;
 
@@ -31,9 +29,8 @@ import org.apache.pdfbox.util.Matrix;
  * @author Ben Litchfield
  * @author John Hewson
  */
-public class PDCalRGB extends PDCIEBasedColorSpace
+public class PDCalRGB extends PDCIEDictionaryBasedColorSpace
 {
-    protected COSDictionary dictionary;
     private final PDColor initialColor = new PDColor(new float[] { 0, 0, 0 }, this);
 
     /**
@@ -41,10 +38,7 @@ public class PDCalRGB extends PDCIEBasedColorSpace
      */
     public PDCalRGB()
     {
-        array = new COSArray();
-        dictionary = new COSDictionary();
-        array.add(COSName.CALRGB);
-        array.add(dictionary);
+        super(COSName.CALRGB);
     }
 
     /**
@@ -53,8 +47,7 @@ public class PDCalRGB extends PDCIEBasedColorSpace
      */
     public PDCalRGB(COSArray rgb)
     {
-        array = rgb;
-        dictionary = (COSDictionary)array.getObject(1);
+        super(rgb);
     }
 
     @Override
@@ -84,110 +77,77 @@ public class PDCalRGB extends PDCIEBasedColorSpace
     @Override
     public float[] toRGB(float[] value)
     {
-        // this is a hack, we simply skip CIE calibration of the RGB value
-        return new float[] { value[0], value[1], value[2] };
-    }
-
-    /**
-     * Returns the whitepoint tristimulus.
-     * A default of 1,1,1 will be returned if the PDF does not have any values yet.
-     * @return the whitepoint tristimulus.
-     */
-    public final PDTristimulus getWhitepoint()
-    {
-        COSArray wp = (COSArray)dictionary.getDictionaryObject(COSName.WHITE_POINT);
-        if(wp == null)
+        if (wpX == 1 && wpY == 1 && wpZ == 1)
         {
-            wp = new COSArray();
-            wp.add(new COSFloat(1.0f));
-            wp.add(new COSFloat(1.0f));
-            wp.add(new COSFloat(1.0f));
-            dictionary.setItem(COSName.WHITE_POINT, wp);
-        }
-        return new PDTristimulus(wp);
-    }
+            float a = value[0];
+            float b = value[1];
+            float c = value[2];
 
-    /**
-     * Returns the blackpoint tristimulus.
-     * A default of 0,0,0 will be returned if the PDF does not have any values yet.
-     * @return the blackpoint tristimulus
-     */
-    public final PDTristimulus getBlackPoint()
-    {
-        COSArray bp = (COSArray)dictionary.getDictionaryObject(COSName.BLACK_POINT);
-        if(bp == null)
+            PDGamma gamma = getGamma();
+            float powAR = (float)Math.pow(a, gamma.getR());
+            float powBG = (float)Math.pow(b, gamma.getG());
+            float powCB = (float)Math.pow(c, gamma.getB());
+
+            float[] matrix = getMatrix();
+            float mXA = matrix[0];
+            float mYA = matrix[1];
+            float mZA = matrix[2];
+            float mXB = matrix[3];
+            float mYB = matrix[4];
+            float mZB = matrix[5];
+            float mXC = matrix[6];
+            float mYC = matrix[7];
+            float mZC = matrix[8];
+
+            float x = mXA * powAR + mXB * powBG + mXC * powCB;
+            float y = mYA * powAR + mYB * powBG + mYC * powCB;
+            float z = mZA * powAR + mZB * powBG + mZC * powCB;
+            return convXYZtoRGB(x, y, z);
+        }
+        else
         {
-            bp = new COSArray();
-            bp.add(new COSFloat(0.0f));
-            bp.add(new COSFloat(0.0f));
-            bp.add(new COSFloat(0.0f));
-            dictionary.setItem(COSName.BLACK_POINT, bp);
+            // this is a hack, we simply skip CIE calibration of the RGB value
+            // this works only with whitepoint D65 (0.9505 1.0 1.089)
+            // see PDFBOX-2553
+            return new float[] { value[0], value[1], value[2] };
         }
-        return new PDTristimulus(bp);
     }
 
     /**
-     * Returns the the gamma value.
+     * Returns the gamma value.
      * If none is present then the default of 1,1,1 will be returned.
      * @return the gamma value
      */
     public final PDGamma getGamma()
     {
-        COSArray gamma = (COSArray)dictionary.getDictionaryObject(COSName.GAMMA);
-        if(gamma == null)
+        COSArray gammaArray = (COSArray) dictionary.getDictionaryObject(COSName.GAMMA);
+        if (gammaArray == null)
         {
-            gamma = new COSArray();
-            gamma.add(new COSFloat(1.0f));
-            gamma.add(new COSFloat(1.0f));
-            gamma.add(new COSFloat(1.0f));
-            dictionary.setItem(COSName.GAMMA, gamma);
+            gammaArray = new COSArray();
+            gammaArray.add(new COSFloat(1.0f));
+            gammaArray.add(new COSFloat(1.0f));
+            gammaArray.add(new COSFloat(1.0f));
+            dictionary.setItem(COSName.GAMMA, gammaArray);
         }
-        return new PDGamma(gamma);
+        return new PDGamma(gammaArray);
     }
 
     /**
-     * Returns the linear interpretation matrix.
+     * Returns the linear interpretation matrix, which is an array of nine numbers.
      * If the underlying dictionary contains null then the identity matrix will be returned.
      * @return the linear interpretation matrix
      */
-    public final Matrix getGammaMatrix()
+    public final float[] getMatrix()
     {
         COSArray matrix = (COSArray)dictionary.getDictionaryObject(COSName.MATRIX);
-        if(matrix == null)
+        if (matrix == null)
         {
-            return new Matrix();
+            return new float[] {  1, 0, 0, 0, 1, 0, 0, 0, 1 };
         }
         else
         {
-           return new Matrix(matrix);
+           return matrix.toFloatArray();
         }
-    }
-
-    /**
-     * Sets the whitepoint tristimulus
-     * @param whitepoint the whitepoint tristimulus, which may not be null
-     */
-    public final void setWhitepoint(PDTristimulus whitepoint)
-    {
-        COSBase wpArray = whitepoint.getCOSObject();
-        if(wpArray != null)
-        {
-            dictionary.setItem(COSName.WHITE_POINT, wpArray);
-        }
-    }
-
-    /**
-     * Sets the blackpoint tristimulus
-     * @param blackpoint the blackpoint tristimulus, which may not be null
-     */
-    public final void setBlackPoint(PDTristimulus blackpoint)
-    {
-        COSBase bpArray = null;
-        if(blackpoint != null)
-        {
-            bpArray = blackpoint.getCOSObject();
-        }
-        dictionary.setItem(COSName.BLACK_POINT, bpArray);
     }
 
     /**
@@ -196,12 +156,12 @@ public class PDCalRGB extends PDCIEBasedColorSpace
      */
     public final void setGamma(PDGamma gamma)
     {
-        COSArray array = null;
+        COSArray gammaArray = null;
         if(gamma != null)
         {
-            array = gamma.getCOSArray();
+            gammaArray = gamma.getCOSArray();
         }
-        dictionary.setItem(COSName.GAMMA, array);
+        dictionary.setItem(COSName.GAMMA, gammaArray);
     }
 
     /**
@@ -209,7 +169,7 @@ public class PDCalRGB extends PDCIEBasedColorSpace
      * Passing in null will clear the matrix.
      * @param matrix the new linear interpretation matrix, or null
      */
-    public final void setGammaMatrix(Matrix matrix)
+    public final void setMatrix(Matrix matrix)
     {
         COSArray matrixArray = null;
         if(matrix != null)

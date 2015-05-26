@@ -22,12 +22,11 @@ import java.util.Stack;
 /**
  * Represents an instruction sequence, a combination of values, operands and nested procedures.
  *
- * @version $Revision$
  */
 public class InstructionSequence
 {
 
-    private List<Object> instructions = new java.util.ArrayList<Object>();
+    private final List<Object> instructions = new java.util.ArrayList<Object>();
 
     /**
      * Add a name (ex. an operator)

@@ -20,9 +20,8 @@ package org.apache.fontbox.cff;
  * This is specialized CFFEncoding. It's used if the EncodingId of a font is set to 1.
  * 
  * @author Villu Ruusmann
- * @version $Revision$
  */
-public class CFFExpertEncoding extends CFFEncoding
+public final class CFFExpertEncoding extends CFFEncoding
 {
 
     private CFFExpertEncoding()

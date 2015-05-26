@@ -23,9 +23,8 @@ import java.util.Map;
 /**
  * This class represents a CFF operator.
  * @author Villu Ruusmann
- * @version $Revision: 1.0 $
  */
-public class CFFOperator
+public final class CFFOperator
 {
 
     private Key operatorKey = null;
@@ -68,6 +67,7 @@ public class CFFOperator
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString()
     {
         return getName();
@@ -76,6 +76,7 @@ public class CFFOperator
     /**
      * {@inheritDoc}
      */
+    @Override
     public int hashCode()
     {
         return getKey().hashCode();
@@ -84,6 +85,7 @@ public class CFFOperator
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals(Object object)
     {
         if (object instanceof CFFOperator)
@@ -170,6 +172,7 @@ public class CFFOperator
         /**
          * {@inheritDoc}
          */
+        @Override
         public String toString()
         {
             return Arrays.toString(getValue());
@@ -178,6 +181,7 @@ public class CFFOperator
         /**
          * {@inheritDoc}
          */
+        @Override
         public int hashCode()
         {
             return Arrays.hashCode(getValue());
@@ -186,6 +190,7 @@ public class CFFOperator
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean equals(Object object)
         {
             if (object instanceof Key)

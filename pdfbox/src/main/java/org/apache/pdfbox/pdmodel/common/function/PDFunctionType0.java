@@ -31,8 +31,8 @@ import org.apache.pdfbox.pdmodel.common.PDRange;
 /**
  * This class represents a type 0 function in a PDF document.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @author Tilman Hausherr <tilman@snafu.de>
+ * @author Ben Litchfield
+ * @author Tilman Hausherr
  * 
  */
 public class PDFunctionType0 extends PDFunction
@@ -94,7 +94,7 @@ public class PDFunctionType0 extends PDFunction
     {
         if (size == null)
         {
-            size = (COSArray) getDictionary().getDictionaryObject(COSName.SIZE);
+            size = (COSArray) getCOSObject().getDictionaryObject(COSName.SIZE);
         }
         return size;
     }
@@ -154,7 +154,7 @@ public class PDFunctionType0 extends PDFunction
      */
     public int getBitsPerSample()
     {
-        return getDictionary().getInt(COSName.BITS_PER_SAMPLE);
+        return getCOSObject().getInt(COSName.BITS_PER_SAMPLE);
     }
 
     /**
@@ -166,7 +166,7 @@ public class PDFunctionType0 extends PDFunction
      */
     public int getOrder()
     {
-        return getDictionary().getInt(COSName.ORDER, 1);
+        return getCOSObject().getInt(COSName.ORDER, 1);
     }
 
     /**
@@ -177,7 +177,7 @@ public class PDFunctionType0 extends PDFunction
      */
     public void setBitsPerSample(int bps)
     {
-        getDictionary().setInt(COSName.BITS_PER_SAMPLE, bps);
+        getCOSObject().setInt(COSName.BITS_PER_SAMPLE, bps);
     }
     
     /**
@@ -189,7 +189,7 @@ public class PDFunctionType0 extends PDFunction
     {
         if (encode == null)
         {
-            encode = (COSArray) getDictionary().getDictionaryObject(COSName.ENCODE);
+            encode = (COSArray) getCOSObject().getDictionaryObject(COSName.ENCODE);
             // the default value is [0 (size[0]-1) 0 (size[1]-1) ...]
             if (encode == null)
             {
@@ -215,7 +215,7 @@ public class PDFunctionType0 extends PDFunction
     {
         if (decode == null)
         {
-            decode = (COSArray) getDictionary().getDictionaryObject(COSName.DECODE);
+            decode = (COSArray) getCOSObject().getDictionaryObject(COSName.DECODE);
             // if decode is null, the default values are the range values
             if (decode == null)
             {
@@ -251,7 +251,7 @@ public class PDFunctionType0 extends PDFunction
     public void setEncodeValues(COSArray encodeValues)
     {
         encode = encodeValues;
-        getDictionary().setItem(COSName.ENCODE, encodeValues);
+        getCOSObject().setItem(COSName.ENCODE, encodeValues);
     }
 
     /**
@@ -280,7 +280,7 @@ public class PDFunctionType0 extends PDFunction
     public void setDecodeValues(COSArray decodeValues)
     {
         decode = decodeValues;
-        getDictionary().setItem(COSName.DECODE, decodeValues);
+        getCOSObject().setItem(COSName.DECODE, decodeValues);
     }
     
     /**
@@ -325,9 +325,12 @@ public class PDFunctionType0 extends PDFunction
      */
     class Rinterpol
     {
-        final float[] in; // coordinate that is to be interpolated
-        final int[] inPrev; // coordinate of the "ceil" point
-        final int[] inNext; // coordinate of the "floor" point
+        // coordinate that is to be interpolated
+        final float[] in;
+        // coordinate of the "ceil" point
+        final int[] inPrev;
+        // coordinate of the "floor" point
+        final int[] inNext;
         final int numberOfInputValues;
         final int numberOfOutputValues = getNumberOfOutputParameters();
 

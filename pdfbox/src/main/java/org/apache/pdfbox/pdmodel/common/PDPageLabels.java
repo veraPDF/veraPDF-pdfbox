@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
@@ -36,14 +35,12 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 /**
  * Represents the page label dictionary of a document.
  * 
- * @author <a href="mailto:igor.podolskiy@ievvwi.uni-stuttgart.de">Igor
- *         Podolskiy</a>
- * @version $Revision$
+ * @author Igor Podolskiy
  */
 public class PDPageLabels implements COSObjectable
 {
 
-    private SortedMap<Integer, PDPageLabelRange> labels;
+    private Map<Integer, PDPageLabelRange> labels;
 
     private PDDocument doc;
 
@@ -161,15 +158,21 @@ public class PDPageLabels implements COSObjectable
      *            page label range.
      * @param item
      *            the page label item to set.
+     * @throws IllegalArgumentException if the startPage parameter is &lt; 0.
      */
     public void setLabelItem(int startPage, PDPageLabelRange item)
     {
+        if (startPage < 0)
+        {
+            throw new IllegalArgumentException("startPage parameter of setLabelItem may not be < 0");
+        }
         labels.put(startPage, item);
     }
     
     /**
      * {@inheritDoc} 
      */
+    @Override
     public COSBase getCOSObject()
     {
         COSDictionary dict = new COSDictionary();
@@ -203,6 +206,7 @@ public class PDPageLabels implements COSObjectable
             new HashMap<String, Integer>(doc.getNumberOfPages());
         computeLabels(new LabelHandler()
         {
+            @Override
             public void newLabel(int pageIndex, String label)
             {
                 labelMap.put(label, pageIndex);
@@ -223,6 +227,7 @@ public class PDPageLabels implements COSObjectable
         final String[] map = new String[doc.getNumberOfPages()];
         computeLabels(new LabelHandler()
         {
+            @Override
             public void newLabel(int pageIndex, String label)
             {
                 if(pageIndex < doc.getNumberOfPages())
@@ -239,9 +244,9 @@ public class PDPageLabels implements COSObjectable
      * 
      * @author Igor Podolskiy
      */
-    private static interface LabelHandler
+    private interface LabelHandler
     {
-        public void newLabel(int pageIndex, String label);
+        void newLabel(int pageIndex, String label);
     }
 
     private void computeLabels(LabelHandler handler)
@@ -284,8 +289,8 @@ public class PDPageLabels implements COSObjectable
      */
     private static class LabelGenerator implements Iterator<String>
     {
-        private PDPageLabelRange labelInfo;
-        private int numPages;
+        private final PDPageLabelRange labelInfo;
+        private final int numPages;
         private int currentPage;
 
         LabelGenerator(PDPageLabelRange label, int pages)
@@ -295,11 +300,13 @@ public class PDPageLabels implements COSObjectable
             this.currentPage = 0;
         }
 
+        @Override
         public boolean hasNext()
         {
             return currentPage < numPages;
         }
 
+        @Override
         public String next()
         {
             if (!hasNext())
@@ -405,6 +412,7 @@ public class PDPageLabels implements COSObjectable
             return buf.toString();
         }
 
+        @Override
         public void remove()
         {
             // This is a generator, no removing allowed.

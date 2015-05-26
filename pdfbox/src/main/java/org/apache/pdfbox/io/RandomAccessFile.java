@@ -25,12 +25,12 @@ import java.io.IOException;
  * An interface to allow temp PDF data to be stored in a scratch
  * file on the disk to reduce memory consumption.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.2 $
+ * @author Ben Litchfield
  */
 public class RandomAccessFile implements RandomAccess, Closeable
 {
-    private java.io.RandomAccessFile ras;
+    private final java.io.RandomAccessFile ras;
+    private boolean isClosed;
 
     /**
      * Constructor.
@@ -51,6 +51,17 @@ public class RandomAccessFile implements RandomAccess, Closeable
     public void close() throws IOException
     {
         ras.close();
+        isClosed = true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clear() throws IOException
+    {
+        ras.seek(0);
+        ras.setLength(0);
     }
 
     /**
@@ -66,10 +77,11 @@ public class RandomAccessFile implements RandomAccess, Closeable
      * {@inheritDoc}
      */
     @Override
-    public long getPosition() throws IOException {
+    public long getPosition() throws IOException
+    {
         return ras.getFilePointer();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -95,6 +107,12 @@ public class RandomAccessFile implements RandomAccess, Closeable
     public long length() throws IOException
     {
         return ras.length();
+    }
+
+    @Override
+    public boolean isClosed()
+    {
+        return isClosed;
     }
 
     /**

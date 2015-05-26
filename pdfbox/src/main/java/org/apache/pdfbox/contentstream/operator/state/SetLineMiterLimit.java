@@ -28,7 +28,6 @@ import java.io.IOException;
 /**
  * M: Set miter limit.
  *
- * @author Andreas Lehmkühler
  */
 public class SetLineMiterLimit extends OperatorProcessor
 {

@@ -23,6 +23,7 @@ import java.awt.image.ColorModel;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
 import org.apache.commons.logging.Log;
@@ -49,24 +50,25 @@ class Type4ShadingContext extends GouraudShadingContext
      * @param shading the shading type to be used
      * @param cm the color model to be used
      * @param xform transformation for user to device space
-     * @param ctm current transformation matrix
+     * @param matrix the pattern matrix concatenated with that of the parent content stream
      */
-    public Type4ShadingContext(PDShadingType4 shading, ColorModel cm, AffineTransform xform,
-            Matrix ctm, Rectangle dBounds) throws IOException
+    Type4ShadingContext(PDShadingType4 shading, ColorModel cm, AffineTransform xform,
+                               Matrix matrix, Rectangle deviceBounds) throws IOException
     {
-        super(shading, cm, xform, ctm, dBounds);
+        super(shading, cm, xform, matrix);
         LOG.debug("Type4ShadingContext");
 
         bitsPerFlag = shading.getBitsPerFlag();
-        LOG.debug("bitsPerFlag: " + bitsPerFlag); //TODO handle cases where bitperflag isn't 8
-        triangleList = getTriangleList(xform, ctm);
-        pixelTable = calcPixelTable();
+        //TODO handle cases where bitperflag isn't 8
+        LOG.debug("bitsPerFlag: " + bitsPerFlag);
+        setTriangleList(collectTriangles(shading, xform, matrix));
+        createPixelTable(deviceBounds);
     }
 
-    private ArrayList<ShadedTriangle> getTriangleList(AffineTransform xform, Matrix ctm) throws IOException
+    private List<ShadedTriangle> collectTriangles(PDShadingType4 freeTriangleShadingType, AffineTransform xform, Matrix matrix)
+            throws IOException
     {
-        PDShadingType4 freeTriangleShadingType = (PDShadingType4) shading;
-        COSDictionary cosDictionary = freeTriangleShadingType.getCOSDictionary();
+        COSDictionary dict = freeTriangleShadingType.getCOSObject();
         PDRange rangeX = freeTriangleShadingType.getDecodeForParameter(0);
         PDRange rangeY = freeTriangleShadingType.getDecodeForParameter(1);
         PDRange[] colRange = new PDRange[numberOfColorComponents];
@@ -74,114 +76,93 @@ class Type4ShadingContext extends GouraudShadingContext
         {
             colRange[i] = freeTriangleShadingType.getDecodeForParameter(2 + i);
         }
-        ArrayList<ShadedTriangle> list = new ArrayList<ShadedTriangle>();
+        List<ShadedTriangle> list = new ArrayList<ShadedTriangle>();
         long maxSrcCoord = (long) Math.pow(2, bitsPerCoordinate) - 1;
         long maxSrcColor = (long) Math.pow(2, bitsPerColorComponent) - 1;
-        COSStream cosStream = (COSStream) cosDictionary;
+        COSStream stream = (COSStream) dict;
 
-        ImageInputStream mciis = new MemoryCacheImageInputStream(cosStream.getUnfilteredStream());
-        byte flag = (byte) 0;
-
+        ImageInputStream mciis = new MemoryCacheImageInputStream(stream.getUnfilteredStream());
         try
         {
-            flag = (byte) (mciis.readBits(bitsPerFlag) & 3);
-        }
-        catch (EOFException ex)
-        {
-            LOG.error(ex);
-        }
-
-        while (true)
-        {
-            Vertex p0, p1, p2;
-            Point2D[] ps;
-            float[][] cs;
-            int lastIndex;
+            byte flag = (byte) 0;
             try
             {
-                switch (flag)
-                {
-                    case 0:
-                        p0 = readVertex(mciis, maxSrcCoord, maxSrcColor, rangeX, rangeY, colRange, ctm, xform);
-                        flag = (byte) (mciis.readBits(bitsPerFlag) & 3);
-                        if (flag != 0)
-                        {
-                            LOG.error("bad triangle: " + flag);
-                        }
-                        p1 = readVertex(mciis, maxSrcCoord, maxSrcColor, rangeX, rangeY, colRange, ctm, xform);
-                        mciis.readBits(bitsPerFlag);
-                        if (flag != 0)
-                        {
-                            LOG.error("bad triangle: " + flag);
-                        }
-                        p2 = readVertex(mciis, maxSrcCoord, maxSrcColor, rangeX, rangeY, colRange, ctm, xform);
-                        ps = new Point2D[]
-                        {
-                            p0.point, p1.point, p2.point
-                        };
-                        cs = new float[][]
-                        {
-                            p0.color, p1.color, p2.color
-                        };
-                        list.add(new ShadedTriangle(ps, cs));
-                        flag = (byte) (mciis.readBits(bitsPerFlag) & 3);
-                        break;
-                    case 1:
-                        lastIndex = list.size() - 1;
-                        if (lastIndex < 0)
-                        {
-                            LOG.error("broken data stream: " + list.size());
-                        }
-                        else
-                        {
-                            ShadedTriangle preTri = list.get(lastIndex);
-                            p2 = readVertex(mciis, maxSrcCoord, maxSrcColor, rangeX, rangeY, colRange, ctm, xform);
-                            ps = new Point2D[]
-                            {
-                                preTri.corner[1], preTri.corner[2], p2.point
-                            };
-                            cs = new float[][]
-                            {
-                                preTri.color[1], preTri.color[2], p2.color
-                            };
-                            list.add(new ShadedTriangle(ps, cs));
-                            flag = (byte) (mciis.readBits(bitsPerFlag) & 3);
-                        }
-                        break;
-                    case 2:
-                        lastIndex = list.size() - 1;
-                        if (lastIndex < 0)
-                        {
-                            LOG.error("broken data stream: " + list.size());
-                        }
-                        else
-                        {
-                            ShadedTriangle preTri = list.get(lastIndex);
-                            p2 = readVertex(mciis, maxSrcCoord, maxSrcColor, rangeX, rangeY, colRange, ctm, xform);
-                            ps = new Point2D[]
-                            {
-                                preTri.corner[0], preTri.corner[2], p2.point
-                            };
-                            cs = new float[][]
-                            {
-                                preTri.color[0], preTri.color[2], p2.color
-                            };
-                            list.add(new ShadedTriangle(ps, cs));
-                            flag = (byte) (mciis.readBits(bitsPerFlag) & 3);
-                        }
-                        break;
-                    default:
-                        LOG.warn("bad flag: " + flag);
-                        break;
-                }
+                flag = (byte) (mciis.readBits(bitsPerFlag) & 3);
             }
             catch (EOFException ex)
             {
-                break;
+                LOG.error(ex);
+            }
+
+            while (true)
+            {
+                Vertex p0, p1, p2;
+                Point2D[] ps;
+                float[][] cs;
+                int lastIndex;
+                try
+                {
+                    switch (flag)
+                    {
+                        case 0:
+                            p0 = readVertex(mciis, maxSrcCoord, maxSrcColor, rangeX, rangeY, colRange,
+                                            matrix, xform);
+                            flag = (byte) (mciis.readBits(bitsPerFlag) & 3);
+                            if (flag != 0)
+                            {
+                                LOG.error("bad triangle: " + flag);
+                            }
+                            p1 = readVertex(mciis, maxSrcCoord, maxSrcColor, rangeX, rangeY, colRange,
+                                            matrix, xform);
+                            mciis.readBits(bitsPerFlag);
+                            if (flag != 0)
+                            {
+                                LOG.error("bad triangle: " + flag);
+                            }
+                            p2 = readVertex(mciis, maxSrcCoord, maxSrcColor, rangeX, rangeY, colRange,
+                                            matrix, xform);
+                            ps = new Point2D[] { p0.point, p1.point, p2.point };
+                            cs = new float[][] { p0.color, p1.color, p2.color };
+                            list.add(new ShadedTriangle(ps, cs));
+                            flag = (byte) (mciis.readBits(bitsPerFlag) & 3);
+                            break;
+                        case 1:
+                        case 2:
+                            lastIndex = list.size() - 1;
+                            if (lastIndex < 0)
+                            {
+                                LOG.error("broken data stream: " + list.size());
+                            }
+                            else
+                            {
+                                ShadedTriangle preTri = list.get(lastIndex);
+                                p2 = readVertex(mciis, maxSrcCoord, maxSrcColor, rangeX, rangeY,
+                                                colRange, matrix, xform);
+                                ps = new Point2D[] { flag == 1 ? preTri.corner[1] : preTri.corner[0],
+                                                     preTri.corner[2],
+                                                     p2.point };
+                                cs = new float[][] { flag == 1 ? preTri.color[1] : preTri.color[0],
+                                                     preTri.color[2],
+                                                     p2.color };
+                                list.add(new ShadedTriangle(ps, cs));
+                                flag = (byte) (mciis.readBits(bitsPerFlag) & 3);
+                            }
+                            break;
+                        default:
+                            LOG.warn("bad flag: " + flag);
+                            break;
+                    }
+                }
+                catch (EOFException ex)
+                {
+                    break;
+                }
             }
         }
-        mciis.close();
+        finally
+        {
+            mciis.close();
+        }
         return list;
     }
-
 }

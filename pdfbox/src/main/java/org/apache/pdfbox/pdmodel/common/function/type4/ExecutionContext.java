@@ -21,13 +21,12 @@ import java.util.Stack;
 /**
  * Makes up the execution context, holding the available operators and the execution stack.
  *
- * @version $Revision$
  */
 public class ExecutionContext
 {
 
-    private Operators operators;
-    private Stack<Object> stack = new Stack<Object>();
+    private final Operators operators;
+    private final Stack<Object> stack = new Stack<Object>();
 
     /**
      * Creates a new execution context.

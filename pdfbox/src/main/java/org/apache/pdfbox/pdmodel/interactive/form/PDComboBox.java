@@ -22,25 +22,34 @@ import org.apache.pdfbox.cos.COSName;
 /**
  * A combo box consisting of a drop-down list.
  * May be accompanied by an editable text box in which non-predefined values may be entered.
+ * 
  * @author John Hewson
  */
 public final class PDComboBox extends PDChoice
 {
-    /**
-     *  Ff-flag.
-     */
     private static final int FLAG_EDIT = 1 << 18;
+    
+    /**
+     * @see PDField#PDField(PDAcroForm)
+     *
+     * @param acroForm The acroform.
+     */
+    public PDComboBox(PDAcroForm acroForm)
+    {
+        super(acroForm);
+        setCombo(true);
+    }    
 
     /**
      * Constructor.
      * 
      * @param acroForm The form that this field is part of.
      * @param field the PDF object to represent as a field.
-     * @param parentNode the parent node of the node to be created
+     * @param parent the parent node of the node
      */
-    public PDComboBox(PDAcroForm acroForm, COSDictionary field, PDFieldTreeNode parentNode)
+    PDComboBox(PDAcroForm acroForm, COSDictionary field, PDNonTerminalField parent)
     {
-        super(acroForm, field, parentNode);
+        super(acroForm, field, parent);
     }
 
     /**
@@ -50,7 +59,7 @@ public final class PDComboBox extends PDChoice
      */
     public boolean isEdit()
     {
-        return getDictionary().getFlag( COSName.FF, FLAG_EDIT );
+        return dictionary.getFlag(COSName.FF, FLAG_EDIT);
     }
 
     /**
@@ -58,38 +67,8 @@ public final class PDComboBox extends PDChoice
      *
      * @param edit The value for Edit.
      */
-    public void setEdit( boolean edit )
+    public void setEdit(boolean edit)
     {
-        getDictionary().setFlag( COSName.FF, FLAG_EDIT, edit );
+        dictionary.setFlag(COSName.FF, FLAG_EDIT, edit);
     }
-
-    /**
-     * setValue sets the entry "V" to the given value.
-     * 
-     * @param value the value
-     * 
-     */
-    public void setValue(String value)
-    {
-        if ((getFieldFlags() & FLAG_EDIT) != 0)
-        {
-            throw new IllegalArgumentException("The combo box isn't editable.");
-        }
-        super.setValue(value);
-    }
-
-    /**
-     * setValue sets the entry "V" to the given value.
-     * 
-     * @param value the value
-     * 
-     */
-    public void setValue(String[] value)
-    {
-        if ((getFieldFlags() & FLAG_EDIT) != 0)
-        {
-            throw new IllegalArgumentException("The combo box isn't editable.");
-        }
-        super.setValue(value);
-    }    
 }

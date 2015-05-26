@@ -31,7 +31,6 @@ import static org.apache.pdfbox.preflight.PreflightConstants.MAX_GRAPHIC_STATES;
 import java.awt.color.ICC_ColorSpace;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -123,7 +122,7 @@ public abstract class PreflightStreamEngine extends PDFStreamEngine
         addOperator(new SetLineJoinStyle());
         addOperator(new SetLineCapStyle());
         addOperator(new SetStrokingDeviceCMYKColor());
-        addOperator( new SetNonStrokingDeviceCMYKColor());
+        addOperator(new SetNonStrokingDeviceCMYKColor());
 
         addOperator(new SetNonStrokingDeviceRGBColor());
         addOperator(new SetStrokingDeviceRGBColor());
@@ -131,7 +130,7 @@ public abstract class PreflightStreamEngine extends PDFStreamEngine
         addOperator(new SetStrokingColor());
         addOperator(new SetStrokingColorN());
         addOperator(new SetNonStrokingColor());
-        addOperator( new SetNonStrokingColorN());
+        addOperator(new SetNonStrokingColorN());
 
         // Graphics state
         addOperator(new Restore());
@@ -201,7 +200,6 @@ public abstract class PreflightStreamEngine extends PDFStreamEngine
         addOperator(new StubOperator("MP"));
 
         addOperator(new StubOperator("gs"));
-        addOperator(new StubOperator("h"));
         addOperator(new StubOperator("i"));
 
         addOperator(new StubOperator("ri"));
@@ -348,44 +346,27 @@ public abstract class PreflightStreamEngine extends PDFStreamEngine
     {
         PDColorSpace cs = getColorSpace(operation);
 
-        if ("rg".equals(operation) || "RG".equals(operation))
+        if (("rg".equals(operation) || "RG".equals(operation)) 
+                && !validColorSpace(cs, ColorSpaceType.RGB))
         {
-            if (!validColorSpace(cs, ColorSpaceType.RGB))
-            {
-                registerError("The operator \"" + operation + "\" can't be used with CMYK Profile",
-                        ERROR_GRAPHIC_INVALID_COLOR_SPACE_RGB);
-                return;
-            }
+            registerError("The operator \"" + operation + "\" can't be used with CMYK Profile",
+                    ERROR_GRAPHIC_INVALID_COLOR_SPACE_RGB);
+            return;
         }
-
-        if ("k".equals(operation) || "K".equals(operation))
+        if (("k".equals(operation) || "K".equals(operation)) 
+                && !validColorSpace(cs, ColorSpaceType.CMYK))
         {
-            if (!validColorSpace(cs, ColorSpaceType.CMYK))
-            {
-                registerError("The operator \"" + operation + "\" can't be used with RGB Profile",
-                        ERROR_GRAPHIC_INVALID_COLOR_SPACE_CMYK);
-                return;
-            }
+            registerError("The operator \"" + operation + "\" can't be used with RGB Profile",
+                    ERROR_GRAPHIC_INVALID_COLOR_SPACE_CMYK);
+            return;
         }
-
-        if ("g".equals(operation) || "G".equals(operation))
+        if (("g".equals(operation) || "G".equals(operation)
+                || "f".equals(operation) || "F".equals(operation) || "f*".equals(operation)
+                || "B".equals(operation) || "B*".equals(operation) || "b".equals(operation) || "b*".equals(operation))
+                && !validColorSpace(cs, ColorSpaceType.ALL))
         {
-            if (!validColorSpace(cs, ColorSpaceType.ALL))
-            {
-                registerError("The operator \"" + operation + "\" can't be used without Color Profile",
-                        ERROR_GRAPHIC_INVALID_COLOR_SPACE_MISSING);
-                return;
-            }
-        }
-
-        if ("f".equals(operation) || "F".equals(operation) || "f*".equals(operation) || "B".equals(operation)
-                || "B*".equals(operation) || "b".equals(operation) || "b*".equals(operation))
-        {
-            if (!validColorSpace(cs, ColorSpaceType.ALL))
-            {
-                registerError("The operator \"" + operation + "\" can't be used without Color Profile",
-                        ERROR_GRAPHIC_INVALID_COLOR_SPACE_MISSING);
-            }
+            registerError("The operator \"" + operation + "\" can't be used without Color Profile",
+                    ERROR_GRAPHIC_INVALID_COLOR_SPACE_MISSING);
         }
     }
 
@@ -513,7 +494,7 @@ public abstract class PreflightStreamEngine extends PDFStreamEngine
         }
         else if (arguments.get(0) instanceof COSString)
         {
-            colorSpaceName = ((COSString) arguments.get(0)).toString();
+            colorSpaceName = (arguments.get(0)).toString();
         }
         else if (arguments.get(0) instanceof COSName)
         {

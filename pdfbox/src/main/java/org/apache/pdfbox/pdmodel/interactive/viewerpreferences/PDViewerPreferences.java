@@ -16,7 +16,6 @@
  */
 package org.apache.pdfbox.pdmodel.interactive.viewerpreferences;
 
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 
@@ -25,8 +24,7 @@ import org.apache.pdfbox.pdmodel.common.COSObjectable;
 /**
  * This is the document viewing preferences.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.3 $
+ * @author Ben Litchfield
  */
 public class PDViewerPreferences implements COSObjectable
 {
@@ -197,7 +195,7 @@ public class PDViewerPreferences implements COSObjectable
         AppDefault
     }
 
-    private COSDictionary prefs;
+    private final COSDictionary prefs;
 
     /**
      * Constructor that is used for a preexisting dictionary.
@@ -214,17 +212,8 @@ public class PDViewerPreferences implements COSObjectable
      *
      * @return The underlying info dictionary.
      */
-    public COSDictionary getDictionary()
-    {
-        return prefs;
-    }
-
-    /**
-     * Convert this standard java object to a COS object.
-     *
-     * @return The cos object that matches this Java object.
-     */
-    public COSBase getCOSObject()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return prefs;
     }

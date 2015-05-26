@@ -18,7 +18,6 @@ package org.apache.pdfbox.pdmodel.graphics.form;
 
 import java.io.IOException;
 
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
@@ -27,11 +26,11 @@ import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
 /**
  * Transparency group.
  * 
- * @author Kühn & Weyh Software, GmbH
+ * @author KÃ¼hn & Weyh Software, GmbH
  */
 public final class PDGroup implements COSObjectable
 {
-    private COSDictionary dictionary;
+    private final COSDictionary dictionary;
     private COSName subType;
     private PDColorSpace colorSpace;
 
@@ -44,12 +43,8 @@ public final class PDGroup implements COSObjectable
         dictionary = dic;
     }
 
-    public COSBase getCOSObject()
-    {
-        return dictionary;
-    }
-
-    public COSDictionary getCOSDictionary()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return dictionary;
     }
@@ -61,7 +56,7 @@ public final class PDGroup implements COSObjectable
     {
         if (subType == null)
         {
-            subType = (COSName) getCOSDictionary().getDictionaryObject(COSName.S);
+            subType = (COSName) getCOSObject().getDictionaryObject(COSName.S);
         }
         return subType;
     }
@@ -75,8 +70,7 @@ public final class PDGroup implements COSObjectable
     {
         if (colorSpace == null)
         {
-            colorSpace = PDColorSpace.create(getCOSDictionary().getDictionaryObject(
-                    COSName.COLORSPACE));
+            colorSpace = PDColorSpace.create(getCOSObject().getDictionaryObject(COSName.COLORSPACE));
         }
         return colorSpace;
     }
@@ -87,7 +81,7 @@ public final class PDGroup implements COSObjectable
      */
     public boolean isIsolated()
     {
-        return getCOSDictionary().getBoolean(COSName.I, false);
+        return getCOSObject().getBoolean(COSName.I, false);
     }
 
     /**
@@ -96,6 +90,6 @@ public final class PDGroup implements COSObjectable
      */
     public boolean isKnockout()
     {
-        return getCOSDictionary().getBoolean(COSName.K, false);
+        return getCOSObject().getBoolean(COSName.K, false);
     }
 }

@@ -20,9 +20,8 @@ package org.apache.fontbox.cff;
  * This is specialized CFFCharset. It's used if the CharsetId of a font is set to 1.
  * 
  * @author Villu Ruusmann
- * @version $Revision$
  */
-public class CFFExpertCharset extends CFFCharset
+public final class CFFExpertCharset extends CFFCharset
 {
 
     private CFFExpertCharset()

@@ -51,10 +51,8 @@ import java.util.Enumeration;
  *
  * In this code sample certificate_path contains the path to the PKCS#12 certificate.
  *
- * @see org.apache.pdfbox.pdmodel.PDDocument#openProtection(DecryptionMaterial)
- *
- * @author Benoit Guillon (benoit.guillon@snv.jussieu.fr)
- * @version $Revision: 1.2 $
+ * @author Benoit Guillon
+ * 
  */
 
 public class PublicKeyDecryptionMaterial extends DecryptionMaterial
@@ -92,8 +90,8 @@ public class PublicKeyDecryptionMaterial extends DecryptionMaterial
     {
         if(keyStore.size() == 1)
         {
-            Enumeration aliases = keyStore.aliases();
-            String keyStoreAlias = (String)aliases.nextElement();
+            Enumeration<String> aliases = keyStore.aliases();
+            String keyStoreAlias = aliases.nextElement();
             return (X509Certificate)keyStore.getCertificate(keyStoreAlias);
         }
         else
@@ -128,8 +126,8 @@ public class PublicKeyDecryptionMaterial extends DecryptionMaterial
         {
             if(keyStore.size() == 1)
             {
-                Enumeration aliases = keyStore.aliases();
-                String keyStoreAlias = (String)aliases.nextElement();
+                Enumeration<String> aliases = keyStore.aliases();
+                String keyStoreAlias = aliases.nextElement();
                 return keyStore.getKey(keyStoreAlias, password.toCharArray());
             }
             else
@@ -143,11 +141,11 @@ public class PublicKeyDecryptionMaterial extends DecryptionMaterial
         }
         catch(UnrecoverableKeyException ex)
         {
-            throw new KeyStoreException("the private key is not recoverable");
+            throw new KeyStoreException("the private key is not recoverable", ex);
         }
         catch(NoSuchAlgorithmException ex)
         {
-            throw new KeyStoreException("the algorithm necessary to recover the key is not available");
+            throw new KeyStoreException("the algorithm necessary to recover the key is not available", ex);
         }
     }
 }

@@ -18,15 +18,12 @@ package org.apache.pdfbox.examples.fdf;
 
 import java.io.File;
 import java.io.IOException;
-
-import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDCheckbox;
-import org.apache.pdfbox.pdmodel.interactive.form.PDChoice;
 import org.apache.pdfbox.pdmodel.interactive.form.PDComboBox;
-import org.apache.pdfbox.pdmodel.interactive.form.PDFieldTreeNode;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import org.apache.pdfbox.pdmodel.interactive.form.PDListBox;
 import org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton;
 import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
@@ -52,16 +49,12 @@ public class SetField
     {
         PDDocumentCatalog docCatalog = pdfDocument.getDocumentCatalog();
         PDAcroForm acroForm = docCatalog.getAcroForm();
-        PDFieldTreeNode field = acroForm.getField(name);
+        PDField field = acroForm.getField(name);
         if (field != null)
         {
             if (field instanceof PDCheckbox)
             {
-                ((PDCheckbox) field).setValue(COSName.getPDFName(value));
-            }
-            else if (field instanceof PDChoice)
-            {
-                ((PDChoice) field).setValue(value);
+                ((PDCheckbox) field).setValue(value.equals("Yes"));
             }
             else if (field instanceof PDComboBox)
             {
@@ -73,7 +66,7 @@ public class SetField
             }
             else if (field instanceof PDRadioButton)
             {
-                ((PDRadioButton) field).setValue(COSName.getPDFName(value));
+                ((PDRadioButton) field).setValue(value);
             }
             else if (field instanceof PDTextField)
             {
@@ -84,7 +77,6 @@ public class SetField
         {
             System.err.println("No field found with name:" + name);
         }
-
     }
 
     /**

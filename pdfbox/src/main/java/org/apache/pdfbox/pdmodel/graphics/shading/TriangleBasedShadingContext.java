@@ -15,64 +15,83 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
+import java.awt.PaintContext;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Point2D;
 import java.awt.image.ColorModel;
+import java.awt.image.Raster;
+import java.awt.image.WritableRaster;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.util.Matrix;
 
 /**
- * Intermediate class extended by the shading types 4,5,6 and 7 that contains
- * the common methods used by these classes.
+ * Intermediate class extended by the shading types 4,5,6 and 7 that contains the common methods
+ * used by these classes.
  *
  * @author Shaola Ren
  * @author Tilman Hausherr
  */
-abstract class TriangleBasedShadingContext extends ShadingContext
+abstract class TriangleBasedShadingContext extends ShadingContext implements PaintContext
 {
     private static final Log LOG = LogFactory.getLog(TriangleBasedShadingContext.class);
 
-    /**
-     * bits per coordinate.
-     */
     protected int bitsPerCoordinate;
-
-    /**
-     * bits per color component
-     */
     protected int bitsPerColorComponent;
+    protected int numberOfColorComponents;
+    
+    private final boolean hasFunction;
+
+    // map of pixels within triangles to their RGB color
+    private Map<Point, Integer> pixelTable;
 
     /**
-     * number of color components.
+     * Constructor.
+     *
+     * @param shading the shading type to be used
+     * @param cm the color model to be used
+     * @param xform transformation for user to device space
+     * @param matrix the pattern matrix concatenated with that of the parent content stream
+     * @throws IOException if there is an error getting the color space or doing background color conversion.
      */
-    protected int numberOfColorComponents;
-
-    final protected boolean hasFunction;
-
-    public TriangleBasedShadingContext(PDShading shading, ColorModel cm,
-            AffineTransform xform, Matrix ctm, Rectangle dBounds)
-            throws IOException
+    TriangleBasedShadingContext(PDShading shading, ColorModel cm, AffineTransform xform,
+                                       Matrix matrix) throws IOException
     {
-        super(shading, cm, xform, ctm, dBounds);
+        super(shading, cm, xform, matrix);
         PDTriangleBasedShadingType triangleBasedShadingType = (PDTriangleBasedShadingType) shading;
         hasFunction = shading.getFunction() != null;
         bitsPerCoordinate = triangleBasedShadingType.getBitsPerCoordinate();
         LOG.debug("bitsPerCoordinate: " + (Math.pow(2, bitsPerCoordinate) - 1));
         bitsPerColorComponent = triangleBasedShadingType.getBitsPerComponent();
         LOG.debug("bitsPerColorComponent: " + bitsPerColorComponent);
-        numberOfColorComponents = hasFunction ? 1 : shadingColorSpace.getNumberOfComponents();
+        numberOfColorComponents = hasFunction ? 1 : getShadingColorSpace().getNumberOfComponents();
         LOG.debug("numberOfColorComponents: " + numberOfColorComponents);
     }
 
-    // get the points from the triangles, calculate their color and add 
-    // point-color mappings to the map
-    protected void calcPixelTable(ArrayList<ShadedTriangle> triangleList, HashMap<Point, Integer> map)
+    /**
+     * Creates the pixel table.
+     */
+    protected final void createPixelTable(Rectangle deviceBounds) throws IOException
+    {
+        pixelTable = calcPixelTable(deviceBounds);
+    }
+
+    /**
+     * Calculate every point and its color and store them in a Hash table.
+     *
+     * @return a Hash table which contains all the points' positions and colors of one image
+     */
+    abstract Map<Point, Integer> calcPixelTable(Rectangle deviceBounds) throws IOException;
+
+    /**
+     * Get the points from the triangles, calculate their color and add point-color mappings.
+     */
+    protected void calcPixelTable(List<ShadedTriangle> triangleList, Map<Point, Integer> map,
+            Rectangle deviceBounds) throws IOException
     {
         for (ShadedTriangle tri : triangleList)
         {
@@ -82,7 +101,7 @@ abstract class TriangleBasedShadingContext extends ShadingContext
                 Line line = tri.getLine();
                 for (Point p : line.linePoints)
                 {
-                    map.put(p, convertToRGB(line.calcColor(p)));
+                    map.put(p, evalFunctionAndConvertToRGB(line.calcColor(p)));
                 }
             }
             else
@@ -99,42 +118,90 @@ abstract class TriangleBasedShadingContext extends ShadingContext
                         Point p = new Point(x, y);
                         if (tri.contains(p))
                         {
-                            map.put(p, convertToRGB(tri.calcColor(p)));
+                            map.put(p, evalFunctionAndConvertToRGB(tri.calcColor(p)));
                         }
                     }
-                }
+                }         
             }
         }
     }
 
-    // transform a point from source space to device space
-    protected void transformPoint(Point2D p, Matrix ctm, AffineTransform xform)
-    {
-        if (ctm != null)
-        {
-            ctm.createAffineTransform().transform(p, p);
-        }
-        xform.transform(p, p);
-    }
-
-    // convert color to RGB color value, using function if required,
-    // then convert from the shading colorspace to an RGB value,
-    // which is encoded into an integer.
-    @Override
-    protected int convertToRGB(float[] values)
+    /**
+     * Convert color to RGB color value, using function if required, then convert from the shading
+     * color space to an RGB value, which is encoded into an integer.
+     */
+    private int evalFunctionAndConvertToRGB(float[] values) throws IOException
     {
         if (hasFunction)
         {
-            try
-            {
-                values = shading.evalFunction(values);
-            }
-            catch (IOException exception)
-            {
-                LOG.error("error while processing a function", exception);
-            }
+            values = getShading().evalFunction(values);
         }
-        return super.convertToRGB(values);
+        return convertToRGB(values);
     }
 
+    /**
+     * Returns true if the shading has an empty data stream.
+     */
+    abstract boolean isDataEmpty();
+
+    @Override
+    public final ColorModel getColorModel()
+    {
+        return super.getColorModel();
+    }
+
+    @Override
+    public void dispose()
+    {
+        super.dispose();
+    }
+
+    @Override
+    public final Raster getRaster(int x, int y, int w, int h)
+    {
+        WritableRaster raster = getColorModel().createCompatibleWritableRaster(w, h);
+        int[] data = new int[w * h * 4];
+        if (!isDataEmpty() || getBackground() != null)
+        {
+            for (int row = 0; row < h; row++)
+            {
+                int currentY = y + row;
+                if (bboxRect != null && (currentY < minBBoxY || currentY > maxBBoxY))
+                {
+                    continue;
+                }
+                for (int col = 0; col < w; col++)
+                {
+                    int currentX = x + col;
+                    if (bboxRect != null && (currentX < minBBoxX || currentX > maxBBoxX))
+                    {
+                        continue;
+                    }
+                    Point p = new Point(currentX, currentY);
+                    int value;
+                    if (pixelTable.containsKey(p))
+                    {
+                        value = pixelTable.get(p);
+                    }
+                    else
+                    {
+                        if (getBackground() == null)
+                        {
+                            continue;
+                        }
+                        value = getRgbBackground();
+                    }
+                    int index = (row * w + col) * 4;
+                    data[index] = value & 255;
+                    value >>= 8;
+                    data[index + 1] = value & 255;
+                    value >>= 8;
+                    data[index + 2] = value & 255;
+                    data[index + 3] = 255;
+                }
+            }
+        }
+        raster.setPixels(0, 0, w, h, data);
+        return raster;
+    }
 }

@@ -17,14 +17,12 @@
 package org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination;
 
 import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
 
 /**
  * This represents a destination to a page at a y location and the width is magnified
  * to just fit on the screen.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.2 $
+ * @author Ben Litchfield
  */
 public class PDPageFitRectangleDestination extends PDPageDestination
 {
@@ -76,7 +74,7 @@ public class PDPageFitRectangleDestination extends PDPageDestination
         array.growToSize( 3 );
         if( x == -1 )
         {
-            array.set( 2, (COSBase)null );
+            array.set(2, null);
         }
         else
         {
@@ -105,7 +103,7 @@ public class PDPageFitRectangleDestination extends PDPageDestination
         array.growToSize( 6 );
         if( y == -1 )
         {
-            array.set( 3, (COSBase)null );
+            array.set(3, null);
         }
         else
         {
@@ -134,7 +132,7 @@ public class PDPageFitRectangleDestination extends PDPageDestination
         array.growToSize( 6 );
         if( x == -1 )
         {
-            array.set( 4, (COSBase)null );
+            array.set(4, null);
         }
         else
         {
@@ -164,7 +162,7 @@ public class PDPageFitRectangleDestination extends PDPageDestination
         array.growToSize( 6 );
         if( y == -1 )
         {
-            array.set( 5, (COSBase)null );
+            array.set(5, null);
         }
         else
         {

@@ -23,16 +23,15 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Map;
-
+import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
 import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDEmbeddedFilesNameTreeNode;
-import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
-import org.apache.pdfbox.util.PDFTextStripper;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 /**
  * This is the main program that simply parses the pdf document and transforms it
@@ -51,9 +50,7 @@ public class ExtractText
     private static final String IGNORE_BEADS = "-ignoreBeads";
     private static final String DEBUG = "-debug";
     // jjb - added simple HTML output
-    private static final String HTML = "-html";  
-    // enables pdfbox to skip corrupt objects
-    private static final String FORCE = "-force"; 
+    private static final String HTML = "-html";
 
     /*
      * debug flag
@@ -94,7 +91,6 @@ public class ExtractText
     {
         boolean toConsole = false;
         boolean toHTML = false;
-        boolean force = false;
         boolean sort = false;
         boolean separateBeads = true;
         String password = "";
@@ -164,10 +160,6 @@ public class ExtractText
             {
                 toConsole = true;
             }
-            else if( args[i].equals( FORCE ) )
-            {
-                force = true;
-            }
             else
             {
                 if( pdfFile == null )
@@ -225,7 +217,6 @@ public class ExtractText
                 {
                     stripper = new PDFTextStripper();
                 }
-                stripper.setForceParsing( force );
                 stripper.setSortByPosition( sort );
                 stripper.setShouldSeparateByBeads( separateBeads );
                 stripper.setStartPage( startPage );
@@ -248,17 +239,18 @@ public class ExtractText
                     PDEmbeddedFilesNameTreeNode embeddedFiles = names.getEmbeddedFiles();
                     if (embeddedFiles != null)
                     {
-                        Map<String,COSObjectable> embeddedFileNames = embeddedFiles.getNames();
-                        if (embeddedFileNames != null) {
-                            for (Map.Entry<String,COSObjectable> ent : embeddedFileNames.entrySet()) 
+                        Map<String, PDComplexFileSpecification> embeddedFileNames = embeddedFiles.getNames();
+                        if (embeddedFileNames != null)
+                        {
+                            for (Map.Entry<String, PDComplexFileSpecification> ent : embeddedFileNames.entrySet()) 
                             {
                                 if (debug)
                                 {
                                     System.err.println("Processing embedded file " + ent.getKey() + ":");
                                 }
-                                PDComplexFileSpecification spec = (PDComplexFileSpecification) ent.getValue();
+                                PDComplexFileSpecification spec = ent.getValue();
                                 PDEmbeddedFile file = spec.getEmbeddedFile();
-                                if (file != null && file.getSubtype().equals("application/pdf"))
+                                if (file != null && "application/pdf".equals(file.getSubtype()))
                                 {
                                     if (debug)
                                     {
@@ -280,7 +272,7 @@ public class ExtractText
                                     } 
                                     finally 
                                     {
-                                        subDoc.close();
+                                        IOUtils.closeQuietly(subDoc);                                       
                                     }
                                 }
                             } 
@@ -291,14 +283,8 @@ public class ExtractText
             }
             finally
             {
-                if( output != null )
-                {
-                    output.close();
-                }
-                if( document != null )
-                {
-                    document.close();
-                }
+                IOUtils.closeQuietly(output);
+                IOUtils.closeQuietly(document);
             }
         }
     }
@@ -334,7 +320,6 @@ public class ExtractText
             "  -html                        Output in HTML format instead of raw text\n" +
             "  -sort                        Sort the text before writing\n" +
             "  -ignoreBeads                 Disables the separation by beads\n" +
-            "  -force                       Enables pdfbox to ignore corrupt objects\n" +
             "  -debug                       Enables debug output about the time consumption of every stage\n" +
             "  -startPage <number>          The first page to start extraction(1 based)\n" +
             "  -endPage <number>            The last page to extract(inclusive)\n" +

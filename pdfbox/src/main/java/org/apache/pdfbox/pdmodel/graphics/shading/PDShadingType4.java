@@ -16,11 +16,11 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
+import java.awt.Paint;
+
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.util.Matrix;
-
-import java.awt.Paint;
 
 /**
  * Resources for a shading type 4 (Free-Form Gouraud-Shaded Triangle Mesh).
@@ -51,7 +51,7 @@ public class PDShadingType4 extends PDTriangleBasedShadingType
      */
     public int getBitsPerFlag()
     {
-        return getCOSDictionary().getInt(COSName.BITS_PER_FLAG, -1);
+        return getCOSObject().getInt(COSName.BITS_PER_FLAG, -1);
     }
 
     /**
@@ -61,7 +61,7 @@ public class PDShadingType4 extends PDTriangleBasedShadingType
      */
     public void setBitsPerFlag(int bitsPerFlag)
     {
-        getCOSDictionary().setInt(COSName.BITS_PER_FLAG, bitsPerFlag);
+        getCOSObject().setInt(COSName.BITS_PER_FLAG, bitsPerFlag);
     }
 
     @Override

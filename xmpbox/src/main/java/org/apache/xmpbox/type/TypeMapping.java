@@ -26,6 +26,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Calendar;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,7 +62,7 @@ public final class TypeMapping
 
     private Map<String, PropertiesDescription> definedStructuredMappings;
 
-    private XMPMetadata metadata;
+    private final XMPMetadata metadata;
 
     private Map<String, XMPSchemaFactory> schemaMap;
 
@@ -71,13 +72,13 @@ public final class TypeMapping
         initialize();
     }
 
-    private static Class<?>[] simplePropertyConstParams = new Class<?>[] { XMPMetadata.class, String.class,
+    private static final Class<?>[] SIMPLEPROPERTYCONSTPARAMS = new Class<?>[] { XMPMetadata.class, String.class,
             String.class, String.class, Object.class };
 
     private void initialize()
     {
         // structured types
-        structuredMappings = new HashMap<Types, PropertiesDescription>();
+        structuredMappings = new EnumMap<Types, PropertiesDescription>(Types.class);
         structuredNamespaces = new HashMap<String, Types>();
         for (Types type : Types.values())
         {
@@ -111,7 +112,6 @@ public final class TypeMapping
         addNameSpace(ExifSchema.class);
         addNameSpace(TiffSchema.class);
         addNameSpace(XMPageTextSchema.class);
-
     }
 
     public void addToDefinedStructuredTypes(String typeName, String ns, PropertiesDescription pm)
@@ -180,7 +180,7 @@ public final class TypeMapping
         {
             Class<? extends AbstractSimpleProperty> clz = type.getImplementingClass().asSubclass(
                     AbstractSimpleProperty.class);
-            Constructor<? extends AbstractSimpleProperty> cons = clz.getConstructor(simplePropertyConstParams);
+            Constructor<? extends AbstractSimpleProperty> cons = clz.getConstructor(SIMPLEPROPERTYCONSTPARAMS);
             return cons.newInstance(params);
         }
         catch (NoSuchMethodError e)
@@ -239,16 +239,6 @@ public final class TypeMapping
         return definedStructuredNamespaces.containsKey(namespace);
     }
 
-    // public String getTypeInArray (String type) {
-    // int pos = type.indexOf(' ');
-    // if (pos<0) {
-    // // not array
-    // return null;
-    // } else {
-    // return type.substring(pos+1);
-    // }
-    // }
-
     public boolean isDefinedType(String name)
     {
         return this.definedStructuredMappings.containsKey(name);
@@ -280,6 +270,7 @@ public final class TypeMapping
      *            Metadata to link the new schema
      * @param namespace
      *            The namespace URI
+     * @param prefix The namespace prefix
      * @return Schema representation
      * @throws XmpSchemaException
      *             When Instancing specified Object Schema failed
@@ -327,6 +318,7 @@ public final class TypeMapping
      * @param name
      *            the property Qualified Name
      * @return Property type declared for namespace specified, null if unknown
+     * @throws org.apache.xmpbox.type.BadFieldValueException if the name was not found.
      */
     public PropertyType getSpecifiedPropertyType(QName name) throws BadFieldValueException
     {
@@ -477,16 +469,19 @@ public final class TypeMapping
         return new PropertyType()
         {
 
+            @Override
             public Class<? extends Annotation> annotationType()
             {
                 return null;
             }
 
+            @Override
             public Types type()
             {
                 return type;
             }
 
+            @Override
             public Cardinality card()
             {
                 return card;

@@ -50,36 +50,20 @@ public class PDFStreamParser extends BaseParser
      */
     private static final Log LOG = LogFactory.getLog(PDFStreamParser.class);
 
-    private List<Object> streamObjects = new ArrayList<Object>( 100 );
-    private final int MAX_BIN_CHAR_TEST_LENGTH = 10;
+    private final List<Object> streamObjects = new ArrayList<Object>( 100 );
+    
+    private static final int MAX_BIN_CHAR_TEST_LENGTH = 10;
     private final byte[] binCharTestArr = new byte[MAX_BIN_CHAR_TEST_LENGTH];
 
     /**
      * Constructor that takes a stream to parse.
      *
-     * @since Apache PDFBox 1.3.0
      * @param stream The stream to read data from.
-     * @param forceParsing flag to skip malformed or otherwise unparseable
-     *                     input where possible
      * @throws IOException If there is an error reading from the stream.
      */
-    public PDFStreamParser(InputStream stream, boolean forceParsing)
-            throws IOException 
+    public PDFStreamParser(InputStream stream) throws IOException
     {
-        super(stream, forceParsing);
-    }
-
-    /**
-     * Constructor that takes a stream to parse.
-     *
-     * @param stream The stream to read data from.
-     *
-     * @throws IOException If there is an error reading from the stream.
-     */
-    public PDFStreamParser(InputStream stream)
-            throws IOException 
-    {
-        this(stream, FORCE_PARSING);
+        super(stream);
     }
 
     /**
@@ -92,21 +76,6 @@ public class PDFStreamParser extends BaseParser
     public PDFStreamParser( PDStream stream ) throws IOException
     {
        this( stream.createInputStream() );
-    }
-
-    /**
-     * Constructor.
-     *
-     * @since Apache PDFBox 1.3.0
-     * @param stream The stream to parse.
-     * @param forceParsing flag to skip malformed or otherwise unparseable
-     *                     input where possible
-     * @throws IOException If there is an error initializing the stream.
-     */
-    public PDFStreamParser(COSStream stream, boolean forceParsing)
-            throws IOException 
-    {
-       this(stream.getUnfilteredStream(), forceParsing);
     }
 
     /**
@@ -151,16 +120,6 @@ public class PDFStreamParser extends BaseParser
     public List<Object> getTokens()
     {
         return streamObjects;
-    }
-
-    /**
-     * This will close the underlying pdfSource object.
-     * 
-     * @throws IOException If there is an error releasing resources.
-     */
-    public void close() throws IOException
-    {
-        pdfSource.close();
     }
 
     /**
@@ -243,21 +202,18 @@ public class PDFStreamParser extends BaseParser
         {
             case '<':
             {
-                int leftBracket = pdfSource.read();//pull off first left bracket
-                c = (char)pdfSource.peek(); //check for second left bracket
-                pdfSource.unread( leftBracket ); //put back first bracket
-                if(c == '<')
+                // pull off first left bracket
+                int leftBracket = pdfSource.read();
+
+                // check for second left bracket
+                c = (char) pdfSource.peek();
+
+                // put back first bracket
+                pdfSource.unread(leftBracket);
+
+                if (c == '<')
                 {
-                    COSDictionary pod = parseCOSDictionary();
-                    skipSpaces();
-                    if((char)pdfSource.peek() == 's')
-                    {
-                        retval = parseCOSStream( pod );
-                    }
-                    else
-                    {
-                        retval = pod;
-                    }
+                    retval = parseCOSDictionary();
                 }
                 else
                 {
@@ -265,19 +221,23 @@ public class PDFStreamParser extends BaseParser
                 }
                 break;
             }
-            case '[': // array
+            case '[':
             {
+                // array
                 retval = parseCOSArray();
                 break;
             }
-            case '(': // string
+            case '(':
+                // string
                 retval = parseCOSString();
                 break;
-            case '/':   // name
+            case '/':
+                // name
                 retval = parseCOSName();
                 break;
-            case 'n':   // null
+            case 'n':   
             {
+                // null
                 String nullString = readString();
                 if( nullString.equals( "null") )
                 {
@@ -417,7 +377,9 @@ public class PDFStreamParser extends BaseParser
                 // some ']' around without its previous '['
                 // this means a PDF is somewhat corrupt but we will continue to parse.
                 pdfSource.read();
-                retval = COSNull.NULL;  // must be a better solution than null...
+                
+                // must be a better solution than null...
+                retval = COSNull.NULL;  
                 break;
             }
             default:
@@ -477,7 +439,9 @@ public class PDFStreamParser extends BaseParser
                     endOpIdx = bIdx;
                 }
             }
-            if (readBytes == MAX_BIN_CHAR_TEST_LENGTH) // only if not close to eof
+            
+            // only if not close to eof
+            if (readBytes == MAX_BIN_CHAR_TEST_LENGTH) 
             {
                 // a PDF operator is 1-3 bytes long
                 if (startOpIdx != -1 && endOpIdx == -1)
@@ -552,19 +516,5 @@ public class PDFStreamParser extends BaseParser
     private boolean hasNextSpaceOrReturn() throws IOException
     {
         return isSpaceOrReturn( pdfSource.peek() );
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void clearResources()
-    {
-        super.clearResources();
-        if (streamObjects != null)
-        {
-            streamObjects.clear();
-            streamObjects = null;
-        }
     }
 }

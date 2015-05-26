@@ -16,7 +16,6 @@
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
 import java.awt.PaintContext;
-import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.NoninvertibleTransformException;
 import java.awt.image.ColorModel;
@@ -25,13 +24,12 @@ import java.awt.image.WritableRaster;
 import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
 import org.apache.pdfbox.util.Matrix;
 
 /**
  * AWT PaintContext for function-based (Type 1) shading.
  *
- * @author Andreas Lehmkühler
  * @author Tilman Hausherr
  */
 class Type1ShadingContext extends ShadingContext implements PaintContext
@@ -41,8 +39,6 @@ class Type1ShadingContext extends ShadingContext implements PaintContext
     private PDShadingType1 type1ShadingType;
     private AffineTransform rat;
     private final float[] domain;
-    private Matrix matrix;
-    private float[] background;
 
     /**
      * Constructor creates an instance to be used for fill operations.
@@ -50,16 +46,14 @@ class Type1ShadingContext extends ShadingContext implements PaintContext
      * @param shading the shading type to be used
      * @param colorModel the color model to be used
      * @param xform transformation for user to device space
-     * @param ctm current transformation matrix
-     * @param dBounds device bounds
+     * @param matrix the pattern matrix concatenated with that of the parent content stream
      */
-    public Type1ShadingContext(PDShadingType1 shading, ColorModel colorModel, AffineTransform xform,
-            Matrix ctm, Rectangle dBounds) throws IOException
+    Type1ShadingContext(PDShadingType1 shading, ColorModel colorModel, AffineTransform xform,
+                               Matrix matrix) throws IOException
     {
-        super(shading, colorModel, xform, ctm, dBounds);
+        super(shading, colorModel, xform, matrix);
         this.type1ShadingType = shading;
 
-        // spec p.308
         // (Optional) An array of four numbers [ xmin xmax ymin ymax ] 
         // specifying the rectangular domain of coordinates over which the 
         // color function(s) are defined. Default value: [ 0.0 1.0 0.0 1.0 ].
@@ -69,16 +63,7 @@ class Type1ShadingContext extends ShadingContext implements PaintContext
         }
         else
         {
-            domain = new float[]
-            {
-                0, 1, 0, 1
-            };
-        }
-
-        matrix = shading.getMatrix();
-        if (matrix == null)
-        {
-            matrix = new Matrix();
+            domain = new float[] { 0, 1, 0, 1 };
         }
 
         try
@@ -86,35 +71,28 @@ class Type1ShadingContext extends ShadingContext implements PaintContext
             // get inverse transform to be independent of 
             // shading matrix and current user / device space 
             // when handling actual pixels in getRaster()
-            rat = matrix.createAffineTransform().createInverse();
-            rat.concatenate(ctm.createAffineTransform().createInverse());
+            rat = shading.getMatrix().createAffineTransform().createInverse();
+            rat.concatenate(matrix.createAffineTransform().createInverse());
             rat.concatenate(xform.createInverse());
         }
         catch (NoninvertibleTransformException ex)
         {
             LOG.error(ex, ex);
         }
-
-        // get background values if available
-        COSArray bg = shading.getBackground();
-        if (bg != null)
-        {
-            background = bg.toFloatArray();
-        }
     }
 
     @Override
     public void dispose()
     {
-        outputColorModel = null;
-        shadingColorSpace = null;
+        super.dispose();
+        
         type1ShadingType = null;
     }
 
     @Override
     public ColorModel getColorModel()
     {
-        return outputColorModel;
+        return super.getColorModel();
     }
 
     @Override
@@ -125,45 +103,37 @@ class Type1ShadingContext extends ShadingContext implements PaintContext
         for (int j = 0; j < h; j++)
         {
             int currentY = y + j;
-            if (bboxRect != null)
+            if (bboxRect != null && (currentY < minBBoxY || currentY > maxBBoxY))
             {
-                if (currentY < minBBoxY || currentY > maxBBoxY)
-                {
-                    continue;
-                }
+                continue;
             }
+
             for (int i = 0; i < w; i++)
             {
                 int currentX = x + i;
-                if (bboxRect != null)
+                if (bboxRect != null && (currentX < minBBoxX || currentX > maxBBoxX))
                 {
-                    if (currentX < minBBoxX || currentX > maxBBoxX)
-                    {
-                        continue;
-                    }
+                    continue;
                 }
+
                 int index = (j * w + i) * 4;
                 boolean useBackground = false;
-                float[] values = new float[]
-                {
-                    x + i, y + j
-                };
+                float[] values = new float[] { x + i, y + j };
                 rat.transform(values, 0, values, 0, 1);
-                if (values[0] < domain[0] || values[0] > domain[1] || values[1] < domain[2] || values[1] > domain[3])
+                if (values[0] < domain[0] || values[0] > domain[1] ||
+                    values[1] < domain[2] || values[1] > domain[3])
                 {
-                    if (background != null)
-                    {
-                        useBackground = true;
-                    }
-                    else
+                    if (getBackground() == null)
                     {
                         continue;
                     }
+                    useBackground = true;
                 }
+
                 // evaluate function
                 if (useBackground)
                 {
-                    values = background;
+                    values = getBackground();
                 }
                 else
                 {
@@ -171,21 +141,23 @@ class Type1ShadingContext extends ShadingContext implements PaintContext
                     {
                         values = type1ShadingType.evalFunction(values);
                     }
-                    catch (IOException exception)
+                    catch (IOException e)
                     {
-                        LOG.error("error while processing a function", exception);
+                        LOG.error("error while processing a function", e);
                     }
                 }
+
                 // convert color values from shading color space to RGB
+                PDColorSpace shadingColorSpace = getShadingColorSpace();
                 if (shadingColorSpace != null)
                 {
                     try
                     {
                         values = shadingColorSpace.toRGB(values);
                     }
-                    catch (IOException exception)
+                    catch (IOException e)
                     {
-                        LOG.error("error processing color space", exception);
+                        LOG.error("error processing color space", e);
                     }
                 }
                 data[index] = (int) (values[0] * 255);

@@ -25,7 +25,6 @@ import org.apache.pdfbox.cos.COSName;
  * Introduced in PDF 1.3 specification, except Squiggly lines in 1.4.
  *
  * @author Paul King
- * @version $Revision: 1.1 $
  */
 public class PDAnnotationTextMarkup extends PDAnnotationMarkup
 {
@@ -89,7 +88,7 @@ public class PDAnnotationTextMarkup extends PDAnnotationMarkup
     {
         COSArray newQuadPoints = new COSArray();
         newQuadPoints.setFloatArray( quadPoints );
-        getDictionary().setItem( "QuadPoints", newQuadPoints );
+        getCOSObject().setItem(COSName.QUADPOINTS, newQuadPoints );
     }
 
     /**
@@ -100,7 +99,7 @@ public class PDAnnotationTextMarkup extends PDAnnotationMarkup
      */
     public float[] getQuadPoints()
     {
-        COSArray quadPoints = (COSArray) getDictionary().getDictionaryObject( "QuadPoints" );
+        COSArray quadPoints = (COSArray) getCOSObject().getDictionaryObject(COSName.QUADPOINTS);
         if (quadPoints != null)
         {
             return quadPoints.toFloatArray();
@@ -119,7 +118,7 @@ public class PDAnnotationTextMarkup extends PDAnnotationMarkup
      */
     public void setSubtype( String subType )
     {
-        getDictionary().setName( COSName.SUBTYPE, subType );
+        getCOSObject().setName( COSName.SUBTYPE, subType );
     }
 
     /**
@@ -130,7 +129,7 @@ public class PDAnnotationTextMarkup extends PDAnnotationMarkup
      */
     public String getSubtype()
     {
-        return getDictionary().getNameAsString( COSName.SUBTYPE);
+        return getCOSObject().getNameAsString( COSName.SUBTYPE);
     }
 
 

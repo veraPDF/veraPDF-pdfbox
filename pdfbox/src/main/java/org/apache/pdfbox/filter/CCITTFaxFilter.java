@@ -16,19 +16,17 @@
  */
 package org.apache.pdfbox.filter;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.filter.ccitt.TIFFFaxDecoder;
-import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.filter.ccitt.CCITTFaxG31DDecodeInputStream;
 import org.apache.pdfbox.filter.ccitt.FillOrderChangeInputStream;
+import org.apache.pdfbox.filter.ccitt.TIFFFaxDecoder;
+import org.apache.pdfbox.io.IOUtils;
 
 /**
  * Decodes image data that has been encoded using either Group 3 or Group 4
@@ -40,10 +38,10 @@ import org.apache.pdfbox.filter.ccitt.FillOrderChangeInputStream;
  */
 final class CCITTFaxFilter extends Filter
 {
-    private static final Log log = LogFactory.getLog(CCITTFaxFilter.class);
+    private static final Log LOG = LogFactory.getLog(CCITTFaxFilter.class);
 
     @Override
-    public final DecodeResult decode(InputStream encoded, OutputStream decoded,
+    public DecodeResult decode(InputStream encoded, OutputStream decoded,
                                          COSDictionary parameters, int index) throws IOException
     {
         DecodeResult result = new DecodeResult(new COSDictionary());
@@ -71,28 +69,30 @@ final class CCITTFaxFilter extends Filter
         int k = decodeParms.getInt(COSName.K, 0);
         boolean encodedByteAlign = decodeParms.getBoolean(COSName.ENCODED_BYTE_ALIGN, false);
         int arraySize = (cols + 7) / 8 * rows;
-        TIFFFaxDecoder faxDecoder = new TIFFFaxDecoder(1, cols, rows);
         // TODO possible options??
         long tiffOptions = 0;
-        byte[] compressed = IOUtils.toByteArray(encoded);
-        byte[] decompressed = null;
+        byte[] decompressed;
         if (k == 0)
         {
-            InputStream in = new CCITTFaxG31DDecodeInputStream(
-                    new ByteArrayInputStream(compressed), cols, encodedByteAlign);
-            in = new FillOrderChangeInputStream(in); //Decorate to change fill order
+            InputStream in = new CCITTFaxG31DDecodeInputStream(encoded, cols, rows, encodedByteAlign);
+            in = new FillOrderChangeInputStream(in);
             decompressed = IOUtils.toByteArray(in);
             in.close();
         }
-        else if (k > 0)
+        else
         {
+            TIFFFaxDecoder faxDecoder = new TIFFFaxDecoder(1, cols, rows);
+            byte[] compressed = IOUtils.toByteArray(encoded);
             decompressed = new byte[arraySize];
-            faxDecoder.decode2D(decompressed, compressed, 0, rows, tiffOptions);
-        }
-        else if (k < 0)
-        {
-            decompressed = new byte[arraySize];
-            faxDecoder.decodeT6(decompressed, compressed, 0, rows, tiffOptions, encodedByteAlign);
+            if (k > 0)
+            {
+                faxDecoder.decode2D(decompressed, compressed, 0, rows, tiffOptions);
+            }
+            else
+            {
+                // k < 0
+                faxDecoder.decodeT6(decompressed, compressed, 0, rows, tiffOptions, encodedByteAlign);
+            }
         }
 
         // invert bitmap
@@ -125,9 +125,9 @@ final class CCITTFaxFilter extends Filter
     }
 
     @Override
-    protected final void encode(InputStream input, OutputStream encoded, COSDictionary parameters)
+    protected void encode(InputStream input, OutputStream encoded, COSDictionary parameters)
             throws IOException
     {
-        log.warn("CCITTFaxDecode.encode is not implemented yet, skipping this stream.");
+        LOG.warn("CCITTFaxDecode.encode is not implemented yet, skipping this stream.");
     }
 }

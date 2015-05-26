@@ -28,8 +28,33 @@ import junit.framework.TestCase;
 public class TestRandomAccessBuffer extends TestCase 
 {
 
-    private static final int BUFFER_SIZE = 16384;
+    private static final int CHUNK_SIZE = 1024;
     
+    /**
+     * This test checks a corner case where the last read ends
+     * exactly at the end of a chunck (remainingBytes == 0)
+     * @throws IOException
+     */
+    public void testRemainingByteZero() throws IOException
+    {
+        RandomAccessBuffer buffer = new RandomAccessBuffer();
+        byte[] byteArray = new byte[CHUNK_SIZE + 2];
+        // fill the second chunk with "1"
+        for (int i = 0; i < 2; i++)
+        {
+            byteArray[CHUNK_SIZE + i] = 1;
+        }
+        buffer.write(byteArray, 0, byteArray.length);
+        buffer.seek(CHUNK_SIZE - 2);
+        // read the last bytes of the first chunk
+        buffer.read(byteArray, 0, 2);
+        // read the last 2 bytes of the buffer/the first bytes of the second chunk
+        buffer.read(byteArray, 0, 2);
+        // check the values read from the second chunk
+        assertEquals(2, byteArray[0]+byteArray[1]);
+        buffer.close();
+    }
+
     /**
      * This will test the {@link RandomAccessBuffer#read()} 
      * and {@link RandomAccessBuffer#write(int)} method.
@@ -53,6 +78,7 @@ public class TestRandomAccessBuffer extends TestCase
             result += buffer.read();
         }
         assertEquals(45, result);
+        buffer.close();
     }
 
     /**
@@ -93,6 +119,7 @@ public class TestRandomAccessBuffer extends TestCase
             result += byteArray[i];
         }
         assertEquals(45, result);
+        buffer.close();
     }
 
     /**
@@ -104,13 +131,13 @@ public class TestRandomAccessBuffer extends TestCase
      */
     public void testArrayReadWrite() throws IOException
     {
-        // create an array filled with 16384 * "0", 16384 * "1" and 100 * "2"
-        byte[] byteArray = new byte[ 2 * BUFFER_SIZE + 100];
-        for (int i = BUFFER_SIZE;i < 2 * BUFFER_SIZE; i++)
+        // create an array filled with 1024 * "0", 1024 * "1" and 100 * "2"
+        byte[] byteArray = new byte[ 2 * CHUNK_SIZE + 100];
+        for (int i = CHUNK_SIZE;i < 2 * CHUNK_SIZE; i++)
         {
             byteArray[i] = 1;
         }
-        for (int i = 2 * BUFFER_SIZE; i < 2 * BUFFER_SIZE + 100; i++)
+        for (int i = 2 * CHUNK_SIZE; i < 2 * CHUNK_SIZE + 100; i++)
         {
             byteArray[i] = 2;
         }
@@ -123,15 +150,15 @@ public class TestRandomAccessBuffer extends TestCase
         assertEquals(0, buffer.read());
         
         // jump to the last byte of the first chunk, it should be "0"
-        buffer.seek(BUFFER_SIZE - 1);
+        buffer.seek(CHUNK_SIZE - 1);
         assertEquals(0, buffer.read());
         
         // jump to the first byte of the second chunk, it should be "1"
-        buffer.seek(BUFFER_SIZE);
+        buffer.seek(CHUNK_SIZE);
         assertEquals(1, buffer.read());
         
         // jump to the end-5 of the first chunk
-        buffer.seek(BUFFER_SIZE - 5);
+        buffer.seek(CHUNK_SIZE - 5);
         // read the last 5 bytes from the first and the first 5 bytes 
         // from the second chunk and sum them up. The result should be "5"
         byteArray = new byte[10];
@@ -144,7 +171,7 @@ public class TestRandomAccessBuffer extends TestCase
         assertEquals(5, result);
 
         // jump to the end-5 of the second chunk
-        buffer.seek(2 * BUFFER_SIZE - 5);
+        buffer.seek(2 * CHUNK_SIZE - 5);
         // read the last 5 bytes from the second and the first 5 bytes 
         // from the third chunk and sum them up. The result should be "15"
         byteArray = new byte[10];
@@ -155,6 +182,7 @@ public class TestRandomAccessBuffer extends TestCase
             result += byteArray[i];
         }
         assertEquals(15, result);
+        buffer.close();
     }
 
     /**
@@ -164,17 +192,17 @@ public class TestRandomAccessBuffer extends TestCase
      */
     public void testOverwrite() throws IOException
     {
-        // create a buffer filled with 16384 * "0" and 100 * "1" 
-        byte[] byteArray = new byte[ BUFFER_SIZE + 100];
+        // create a buffer filled with 1024 * "0" and 100 * "1" 
+        byte[] byteArray = new byte[ CHUNK_SIZE + 100];
         RandomAccessBuffer buffer = new RandomAccessBuffer();
-        for (int i = BUFFER_SIZE;i < BUFFER_SIZE + 100; i++)
+        for (int i = CHUNK_SIZE;i < CHUNK_SIZE + 100; i++)
         {
             byteArray[i] = 1;
         }
         buffer.write(byteArray, 0, byteArray.length);
         
         // jump to the end-5 of the first chunk
-        buffer.seek(BUFFER_SIZE - 5);
+        buffer.seek(CHUNK_SIZE - 5);
         // read the last 5 bytes from the first and the first 5 bytes 
         // from the second chunk and sum them up. The result should be "5"
         byteArray = new byte[10];
@@ -187,7 +215,7 @@ public class TestRandomAccessBuffer extends TestCase
         assertEquals(5, result);
         
         // jump to the end-5 of the first chunk
-        buffer.seek(BUFFER_SIZE - 5);
+        buffer.seek(CHUNK_SIZE - 5);
         // write 5 "2" and 5 "3" to the buffer
         for ( int i=0;i < 5;i++ )
         {
@@ -198,7 +226,7 @@ public class TestRandomAccessBuffer extends TestCase
             buffer.write(3);
         }
         // jump to the end-5 of the first chunk
-        buffer.seek(BUFFER_SIZE - 5);
+        buffer.seek(CHUNK_SIZE - 5);
         // read the last 5 bytes from the first and the first 5 bytes 
         // from the second chunk and sum them up. The result should be "25"
         byteArray = new byte[10];
@@ -209,17 +237,19 @@ public class TestRandomAccessBuffer extends TestCase
             result += byteArray[i];
         }
         assertEquals(25, result);
+        buffer.close();
     }
     
     public void testPDFBOX1490() throws Exception
     {
-        // create a buffer filled with 16383 * "0" 
-        byte[] byteArray = new byte[ BUFFER_SIZE-1];
+        // create a buffer filled with 1024 * "0" 
+        byte[] byteArray = new byte[ CHUNK_SIZE-1];
         RandomAccessBuffer buffer = new RandomAccessBuffer();
         buffer.write(byteArray,0, byteArray.length);
         // fill the first buffer until the end
         buffer.write(0);
         // seek the current == last position in the first buffer chunk
         buffer.seek(buffer.getPosition());
+        buffer.close();
     }
 }

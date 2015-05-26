@@ -37,8 +37,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.xmpbox.XMPMetadata;
 import org.apache.xmpbox.XmpConstants;
 import org.apache.xmpbox.schema.XMPSchema;
@@ -69,13 +67,6 @@ import org.xml.sax.SAXException;
 
 public class DomXmpParser
 {
-
-    /**
-     * Log instance.
-     */
-    private static final Log LOG = LogFactory.getLog(DomXmpParser.class);
-
-
     private DocumentBuilder dBuilder;
 
     private NamespaceFinder nsFinder;
@@ -119,7 +110,8 @@ public class DomXmpParser
         Document document = null;
         try
         {
-            dBuilder.setErrorHandler(null); // prevents validation messages polluting the console
+            // prevents validation messages polluting the console
+            dBuilder.setErrorHandler(null);
             document = dBuilder.parse(input);
         }
         catch (SAXException e)
@@ -130,7 +122,7 @@ public class DomXmpParser
         {
             throw new XmpParsingException(ErrorType.Undefined, "Failed to parse", e);
         }
-        // document.normalizeDocument();
+
         XMPMetadata xmp = null;
 
         // Start reading
@@ -270,27 +262,7 @@ public class DomXmpParser
                     }
                 }
             }
-            // parse children elements as properties
-            for (Element property : properties)
-            {
-                String namespace = property.getNamespaceURI();
-                PropertyType type = checkPropertyDefinition(xmp, DomHelper.getQName(property));
-                // create the container
-                if (!tm.isDefinedSchema(namespace))
-                {
-                    throw new XmpParsingException(ErrorType.NoSchema,
-                            "This namespace is not a schema or a structured type : " + namespace);
-                }
-                XMPSchema schema = xmp.getSchema(namespace);
-                if (schema == null)
-                {
-                    schema = tm.getSchemaFactory(namespace).createXMPSchema(xmp, property.getPrefix());
-                    loadAttributes(schema, description);
-                }
-                ComplexPropertyContainer container = schema.getContainer();
-                // create property
-                createProperty(xmp, property, type, container);
-            }
+            parseChildrenAsProperties(xmp, properties, tm, description);
         }
         catch (XmpSchemaException e)
         {
@@ -299,6 +271,32 @@ public class DomXmpParser
         finally
         {
             nsFinder.pop();
+        }
+    }
+
+    private void parseChildrenAsProperties(XMPMetadata xmp, List<Element> properties, TypeMapping tm, Element description)
+            throws XmpParsingException, XmpSchemaException
+    {
+        // parse children elements as properties
+        for (Element property : properties)
+        {
+            String namespace = property.getNamespaceURI();
+            PropertyType type = checkPropertyDefinition(xmp, DomHelper.getQName(property));
+            // create the container
+            if (!tm.isDefinedSchema(namespace))
+            {
+                throw new XmpParsingException(ErrorType.NoSchema,
+                        "This namespace is not a schema or a structured type : " + namespace);
+            }
+            XMPSchema schema = xmp.getSchema(namespace);
+            if (schema == null)
+            {
+                schema = tm.getSchemaFactory(namespace).createXMPSchema(xmp, property.getPrefix());
+                loadAttributes(schema, description);
+            }
+            ComplexPropertyContainer container = schema.getContainer();
+            // create property
+            createProperty(xmp, property, type, container);
         }
     }
 
@@ -339,47 +337,11 @@ public class DomXmpParser
             }
             else if (type.type().isStructured())
             {
-                if (DomHelper.isParseTypeResource(property))
-                {
-                    AbstractStructuredType ast = parseLiDescription(xmp, DomHelper.getQName(property), property);
-                    if (ast != null)
-                    {
-                        ast.setPrefix(prefix);
-                        container.addProperty(ast);
-                    }
-                }
-                else
-                {
-                    Element inner = DomHelper.getFirstChildElement(property);
-                    if (inner != null)
-                    {
-                        nsFinder.push(inner);
-                        AbstractStructuredType ast = parseLiDescription(xmp, DomHelper.getQName(property), inner);
-                        ast.setPrefix(prefix);
-                        container.addProperty(ast);
-                    }
-                }
+                manageStructuredType(xmp, property, prefix, container);
             }
             else if (type.type() == Types.DefinedType)
             {
-                if (DomHelper.isParseTypeResource(property))
-                {
-                    AbstractStructuredType ast = parseLiDescription(xmp, DomHelper.getQName(property), property);
-                    ast.setPrefix(prefix);
-                    container.addProperty(ast);
-                }
-                else
-                {
-                    Element inner = DomHelper.getFirstChildElement(property);
-                    if (inner == null)
-                    {
-                        throw new XmpParsingException(ErrorType.Format, "property should contain child element : "
-                                + property);
-                    }
-                    AbstractStructuredType ast = parseLiDescription(xmp, DomHelper.getQName(property), inner);
-                    ast.setPrefix(prefix);
-                    container.addProperty(ast);
-                }
+                manageDefinedType(xmp, property, prefix, container);
             }
         }
         catch (IllegalArgumentException e)
@@ -390,7 +352,54 @@ public class DomXmpParser
         {
             nsFinder.pop();
         }
+    }
 
+    private void manageDefinedType(XMPMetadata xmp, Element property, String prefix, ComplexPropertyContainer container)
+            throws XmpParsingException
+    {
+        if (DomHelper.isParseTypeResource(property))
+        {
+            AbstractStructuredType ast = parseLiDescription(xmp, DomHelper.getQName(property), property);
+            ast.setPrefix(prefix);
+            container.addProperty(ast);
+        }
+        else
+        {
+            Element inner = DomHelper.getFirstChildElement(property);
+            if (inner == null)
+            {
+                throw new XmpParsingException(ErrorType.Format, "property should contain child element : "
+                        + property);
+            }
+            AbstractStructuredType ast = parseLiDescription(xmp, DomHelper.getQName(property), inner);
+            ast.setPrefix(prefix);
+            container.addProperty(ast);
+        }
+    }
+
+    private void manageStructuredType(XMPMetadata xmp, Element property, String prefix, ComplexPropertyContainer container)
+            throws XmpParsingException
+    {
+        if (DomHelper.isParseTypeResource(property))
+        {
+            AbstractStructuredType ast = parseLiDescription(xmp, DomHelper.getQName(property), property);
+            if (ast != null)
+            {
+                ast.setPrefix(prefix);
+                container.addProperty(ast);
+            }
+        }
+        else
+        {
+            Element inner = DomHelper.getFirstChildElement(property);
+            if (inner != null)
+            {
+                nsFinder.push(inner);
+                AbstractStructuredType ast = parseLiDescription(xmp, DomHelper.getQName(property), inner);
+                ast.setPrefix(prefix);
+                container.addProperty(ast);
+            }
+        }
     }
 
     private void manageSimpleType(XMPMetadata xmp, Element property, Types type, ComplexPropertyContainer container)
@@ -770,7 +779,7 @@ public class DomXmpParser
             return;
         }
         NodeList nl = root.getChildNodes();
-        for (int i=0; i < nl.getLength() ; i ++) 
+        for (int i=0; i < nl.getLength(); i++) 
         {
             Node node = nl.item(i);
             if (node instanceof Comment)

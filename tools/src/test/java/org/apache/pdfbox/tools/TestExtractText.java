@@ -20,7 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import junit.framework.TestCase;
-import org.apache.pdfbox.tools.ExtractText;
 
 /**
  * Test suite for ExtractText. 
@@ -50,7 +49,7 @@ public class TestExtractText extends TestCase
         }
 
         String result = outBytes.toString("UTF-8");
-        assertTrue(result.indexOf("PDF1") != -1);
-        assertTrue(result.indexOf("PDF2") != -1);
+        assertTrue(result.contains("PDF1"));
+        assertTrue(result.contains("PDF2"));
     }
 }

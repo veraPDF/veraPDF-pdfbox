@@ -16,14 +16,12 @@
  */
 package org.apache.pdfbox.pdmodel.common;
 
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 
 /**
  * A wrapper for a COS dictionary.
  *
- * @author <a href="mailto:Johannes%20Koch%20%3Ckoch@apache.org%3E">Johannes Koch</a>
- * @version $Revision: $
+ * @author Johannes Koch
  *
  */
 public class PDDictionaryWrapper implements COSObjectable
@@ -49,25 +47,14 @@ public class PDDictionaryWrapper implements COSObjectable
         this.dictionary = dictionary;
     }
 
-
     /**
      * {@inheritDoc}
      */
-    public COSBase getCOSObject()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return this.dictionary;
     }
-
-    /**
-     * Gets the COS dictionary.
-     * 
-     * @return the COS dictionary
-     */
-    protected COSDictionary getCOSDictionary()
-    {
-        return this.dictionary;
-    }
-
 
     @Override
     public boolean equals(Object obj)

@@ -26,7 +26,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDStream;
-import org.apache.pdfbox.pdmodel.encryption.StandardDecryptionMaterial;
 import org.apache.pdfbox.pdmodel.font.PDCIDFont;
 import org.apache.pdfbox.pdmodel.font.PDCIDFontType2;
 import org.apache.pdfbox.pdmodel.font.PDFont;
@@ -122,13 +121,7 @@ public class ExtractTTFFonts
                 PDDocument document = null;
                 try
                 {
-                    document = PDDocument.load(new File(pdfFile));
-
-                    if (document.isEncrypted())
-                    {
-                        StandardDecryptionMaterial sdm = new StandardDecryptionMaterial(password);
-                        document.openProtection(sdm);
-                    }
+                    document = PDDocument.load(new File(pdfFile), password);
                     for (PDPage page : document.getPages())
                     {
                         PDResources resources = page.getResources();
@@ -210,10 +203,20 @@ public class ExtractTTFFonts
             PDStream ff2Stream = fd.getFontFile2();
             if (ff2Stream != null)
             {
-                System.out.println("Writing font:" + name);
-                FileOutputStream fos = new FileOutputStream(new File(name + ".ttf"));
-                IOUtils.copy(ff2Stream.createInputStream(), fos);
-                fos.close();
+                FileOutputStream fos = null;
+                try
+                {
+                    System.out.println("Writing font:" + name);
+                    fos = new FileOutputStream(new File(name + ".ttf"));
+                    IOUtils.copy(ff2Stream.createInputStream(), fos);
+                }
+                finally
+                {
+                    if (fos != null)
+                    {
+                        fos.close();
+                    }
+                }
             }
         }
     }

@@ -104,28 +104,7 @@ public final class PublicKeySecurityHandler extends SecurityHandler
     }
 
     /**
-     * Decrypt the document.
-     *
-     * @param doc The document to decrypt.
-     * @param decryptionMaterial The data used to decrypt the document.
-     *
-     * @throws IOException If there is an error accessing data.
-     */
-    @Override
-    public void decryptDocument(PDDocument doc, DecryptionMaterial decryptionMaterial) throws IOException
-    {
-        this.document = doc;
-        PDEncryption dictionary = doc.getEncryption();
-        prepareForDecryption( dictionary, doc.getDocument().getDocumentID(), decryptionMaterial );
-        proceedDecryption();
-    }
-
-    /**
      * Prepares everything to decrypt the document.
-     *
-     * If {@link #decryptDocument(PDDocument, DecryptionMaterial)} is used, this
-     * method is called from there. Only if decryption of single objects is
-     * needed this should be called instead.
      *
      * @param encryption encryption dictionary, can be retrieved via
      * {@link PDDocument#getEncryption()}
@@ -135,7 +114,7 @@ public final class PublicKeySecurityHandler extends SecurityHandler
      * @param decryptionMaterial Information used to decrypt the document.
      *
      * @throws IOException If there is an error accessing data. If verbose mode
-     * is enabled, the exception message will provide more details why the the
+     * is enabled, the exception message will provide more details why the
      * match wasn't successful.
      */
     @Override
@@ -149,7 +128,7 @@ public final class PublicKeySecurityHandler extends SecurityHandler
                     "Provided decryption material is not compatible with the document");
         }
 
-        decryptMetadata = encryption.isEncryptMetaData();
+        setDecryptMetadata(encryption.isEncryptMetaData());
         if (encryption.getLength() != 0)
         {
             this.keyLength = encryption.getLength();
@@ -170,7 +149,7 @@ public final class PublicKeySecurityHandler extends SecurityHandler
 
             int recipientFieldsLength = 0;
             int i = 0;
-            String extraInfo = "";
+            StringBuilder extraInfo = new StringBuilder();
             for (; i < encryption.getRecipientsLength(); i++)
             {
                 COSString recipientFieldString = encryption.getRecipientStringAt(i);
@@ -200,24 +179,12 @@ public final class PublicKeySecurityHandler extends SecurityHandler
                     j++;
                     if (certificate != null)
                     {
-                        extraInfo += "\n" + j + ": ";
+                        extraInfo.append('\n');
+                        extraInfo.append(j);
+                        extraInfo.append(": ");
                         if (rid instanceof KeyTransRecipientId)
                         {
-                            KeyTransRecipientId ktRid = (KeyTransRecipientId) rid;
-                            BigInteger ridSerialNumber = ktRid.getSerialNumber();
-                            if (ridSerialNumber != null)
-                            {
-                                String certSerial = "unknown";
-                                BigInteger certSerialNumber = certificate.getSerialNumber();
-                                if (certSerialNumber != null)
-                                {
-                                    certSerial = certSerialNumber.toString(16);
-                                }
-                                extraInfo += "serial-#: rid " + ridSerialNumber.toString(16)
-                                        + " vs. cert " + certSerial + " issuer: rid \'"
-                                        + ktRid.getIssuer() + "\' vs. cert \'"
-                                        + (materialCert == null ? "null" : materialCert.getIssuer()) + "\' ";
-                            }
+                            appendCertInfo(extraInfo, (KeyTransRecipientId) rid, certificate, materialCert);
                         }
                     }
                 }
@@ -227,7 +194,7 @@ public final class PublicKeySecurityHandler extends SecurityHandler
             if (!foundRecipient || envelopedData == null)
             {
                 throw new IOException("The certificate matches none of " + i
-                        + " recipient entries" + extraInfo);
+                        + " recipient entries" + extraInfo.toString());
             }
             if (envelopedData.length != 24)
             {
@@ -240,8 +207,9 @@ public final class PublicKeySecurityHandler extends SecurityHandler
             byte[] accessBytes = new byte[4];
             System.arraycopy(envelopedData, 20, accessBytes, 0, 4);
 
-            currentAccessPermission = new AccessPermission(accessBytes);
+            AccessPermission currentAccessPermission = new AccessPermission(accessBytes);
             currentAccessPermission.setReadOnly();
+            setCurrentAccessPermission(currentAccessPermission);
 
             // what we will put in the SHA1 = the seed + each byte contained in the recipients array
             byte[] sha1Input = new byte[recipientFieldsLength + 20];
@@ -278,6 +246,30 @@ public final class PublicKeySecurityHandler extends SecurityHandler
             throw new IOException(e);
         }
     }
+
+    private void appendCertInfo(StringBuilder extraInfo, KeyTransRecipientId ktRid, 
+            X509Certificate certificate, X509CertificateHolder materialCert)
+    {
+        BigInteger ridSerialNumber = ktRid.getSerialNumber();
+        if (ridSerialNumber != null)
+        {
+            String certSerial = "unknown";
+            BigInteger certSerialNumber = certificate.getSerialNumber();
+            if (certSerialNumber != null)
+            {
+                certSerial = certSerialNumber.toString(16);
+            }
+            extraInfo.append("serial-#: rid ");
+            extraInfo.append(ridSerialNumber.toString(16));
+            extraInfo.append(" vs. cert ");
+            extraInfo.append(certSerial);
+            extraInfo.append(" issuer: rid \'");
+            extraInfo.append(ktRid.getIssuer());
+            extraInfo.append("\' vs. cert \'");
+            extraInfo.append(materialCert == null ? "null" : materialCert.getIssuer());
+            extraInfo.append("\' ");
+        }
+    }
     
     /**
      * Prepare the document for encryption.
@@ -306,9 +298,11 @@ public final class PublicKeySecurityHandler extends SecurityHandler
             dictionary.setFilter(FILTER);
             dictionary.setLength(this.keyLength);
             dictionary.setVersion(2);
+            
+            // remove CF, StmF, and StrF entries that may be left from a previous encryption
+            dictionary.removeV45filters();
+            
             dictionary.setSubFilter(SUBFILTER);
-
-            byte[][] recipientsField = new byte[policy.getNumberOfRecipients()][];
 
             // create the 20 bytes seed
 
@@ -328,44 +322,8 @@ public final class PublicKeySecurityHandler extends SecurityHandler
             key.init(192, new SecureRandom());
             SecretKey sk = key.generateKey();
             System.arraycopy(sk.getEncoded(), 0, seed, 0, 20); // create the 20 bytes seed
-
-
-            Iterator<PublicKeyRecipient> it = policy.getRecipientsIterator();
-            int i = 0;
-
-
-            while(it.hasNext())
-            {
-                PublicKeyRecipient recipient = it.next();
-                X509Certificate certificate = recipient.getX509();
-                int permission = recipient.getPermission().getPermissionBytesForPublicKey();
-
-                byte[] pkcs7input = new byte[24];
-                byte one = (byte)(permission);
-                byte two = (byte)(permission >>> 8);
-                byte three = (byte)(permission >>> 16);
-                byte four = (byte)(permission >>> 24);
-
-                System.arraycopy(seed, 0, pkcs7input, 0, 20); // put this seed in the pkcs7 input
-
-                pkcs7input[20] = four;
-                pkcs7input[21] = three;
-                pkcs7input[22] = two;
-                pkcs7input[23] = one;
-
-                ASN1Primitive obj = createDERForRecipient(pkcs7input, certificate);
-
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-                DEROutputStream k = new DEROutputStream(baos);
-
-                k.writeObject(obj);
-
-                recipientsField[i] = baos.toByteArray();
-
-                i++;
-            }
-
+            
+            byte[][] recipientsField = computeRecipientsField(seed);
             dictionary.setRecipients(recipientsField);
 
             int sha1InputLength = seed.length;
@@ -376,13 +334,11 @@ public final class PublicKeySecurityHandler extends SecurityHandler
                 sha1InputLength += string.getBytes().length;
             }
 
-
             byte[] sha1Input = new byte[sha1InputLength];
 
             System.arraycopy(seed, 0, sha1Input, 0, 20);
 
             int sha1InputOffset = 20;
-
 
             for(int j=0; j<dictionary.getRecipientsLength(); j++)
             {
@@ -406,6 +362,46 @@ public final class PublicKeySecurityHandler extends SecurityHandler
         {
             throw new IOException(e);
         }
+    }
+
+    private byte[][] computeRecipientsField(byte[] seed) throws GeneralSecurityException, IOException
+    {
+        byte[][] recipientsField = new byte[policy.getNumberOfRecipients()][];
+        Iterator<PublicKeyRecipient> it = policy.getRecipientsIterator();
+        int i = 0;
+        
+        while(it.hasNext())
+        {
+            PublicKeyRecipient recipient = it.next();
+            X509Certificate certificate = recipient.getX509();
+            int permission = recipient.getPermission().getPermissionBytesForPublicKey();
+            
+            byte[] pkcs7input = new byte[24];
+            byte one = (byte)(permission);
+            byte two = (byte)(permission >>> 8);
+            byte three = (byte)(permission >>> 16);
+            byte four = (byte)(permission >>> 24);
+            
+            System.arraycopy(seed, 0, pkcs7input, 0, 20); // put this seed in the pkcs7 input
+            
+            pkcs7input[20] = four;
+            pkcs7input[21] = three;
+            pkcs7input[22] = two;
+            pkcs7input[23] = one;
+            
+            ASN1Primitive obj = createDERForRecipient(pkcs7input, certificate);
+            
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            
+            DEROutputStream k = new DEROutputStream(baos);
+            
+            k.writeObject(obj);
+            
+            recipientsField[i] = baos.toByteArray();
+            
+            i++;
+        }
+        return recipientsField;
     }
 
     private ASN1Primitive createDERForRecipient(byte[] in, X509Certificate cert)
@@ -491,5 +487,14 @@ public final class PublicKeySecurityHandler extends SecurityHandler
         DEROctetString octets = new DEROctetString(cipher.doFinal(abyte0));
         RecipientIdentifier recipientId = new RecipientIdentifier(serial);
         return new KeyTransRecipientInfo(recipientId, algorithmId, octets);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasProtectionPolicy()
+    {
+        return policy != null;
     }
 }

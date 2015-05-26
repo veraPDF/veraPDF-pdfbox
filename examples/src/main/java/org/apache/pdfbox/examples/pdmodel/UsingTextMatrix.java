@@ -21,13 +21,13 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.edit.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.util.Matrix;
 
 /**
  * This is an example of how to use a text matrix.
- * @version $Revision: 1.0 $
  */
 public class UsingTextMatrix
 {
@@ -72,15 +72,16 @@ public class UsingTextMatrix
             // counterclockwise rotation
             for (int i=0;i<8;i++) 
             {
-                contentStream.setTextRotation(i*Math.PI*0.25, centeredXPosition, 
-                        pageSize.getHeight()-centeredYPosition);
-                contentStream.drawString( message + " " + i);
+                contentStream.setTextMatrix(Matrix.getRotateInstance(i * Math.PI * 0.25,
+                        centeredXPosition, pageSize.getHeight() - centeredYPosition));
+                contentStream.showText(message + " " + i);
             }
             // clockwise rotation
             for (int i=0;i<8;i++) 
             {
-                contentStream.setTextRotation(-i*Math.PI*0.25, centeredXPosition, centeredYPosition);
-                contentStream.drawString( message + " " + i);
+                contentStream.setTextMatrix(Matrix.getRotateInstance(-i*Math.PI*0.25,
+                        centeredXPosition, centeredYPosition));
+                contentStream.showText(message + " " + i);
             }
 
             contentStream.endText();
@@ -95,11 +96,11 @@ public class UsingTextMatrix
             contentStream.setFont( font, fontSize );
             contentStream.beginText();
 
-            // text scaling
+            // text scaling and translation
             for (int i=0;i<10;i++)
             {
-                contentStream.setTextScaling(12+(i*6), 12+(i*6), 100, 100+i*50);
-                contentStream.drawString( message + " " +i);
+                contentStream.setTextMatrix(new Matrix(12 + (i * 6), 0, 0, 12+(i*6), 100, 100+i*50));
+                contentStream.showText(message + " " + i);
             }
             contentStream.endText();
             contentStream.close();
@@ -115,17 +116,17 @@ public class UsingTextMatrix
 
             int i = 0;
             // text scaling combined with rotation 
-            contentStream.setTextMatrix(12, 0, 0, 12, centeredXPosition, centeredYPosition*1.5);
-            contentStream.drawString( message + " " +i++);
+            contentStream.setTextMatrix(new Matrix(12, 0, 0, 12, centeredXPosition, centeredYPosition*1.5f));
+            contentStream.showText(message + " " + i++);
 
-            contentStream.setTextMatrix(0, 18, -18, 0, centeredXPosition, centeredYPosition*1.5);
-            contentStream.drawString( message + " " +i++);
+            contentStream.setTextMatrix(new Matrix(0, 18, -18, 0, centeredXPosition, centeredYPosition*1.5f));
+            contentStream.showText(message + " " + i++);
 
-            contentStream.setTextMatrix(-24, 0, 0, -24, centeredXPosition, centeredYPosition*1.5);
-            contentStream.drawString( message + " " +i++);
+            contentStream.setTextMatrix(new Matrix(-24, 0, 0, -24, centeredXPosition, centeredYPosition*1.5f));
+            contentStream.showText(message + " " + i++);
 
-            contentStream.setTextMatrix(0, -30, 30, 0, centeredXPosition, centeredYPosition*1.5);
-            contentStream.drawString( message + " " +i++);
+            contentStream.setTextMatrix(new Matrix(0, -30, 30, 0, centeredXPosition, centeredYPosition*1.5f));
+            contentStream.showText(message + " " + i++);
 
             contentStream.endText();
             contentStream.close();

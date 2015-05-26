@@ -17,7 +17,6 @@
 package org.apache.pdfbox.io;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
@@ -32,7 +31,7 @@ import java.util.Map;
  * File is accessed via {@link RandomAccessFile} and is read in byte chunks
  * which are cached.
  * 
- * @author Timo Boehme (timo.boehme at ontochem com)
+ * @author Timo Boehme
  */
 public class RandomAccessBufferedFileInputStream
 extends InputStream implements RandomAccessRead
@@ -46,18 +45,18 @@ extends InputStream implements RandomAccessRead
     private byte[] lastRemovedCachePage = null;
 
     /** Create a LRU page cache. */
-    private final LinkedHashMap<Long, byte[]> pageCache =
+    private final Map<Long, byte[]> pageCache =
         new LinkedHashMap<Long, byte[]>( maxCachedPages, 0.75f, true )
     {
         private static final long serialVersionUID = -6302488539257741101L;
 
         @Override
-        protected boolean removeEldestEntry( Map.Entry<Long, byte[]> _eldest )
+        protected boolean removeEldestEntry( Map.Entry<Long, byte[]> eldest )
         {
             final boolean doRemove = size() > maxCachedPages;
             if (doRemove)
             {
-                lastRemovedCachePage = _eldest.getValue();
+                lastRemovedCachePage = eldest.getValue();
             }
             return doRemove;
         }
@@ -70,19 +69,17 @@ extends InputStream implements RandomAccessRead
     private final RandomAccessFile raFile;
     private final long fileLength;
     private long fileOffset = 0;
-
-    // ------------------------------------------------------------------------
+    private boolean isClosed;
+    
     /** Create input stream instance for given file. */
-    public RandomAccessBufferedFileInputStream( File _file )
-    throws FileNotFoundException, IOException
+    public RandomAccessBufferedFileInputStream( File file ) throws IOException 
     {
-        raFile = new RandomAccessFile(_file, "r");
-        fileLength = _file.length();
+        raFile = new RandomAccessFile(file, "r");
+        fileLength = file.length();
 
         seek(0);
     }
-
-    // ------------------------------------------------------------------------
+    
     /**
      *  Returns offset in file at which next byte would be read.
      *  
@@ -92,19 +89,19 @@ extends InputStream implements RandomAccessRead
     {
         return fileOffset;
     }
-
-    // ------------------------------------------------------------------------
+    
     /** Returns offset in file at which next byte would be read. */
+    @Override
     public long getPosition()
     {
         return fileOffset;
     }
-
-    // ------------------------------------------------------------------------
+    
     /**
      * Seeks to new position. If new position is outside of current page the new
      * page is either taken from cache or read from file and added to cache.
      */
+    @Override
     public void seek( final long newOffset ) throws IOException
     {
         final long newPageOffset = newOffset & pageOffsetMask;
@@ -124,14 +121,13 @@ extends InputStream implements RandomAccessRead
         offsetWithinPage = (int) ( newOffset - curPageOffset );
         fileOffset = newOffset;
     }
-
-    // ------------------------------------------------------------------------
+    
     /**
      * Reads a page with data from current file position. If we have a
      * previously removed page from cache the buffer of this page is reused.
      * Otherwise a new byte buffer is created.
      */
-    private final byte[] readPage() throws IOException
+    private byte[] readPage() throws IOException
     {
         byte[] page;
 
@@ -159,8 +155,7 @@ extends InputStream implements RandomAccessRead
 
         return page;
     }
-
-    // ------------------------------------------------------------------------
+    
     @Override
     public int read() throws IOException
     {
@@ -177,8 +172,7 @@ extends InputStream implements RandomAccessRead
         fileOffset++;
         return curPage[offsetWithinPage++] & 0xff;
     }
-
-    // ------------------------------------------------------------------------
+    
     @Override
     public int read( byte[] b, int off, int len ) throws IOException
     {
@@ -194,7 +188,9 @@ extends InputStream implements RandomAccessRead
 
         int commonLen = Math.min( pageSize - offsetWithinPage, len );
         if ( ( fileLength - fileOffset ) < pageSize )
+        {
             commonLen = Math.min( commonLen, (int) ( fileLength - fileOffset ) );
+        }
 
         System.arraycopy( curPage, offsetWithinPage, b, off, commonLen );
 
@@ -203,15 +199,13 @@ extends InputStream implements RandomAccessRead
 
         return commonLen;
     }
-
-    // ------------------------------------------------------------------------
+    
     @Override
     public int available() throws IOException
     {
         return (int) Math.min( fileLength - fileOffset, Integer.MAX_VALUE );
     }
-
-    // ------------------------------------------------------------------------
+    
     @Override
     public long skip( long n ) throws IOException
     {
@@ -237,18 +231,24 @@ extends InputStream implements RandomAccessRead
 
         return toSkip;
     }
-
-    // ------------------------------------------------------------------------
+    
+    @Override
     public long length() throws IOException
     {
         return fileLength;
     }
-
-    // ------------------------------------------------------------------------
+    
     @Override
     public void close() throws IOException
     {
         raFile.close();
         pageCache.clear();
+        isClosed = true;
+    }
+
+    @Override
+    public boolean isClosed()
+    {
+        return isClosed;
     }
 }

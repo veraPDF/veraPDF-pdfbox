@@ -32,10 +32,12 @@ import org.apache.xmpbox.XMPMetadata;
 public abstract class AbstractSimpleProperty extends AbstractField
 {
 
-    private String namespace;
+    private final String namespace;
 
-    private String prefix;
+    private final String prefix;
 
+    private final Object rawValue;
+    
     /**
      * Property specific type constructor (namespaceURI is given)
      * 
@@ -57,6 +59,7 @@ public abstract class AbstractSimpleProperty extends AbstractField
         setValue(value);
         this.namespace = namespaceURI;
         this.prefix = prefix;
+        this.rawValue = value;
 
     }
 
@@ -76,7 +79,24 @@ public abstract class AbstractSimpleProperty extends AbstractField
     public abstract String getStringValue();
 
     public abstract Object getValue();
+    
+    /**
+     * Return the properties raw value.
+     * <p>
+     * The properties raw value is how it has been
+     * serialized into the XML. Allows to retrieve the
+     * low level date for validation purposes.
+     * </p> 
+     * 
+     * @return the raw value.
+     */
+    public Object getRawValue()
+    {
+        return rawValue;
+    }
+    
 
+    @Override
     public String toString()
     {
         StringBuilder sb = new StringBuilder();
@@ -90,6 +110,7 @@ public abstract class AbstractSimpleProperty extends AbstractField
      * 
      * @return the namespace URI
      */
+    @Override
     public final String getNamespace()
     {
         return namespace;
@@ -100,6 +121,7 @@ public abstract class AbstractSimpleProperty extends AbstractField
      * 
      * @return the prefix specified
      */
+    @Override
     public String getPrefix()
     {
         return prefix;

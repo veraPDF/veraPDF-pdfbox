@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
+
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 
@@ -38,7 +39,7 @@ import org.apache.pdfbox.cos.COSName;
  */
 public abstract class Filter
 {
-    private static final Log log = LogFactory.getLog(Filter.class);
+    private static final Log LOG = LogFactory.getLog(Filter.class);
 
     protected Filter()
     {
@@ -93,7 +94,7 @@ public abstract class Filter
         }
         else if (obj != null)
         {
-            log.error("Expected DecodeParams to be an Array or Dictionary but found " +
+            LOG.error("Expected DecodeParams to be an Array or Dictionary but found " +
                       obj.getClass().getName());
         }
         return new COSDictionary();
@@ -107,7 +108,7 @@ public abstract class Filter
      * @return The image reader for the format.
      * @throws MissingImageReaderException if no image reader is found.
      */
-    protected ImageReader findImageReader(String formatName, String errorCause) throws MissingImageReaderException
+    protected static ImageReader findImageReader(String formatName, String errorCause) throws MissingImageReaderException
     {
         Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName(formatName);
         ImageReader reader = null;

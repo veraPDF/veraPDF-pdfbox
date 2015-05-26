@@ -16,15 +16,13 @@
  */
 package org.apache.pdfbox.pdmodel.interactive.action;
 
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 
 /**
  * This represents a URI action that can be executed in a PDF document.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @author Panagiotis Toumasis (ptoumasis@mail.gr)
- * @version $Revision: 1.3 $
+ * @author Ben Litchfield
+ * @author Panagiotis Toumasis
  */
 public class PDActionURI extends PDAction
 {
@@ -50,28 +48,6 @@ public class PDActionURI extends PDAction
     public PDActionURI(COSDictionary a)
     {
         super(a);
-    }
-
-    /**
-     * Convert this standard java object to a COS object.
-     *
-     * @return The cos object that matches this Java object.
-     */
-    @Override
-    public COSBase getCOSObject()
-    {
-        return action;
-    }
-
-    /**
-     * Convert this standard java object to a COS object.
-     *
-     * @return The cos object that matches this Java object.
-     */
-    @Override
-    public COSDictionary getCOSDictionary()
-    {
-        return action;
     }
 
     /**

@@ -22,10 +22,9 @@ import java.io.OutputStream;
 /**
  * This class represents a boolean value in the PDF document.
  *
- * @author <a href="ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.14 $
+ * @author Ben Litchfield
  */
-public class COSBoolean extends COSBase
+public final class COSBoolean extends COSBase
 {
     /**
      * The true boolean token.
@@ -46,14 +45,14 @@ public class COSBoolean extends COSBase
      */
     public static final COSBoolean FALSE = new COSBoolean( false );
 
-    private boolean value;
+    private final boolean value;
 
     /**
      * Constructor.
      *
      * @param aValue The boolean value.
      */
-    private COSBoolean(boolean aValue )
+    private COSBoolean(boolean aValue)
     {
         value = aValue;
     }
@@ -109,6 +108,7 @@ public class COSBoolean extends COSBase
      * @return any object, depending on the visitor implementation, or null
      * @throws IOException If an error occurs while visiting this object.
      */
+    @Override
     public Object accept(ICOSVisitor  visitor) throws IOException
     {
         return visitor.visitFromBoolean(this);
@@ -119,6 +119,7 @@ public class COSBoolean extends COSBase
      *
      * @return The string value of this object.
      */
+    @Override
     public String toString()
     {
         return String.valueOf( value );

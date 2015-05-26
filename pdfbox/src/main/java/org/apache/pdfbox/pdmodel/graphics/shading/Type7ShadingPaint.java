@@ -15,6 +15,7 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
+import java.awt.Color;
 import java.awt.Paint;
 import java.awt.PaintContext;
 import java.awt.Rectangle;
@@ -38,18 +39,18 @@ class Type7ShadingPaint implements Paint
     private static final Log LOG = LogFactory.getLog(Type7ShadingPaint.class);
 
     private final PDShadingType7 shading;
-    private final Matrix ctm;
+    private final Matrix matrix;
 
     /**
      * Constructor.
      *
      * @param shading the shading resources
-     * @param ctm current transformation matrix
+     * @param matrix the pattern matrix concatenated with that of the parent content stream
      */
-    public Type7ShadingPaint(PDShadingType7 shading, Matrix ctm)
+    Type7ShadingPaint(PDShadingType7 shading, Matrix matrix)
     {
         this.shading = shading;
-        this.ctm = ctm;
+        this.matrix = matrix;
     }
 
     @Override
@@ -64,12 +65,12 @@ class Type7ShadingPaint implements Paint
     {
         try
         {
-            return new Type7ShadingContext(shading, cm, xform, ctm, deviceBounds);
+            return new Type7ShadingContext(shading, cm, xform, matrix, deviceBounds);
         }
-        catch (IOException ex)
+        catch (IOException e)
         {
-            LOG.error(ex);
-            return null;
+            LOG.error("An error occurred while painting", e);
+            return new Color(0, 0, 0, 0).createContext(cm, deviceBounds, userBounds, xform, hints);
         }
     }
 }

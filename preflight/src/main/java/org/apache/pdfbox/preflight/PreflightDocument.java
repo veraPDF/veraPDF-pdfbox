@@ -49,7 +49,7 @@ public class PreflightDocument extends PDDocument
      */
     public PreflightDocument(Format format) throws IOException
     {
-        this(format, (PreflightConfiguration) null);
+        this(format, null);
     }
 
     /**
@@ -100,10 +100,6 @@ public class PreflightDocument extends PDDocument
     {
         switch (format)
         {
-        // case PDF_A1A:
-        //
-        // break;
-
         default: // default is PDF/A1-b
             this.config = PreflightConfiguration.createPdfA1BConfiguration();
             break;

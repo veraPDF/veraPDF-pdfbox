@@ -17,6 +17,7 @@ package org.apache.pdfbox.pdmodel.graphics.shading;
 
 import java.awt.Point;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * This class describes a rasterized line. This was done as part of GSoC2014,
@@ -31,7 +32,7 @@ class Line
     private final float[] color0;
     private final float[] color1;
 
-    protected final HashSet<Point> linePoints; // all the points in this rasterized line
+    protected final Set<Point> linePoints; // all the points in this rasterized line
 
     /**
      * Constructor of class Line.
@@ -41,7 +42,7 @@ class Line
      * @param c0 color of point p0
      * @param c1 color of point p1
      */
-    public Line(Point p0, Point p1, float[] c0, float[] c1)
+    Line(Point p0, Point p1, float[] c0, float[] c1)
     {
         point0 = p0;
         point1 = p1;
@@ -62,11 +63,11 @@ class Line
      * @param y1 coordinate
      * @return all the points on the rasterized line from (x0, y0) to (x1, y1)
      */
-    private HashSet<Point> calcLine(int x0, int y0, int x1, int y1)
+    private Set<Point> calcLine(int x0, int y0, int x1, int y1)
     {
-        HashSet<Point> points = new HashSet<Point>(3);
-        int dx = (int) Math.round(Math.abs(x1 - x0));
-        int dy = (int) Math.round(Math.abs(y1 - y0));
+        Set<Point> points = new HashSet<Point>(3);
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
         int sy = y0 < y1 ? 1 : -1;
         int err = dx - dy;
@@ -80,13 +81,13 @@ class Line
             int e2 = 2 * err;
             if (e2 > -dy)
             {
-                err = err - dy;
-                x0 = x0 + sx;
+                err -= dy;
+                x0 += sx;
             }
             if (e2 < dx)
             {
-                err = err + dx;
-                y0 = y0 + sy;
+                err += dx;
+                y0 += sy;
             }
         }
         return points;
@@ -112,7 +113,7 @@ class Line
             float l = point1.y - point0.y;
             for (int i = 0; i < numberOfColorComponents; i++)
             {
-                pc[i] = (float) (color0[i] * (point1.y - p.y) / l
+                pc[i] = (color0[i] * (point1.y - p.y) / l
                         + color1[i] * (p.y - point0.y) / l);
             }
         }
@@ -121,7 +122,7 @@ class Line
             float l = point1.x - point0.x;
             for (int i = 0; i < numberOfColorComponents; i++)
             {
-                pc[i] = (float) (color0[i] * (point1.x - p.x) / l
+                pc[i] = (color0[i] * (point1.x - p.x) / l
                         + color1[i] * (p.x - point0.x) / l);
             }
         }

@@ -17,12 +17,9 @@
 package org.apache.pdfbox.pdmodel.graphics.color;
 
 import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSFloat;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.common.PDRange;
-import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 import java.io.IOException;
@@ -33,29 +30,16 @@ import java.io.IOException;
  * @author Ben Litchfield
  * @author John Hewson
  */
-public final class PDLab extends PDCIEBasedColorSpace
+public final class PDLab extends PDCIEDictionaryBasedColorSpace
 {
-    private static final ColorSpace CIEXYZ = ColorSpace.getInstance(ColorSpace.CS_CIEXYZ);
-
-    private final COSDictionary dictionary;
     private PDColor initialColor;
     
-    // we need to cache whitepoint values, because using getWhitePoint()
-    // would create a new default object for each pixel conversion if the original
-    // PDF didn't have a whitepoint array
-    private float wpX = 1;
-    private float wpY = 1;
-    private float wpZ = 1;
-
     /**
      * Creates a new Lab color space.
      */
     public PDLab()
     {
-        array = new COSArray();
-        dictionary = new COSDictionary();
-        array.add(COSName.LAB);
-        array.add(dictionary);
+        super(COSName.LAB);
     }
 
     /**
@@ -64,16 +48,9 @@ public final class PDLab extends PDCIEBasedColorSpace
      */
     public PDLab(COSArray lab)
     {
-        array = lab;
-        dictionary = (COSDictionary)array.getObject(1);
-        
-        // init whitepoint cache
-        PDTristimulus whitepoint = getWhitepoint();
-        wpX = whitepoint.getX();
-        wpY = whitepoint.getY();
-        wpZ = whitepoint.getZ();
+        super(lab);
     }
-
+    
     @Override
     public String getName()
     {
@@ -144,24 +121,7 @@ public final class PDLab extends PDCIEBasedColorSpace
         float y = wpY * inverse(lstar);
         float z = wpZ * inverse(lstar - value[2] * (1f / 200f));
         
-        // toRGB() malfunctions with negative values
-        // XYZ must be non-negative anyway:
-        // http://ninedegreesbelow.com/photography/icc-profile-negative-tristimulus.html
-        if (x < 0)
-        {
-            x = 0;
-        }
-        if (y < 0)
-        {
-            y = 0;
-        }
-        if (z < 0)
-        {
-            z = 0;
-        }
-
-        // XYZ to RGB
-        return CIEXYZ.toRGB(new float[] { x, y, z });
+        return convXYZtoRGB(x, y, z);
     }
 
     // reverse transformation (f^-1)
@@ -203,44 +163,6 @@ public final class PDLab extends PDCIEBasedColorSpace
                     this);
         }
         return initialColor;
-    }
-
-    /**
-     * This will return the whitepoint tristimulus.
-     * As this is a required field this will never return null.
-     * A default of 1,1,1 will be returned if the pdf does not have any values yet.
-     * @return the whitepoint tristimulus
-     */
-    public PDTristimulus getWhitepoint()
-    {
-        COSArray wp = (COSArray)dictionary.getDictionaryObject(COSName.WHITE_POINT);
-        if(wp == null)
-        {
-            wp = new COSArray();
-            wp.add(new COSFloat(1.0f));
-            wp.add(new COSFloat(1.0f));
-            wp.add(new COSFloat(1.0f));
-        }
-        return new PDTristimulus(wp);
-    }
-
-    /**
-     * This will return the BlackPoint tristimulus.
-     * This is an optional field but has defaults so this will never return null.
-     * A default of 0,0,0 will be returned if the pdf does not have any values yet.
-     * @return the blackpoint tristimulus
-     */
-    public PDTristimulus getBlackPoint()
-    {
-        COSArray bp = (COSArray)dictionary.getDictionaryObject(COSName.BLACK_POINT);
-        if(bp == null)
-        {
-            bp = new COSArray();
-            bp.add(new COSFloat(0.0f));
-            bp.add(new COSFloat(0.0f));
-            bp.add(new COSFloat(0.0f));
-        }
-        return new PDTristimulus(bp);
     }
 
     /**
@@ -288,64 +210,13 @@ public final class PDLab extends PDCIEBasedColorSpace
     }
 
     /**
-     * This will set the whitepoint tristimulus.
-     * As this is a required field this null should not be passed into this function.
-     * @param whitepoint the whitepoint tristimulus
-     */
-    public void setWhitePoint(PDTristimulus whitepoint)
-    {
-        COSBase wpArray = whitepoint.getCOSObject();
-        if(wpArray != null)
-        {
-            dictionary.setItem(COSName.WHITE_POINT, wpArray);
-        }
-        
-        // update cached values
-        wpX = whitepoint.getX();
-        wpY = whitepoint.getY();
-        wpZ = whitepoint.getZ();
-    }
-
-    /**
-     * This will set the BlackPoint tristimulus.
-     * As this is a required field this null should not be passed into this function.
-     * @param blackpoint the BlackPoint tristimulus
-     */
-    public void setBlackPoint(PDTristimulus blackpoint)
-    {
-        COSBase bpArray = null;
-        if(blackpoint != null)
-        {
-            bpArray = blackpoint.getCOSObject();
-        }
-        dictionary.setItem(COSName.BLACK_POINT, bpArray);
-    }
-
-    /**
      * This will set the a range for the "a" component.
      * @param range the new range for the "a" component, 
      * or null if defaults (-100..100) are to be set.
      */
     public void setARange(PDRange range)
     {
-        COSArray rangeArray = (COSArray) dictionary.getDictionaryObject(COSName.RANGE);
-        if (rangeArray == null)
-        {
-            rangeArray = getDefaultRangeArray();
-        }
-        //if null then reset to defaults
-        if(range == null)
-        {
-            rangeArray.set(0, new COSFloat(-100));
-            rangeArray.set(1, new COSFloat(100));
-        }
-        else
-        {
-            rangeArray.set(0, new COSFloat(range.getMin()));
-            rangeArray.set(1, new COSFloat(range.getMax()));
-        }
-        dictionary.setItem(COSName.RANGE, rangeArray);
-        initialColor = null;
+        setComponentRangeArray(range, 0);
     }
 
     /**
@@ -355,23 +226,29 @@ public final class PDLab extends PDCIEBasedColorSpace
      */
     public void setBRange(PDRange range)
     {
+        setComponentRangeArray(range, 2);
+    }
+
+    private void setComponentRangeArray(PDRange range, int index)
+    {
         COSArray rangeArray = (COSArray) dictionary.getDictionaryObject(COSName.RANGE);
         if (rangeArray == null)
         {
             rangeArray = getDefaultRangeArray();
         }
-        //if null then reset to defaults
-        if(range == null)
+        if (range == null)
         {
-            rangeArray.set(2, new COSFloat(-100));
-            rangeArray.set(3, new COSFloat(100));
+            // reset to defaults
+            rangeArray.set(index, new COSFloat(-100));
+            rangeArray.set(index + 1, new COSFloat(100));
         }
         else
         {
-            rangeArray.set(2, new COSFloat(range.getMin()));
-            rangeArray.set(3, new COSFloat(range.getMax()));
+            rangeArray.set(index, new COSFloat(range.getMin()));
+            rangeArray.set(index + 1, new COSFloat(range.getMax()));
         }
         dictionary.setItem(COSName.RANGE, rangeArray);
         initialColor = null;
     }
+
 }

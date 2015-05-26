@@ -54,27 +54,27 @@ public class PDFunctionType2 extends PDFunction
     {
         super(function);
 
-        if (getDictionary().getDictionaryObject(COSName.C0) == null)
+        if (getCOSObject().getDictionaryObject(COSName.C0) == null)
         {
             c0 = new COSArray();
             c0.add(new COSFloat(0));
         }
         else
         {
-            c0 = (COSArray) getDictionary().getDictionaryObject(COSName.C0);
+            c0 = (COSArray) getCOSObject().getDictionaryObject(COSName.C0);
         }
 
-        if (getDictionary().getDictionaryObject(COSName.C1) == null)
+        if (getCOSObject().getDictionaryObject(COSName.C1) == null)
         {
             c1 = new COSArray();
             c1.add(new COSFloat(1));
         }
         else
         {
-            c1 = (COSArray) getDictionary().getDictionaryObject(COSName.C1);
+            c1 = (COSArray) getCOSObject().getDictionaryObject(COSName.C1);
         }
 
-        exponent = getDictionary().getFloat(COSName.N);
+        exponent = getCOSObject().getFloat(COSName.N);
     }
 
     /**
@@ -100,9 +100,9 @@ public class PDFunctionType2 extends PDFunction
         float[] result = new float[c0.size()];
         for (int j = 0; j < result.length; j++)
         {
-            float C0j = ((COSNumber) c0.get(j)).floatValue();
-            float C1j = ((COSNumber) c1.get(j)).floatValue();
-            result[j] = C0j + xToN * (C1j - C0j);
+            float c0j = ((COSNumber) c0.get(j)).floatValue();
+            float c1j = ((COSNumber) c1.get(j)).floatValue();
+            result[j] = c0j + xToN * (c1j - c0j);
         }
 
         return clipToRange(result);

@@ -36,15 +36,14 @@ import org.apache.pdfbox.cos.COSName;
  * This class represents a PDF Number tree. See the PDF Reference 1.7 section
  * 7.9.7 for more details.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>,
- *         <a href="igor.podolskiy@ievvwi.uni-stuttgart.de">Igor Podolskiy</a>
- * @version $Revision: 1.4 $
+ * @author Ben Litchfield,
+ * @author Igor Podolskiy
  */
 public class PDNumberTreeNode implements COSObjectable
 {
     private static final Log LOG = LogFactory.getLog( PDNumberTreeNode.class );
 
-    private COSDictionary node;
+    private final COSDictionary node;
     private Class<? extends COSObjectable> valueType = null;
 
     /**
@@ -75,17 +74,8 @@ public class PDNumberTreeNode implements COSObjectable
      *
      * @return The cos object that matches this Java object.
      */
-    public COSBase getCOSObject()
-    {
-        return node;
-    }
-
-    /**
-     * Convert this standard java object to a COS object.
-     *
-     * @return The cos object that matches this Java object.
-     */
-    public COSDictionary getCOSDictionary()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return node;
     }
@@ -223,8 +213,7 @@ public class PDNumberTreeNode implements COSObjectable
         }
         catch( Throwable t )
         {
-            throw new IOException( "Error while trying to create value in number tree:" + t.getMessage());
-
+            throw new IOException( "Error while trying to create value in number tree:" + t.getMessage(), t);
         }
         return retval;
     }
@@ -262,7 +251,7 @@ public class PDNumberTreeNode implements COSObjectable
             for (Integer key : keys)
             {
                 array.add( COSInteger.get( key ) );
-                COSObjectable obj = (COSObjectable)numbers.get( key );
+                COSObjectable obj = numbers.get( key );
                 array.add( obj );
             }
             Integer lower = null;

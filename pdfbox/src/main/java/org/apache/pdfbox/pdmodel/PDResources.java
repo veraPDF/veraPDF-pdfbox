@@ -28,7 +28,8 @@ import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDPropertyLis
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontFactory;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.apache.pdfbox.pdmodel.graphics.state.PDExternalGraphicsState;
+import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDAbstractPattern;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
@@ -71,8 +72,9 @@ public final class PDResources implements COSObjectable
     }
 
     /**
-     * Returns the the underlying dictionary.
+     * Returns the underlying dictionary.
      */
+    @Override
     public COSDictionary getCOSObject()
     {
         return resources;
@@ -80,6 +82,9 @@ public final class PDResources implements COSObjectable
 
     /**
      * Returns the font resource with the given name, or null if none exists.
+     * 
+     * @param name Name of the font resource.
+     * @throws java.io.IOException if something went wrong.
      */
     public PDFont getFont(COSName name) throws IOException
     {
@@ -93,6 +98,9 @@ public final class PDResources implements COSObjectable
 
     /**
      * Returns the color space resource with the given name, or null if none exists.
+     * 
+     * @param name Name of the color space resource.
+     * @throws java.io.IOException if something went wrong.
      */
     public PDColorSpace getColorSpace(COSName name) throws IOException
     {
@@ -110,7 +118,8 @@ public final class PDResources implements COSObjectable
 
     /**
      * Returns true if the given color space name exists in these resources.
-     * @param name color space name
+     *
+     * @param name Name of the color space resource.
      */
     public boolean hasColorSpace(COSName name)
     {
@@ -118,20 +127,26 @@ public final class PDResources implements COSObjectable
     }
 
     /**
-     * Returns the external graphics state resource with the given name, or null if none exists.
+     * Returns the extended graphics state resource with the given name, or null
+     * if none exists.
+     *
+     * @param name Name of the graphics state resource.
      */
-    public PDExternalGraphicsState getExtGState(COSName name) throws IOException
+    public PDExtendedGraphicsState getExtGState(COSName name)
     {
         COSDictionary dict = (COSDictionary)get(COSName.EXT_G_STATE, name);
         if (dict == null)
         {
             return null;
         }
-        return new PDExternalGraphicsState(dict);
+        return new PDExtendedGraphicsState(dict);
     }
 
     /**
      * Returns the shading resource with the given name, or null if none exists.
+     *
+     * @param name Name of the shading resource.
+     * @throws java.io.IOException if something went wrong.
      */
     public PDShading getShading(COSName name) throws IOException
     {
@@ -145,6 +160,9 @@ public final class PDResources implements COSObjectable
 
     /**
      * Returns the pattern resource with the given name, or null if none exists.
+     * 
+     * @param name Name of the pattern resource.
+     * @throws java.io.IOException if something went wrong.
      */
     public PDAbstractPattern getPattern(COSName name) throws IOException
     {
@@ -158,8 +176,10 @@ public final class PDResources implements COSObjectable
 
     /**
      * Returns the property list resource with the given name, or null if none exists.
+     * 
+     * @param name Name of the property list resource.
      */
-    public PDPropertyList getProperties(COSName name) throws IOException
+    public PDPropertyList getProperties(COSName name)
     {
         COSDictionary dict = (COSDictionary)get(COSName.PROPERTIES, name);
         if (dict == null)
@@ -171,6 +191,9 @@ public final class PDResources implements COSObjectable
 
     /**
      * Returns the XObject resource with the given name, or null if none exists.
+     * 
+     * @param name Name of the XObject resource.
+     * @throws java.io.IOException if something went wrong.
      */
     public PDXObject getXObject(COSName name) throws IOException
     {
@@ -184,7 +207,7 @@ public final class PDResources implements COSObjectable
             COSObject object = (COSObject)value;
             // add the object number to create an unique identifier
             String id = name.getName();
-            id += "#" + object.getObjectNumber().intValue();
+            id += "#" + object.getObjectNumber();
             return PDXObject.createXObject(object.getObject(), id, this);
         }
         else
@@ -255,7 +278,7 @@ public final class PDResources implements COSObjectable
     }
 
     /**
-     * Returns the names of the external graphics state resources, if any.
+     * Returns the names of the extended graphics state resources, if any.
      */
     public Iterable<COSName> getExtGStateNames()
     {
@@ -282,7 +305,7 @@ public final class PDResources implements COSObjectable
      * @param font the font to add
      * @return the name of the resource in the resources dictionary
      */
-    public COSName add(PDFont font) throws IOException
+    public COSName add(PDFont font)
     {
         return add(COSName.FONT, "F", font);
     }
@@ -300,13 +323,13 @@ public final class PDResources implements COSObjectable
     }
 
     /**
-     * Adds the given external graphics state to the resources of the current page and returns the
+     * Adds the given extended graphics state to the resources of the current page and returns the
      * name for the new resources. Returns the existing resource name if the given item already exists.
      *
-     * @param extGState the external graphics stae to add
+     * @param extGState the extended graphics state to add
      * @return the name of the resource in the resources dictionary
      */
-    public COSName add(PDExternalGraphicsState extGState)
+    public COSName add(PDExtendedGraphicsState extGState)
     {
         return add(COSName.EXT_G_STATE, "gs", extGState);
     }
@@ -344,7 +367,14 @@ public final class PDResources implements COSObjectable
      */
     public COSName add(PDPropertyList properties)
     {
-        return add(COSName.PROPERTIES, "Prop", properties);
+        if (properties instanceof PDOptionalContentGroup)
+        {
+            return add(COSName.PROPERTIES, "oc", properties);
+        }
+        else
+        {
+            return add(COSName.PROPERTIES, "Prop", properties);
+        }
     }
 
     /**
@@ -443,7 +473,7 @@ public final class PDResources implements COSObjectable
      * @param name the name of the resource
      * @param font the font to be added
      */
-    public void put(COSName name, PDFont font) throws IOException
+    public void put(COSName name, PDFont font)
     {
         put(COSName.FONT, name, font);
     }
@@ -454,18 +484,18 @@ public final class PDResources implements COSObjectable
      * @param name the name of the resource
      * @param colorSpace the color space to be added
      */
-    public void put(COSName name, PDColorSpace colorSpace) throws IOException
+    public void put(COSName name, PDColorSpace colorSpace)
     {
         put(COSName.COLORSPACE, name, colorSpace);
     }
 
     /**
-     * Sets the external graphics state resource with the given name.
+     * Sets the extended graphics state resource with the given name.
      *
      * @param name the name of the resource
-     * @param extGState the external graphics state to be added
+     * @param extGState the extended graphics state to be added
      */
-    public void put(COSName name, PDExternalGraphicsState extGState) throws IOException
+    public void put(COSName name, PDExtendedGraphicsState extGState)
     {
         put(COSName.EXT_G_STATE, name, extGState);
     }
@@ -476,7 +506,7 @@ public final class PDResources implements COSObjectable
      * @param name the name of the resource
      * @param shading the shading to be added
      */
-    public void put(COSName name, PDShading shading) throws IOException
+    public void put(COSName name, PDShading shading)
     {
         put(COSName.SHADING, name, shading);
     }
@@ -487,7 +517,7 @@ public final class PDResources implements COSObjectable
      * @param name the name of the resource
      * @param pattern the pattern to be added
      */
-    public void put(COSName name, PDAbstractPattern pattern) throws IOException
+    public void put(COSName name, PDAbstractPattern pattern)
     {
         put(COSName.PATTERN, name, pattern);
     }
@@ -498,7 +528,7 @@ public final class PDResources implements COSObjectable
      * @param name the name of the resource
      * @param properties the property list to be added
      */
-    public void put(COSName name, PDPropertyList properties) throws IOException
+    public void put(COSName name, PDPropertyList properties)
     {
         put(COSName.PROPERTIES, name, properties);
     }
@@ -509,7 +539,7 @@ public final class PDResources implements COSObjectable
      * @param name the name of the resource
      * @param xobject the XObject to be added
      */
-    public void put(COSName name, PDXObject xobject) throws IOException
+    public void put(COSName name, PDXObject xobject)
     {
         put(COSName.XOBJECT, name, xobject);
     }

@@ -16,11 +16,15 @@
  */
 package org.apache.pdfbox.pdmodel.interactive.form;
 
+import java.io.IOException;
+
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSNumber;
+import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.cos.COSString;
+import org.apache.pdfbox.pdmodel.PDResources;
 
 /**
  * Base class for fields which use "Variable Text".
@@ -28,186 +32,32 @@ import org.apache.pdfbox.cos.COSString;
  *
  * @author Ben Litchfield
  */
-public abstract class PDVariableText extends PDField
+public abstract class PDVariableText extends PDTerminalField
 {
-    /**
-     * Ff flags.
-     */
-    private static final int FLAG_MULTILINE = 1 << 12;
-    private static final int FLAG_PASSWORD = 1 << 13;
-    private static final int FLAG_FILE_SELECT = 1 << 20;
-    private static final int FLAG_DO_NOT_SPELL_CHECK = 1 << 22;
-    private static final int FLAG_DO_NOT_SCROLL = 1 << 23;
-    private static final int FLAG_COMB = 1 << 24;
-    private static final int FLAG_RICH_TEXT = 1 << 25;
-
+    static final int QUADDING_LEFT = 0;
+    static final int QUADDING_CENTERED = 1;
+    static final int QUADDING_RIGHT = 2;
 
     /**
-     * DA    Default appearance.
-     */
-    private COSString defaultAppearance;
-
-    /**
-     * A Q value.
-     */
-    public static final int QUADDING_LEFT = 0;
-
-    /**
-     * A Q value.
-     */
-    public static final int QUADDING_CENTERED = 1;
-
-    /**
-     * A Q value.
-     */
-    public static final int QUADDING_RIGHT = 2;
-
-    /**
-     * @see PDField#PDField(PDAcroForm,COSDictionary)
+     * @see PDTerminalField#PDTerminalField(PDAcroForm)
      *
-     * @param theAcroForm The acroform.
+     * @param acroForm The acroform.
      */
-    PDVariableText(PDAcroForm theAcroForm)
+    PDVariableText(PDAcroForm acroForm)
     {
-        super( theAcroForm );
+        super(acroForm);
     }
 
     /**
      * Constructor.
      * 
-     * @param theAcroForm The form that this field is part of.
+     * @param acroForm The form that this field is part of.
      * @param field the PDF object to represent as a field.
-     * @param parentNode the parent node of the node to be created
+     * @param parent the parent node of the node
      */
-    protected PDVariableText(PDAcroForm theAcroForm, COSDictionary field, PDFieldTreeNode parentNode)
+    PDVariableText(PDAcroForm acroForm, COSDictionary field, PDNonTerminalField parent)
     {
-        super( theAcroForm, field, parentNode);
-    }
-
-    /**
-     * @return true if the field is multiline
-     */
-    public boolean isMultiline()
-    {
-        return getDictionary().getFlag( COSName.FF, FLAG_MULTILINE );
-    }
-
-    /**
-     * Set the multiline bit.
-     *
-     * @param multiline The value for the multiline.
-     */
-    public void setMultiline( boolean multiline )
-    {
-        getDictionary().setFlag( COSName.FF, FLAG_MULTILINE, multiline );
-    }
-
-    /**
-     * @return true if the field is a password field.
-     */
-    public boolean isPassword()
-    {
-        return getDictionary().getFlag( COSName.FF, FLAG_PASSWORD );
-    }
-
-    /**
-     * Set the password bit.
-     *
-     * @param password The value for the password.
-     */
-    public void setPassword( boolean password )
-    {
-        getDictionary().setFlag( COSName.FF, FLAG_PASSWORD, password );
-    }
-
-    /**
-     * @return true if the field is a file select field.
-     */
-    public boolean isFileSelect()
-    {
-        return getDictionary().getFlag( COSName.FF, FLAG_FILE_SELECT );
-    }
-
-    /**
-     * Set the file select bit.
-     *
-     * @param fileSelect The value for the fileSelect.
-     */
-    public void setFileSelect( boolean fileSelect )
-    {
-        getDictionary().setFlag( COSName.FF, FLAG_FILE_SELECT, fileSelect );
-    }
-
-    /**
-     * @return true if the field is not suppose to spell check.
-     */
-    public boolean doNotSpellCheck()
-    {
-        return getDictionary().getFlag( COSName.FF, FLAG_DO_NOT_SPELL_CHECK );
-    }
-
-    /**
-     * Set the doNotSpellCheck bit.
-     *
-     * @param doNotSpellCheck The value for the doNotSpellCheck.
-     */
-    public void setDoNotSpellCheck( boolean doNotSpellCheck )
-    {
-        getDictionary().setFlag( COSName.FF, FLAG_DO_NOT_SPELL_CHECK, doNotSpellCheck );
-    }
-
-    /**
-     * @return true if the field is not suppose to scroll.
-     */
-    public boolean doNotScroll()
-    {
-        return getDictionary().getFlag( COSName.FF, FLAG_DO_NOT_SCROLL );
-    }
-
-    /**
-     * Set the doNotScroll bit.
-     *
-     * @param doNotScroll The value for the doNotScroll.
-     */
-    public void setDoNotScroll( boolean doNotScroll )
-    {
-        getDictionary().setFlag( COSName.FF, FLAG_DO_NOT_SCROLL, doNotScroll );
-    }
-
-    /**
-     * @return true if the field is not suppose to comb the text display.
-     */
-    public boolean isComb()
-    {
-        return getDictionary().getFlag( COSName.FF, FLAG_COMB );
-    }
-
-    /**
-     * Set the comb bit.
-     *
-     * @param comb The value for the comb.
-     */
-    public void setComb( boolean comb )
-    {
-        getDictionary().setFlag( COSName.FF, FLAG_COMB, comb );
-    }
-
-    /**
-     * @return true if the field is a rich text field.
-     */
-    public boolean isRichText()
-    {
-        return getDictionary().getFlag( COSName.FF, FLAG_RICH_TEXT );
-    }
-
-    /**
-     * Set the richText bit.
-     *
-     * @param richText The value for the richText.
-     */
-    public void setRichText( boolean richText )
-    {
-        getDictionary().setFlag( COSName.FF, FLAG_RICH_TEXT, richText );
+        super(acroForm, field, parent);
     }
 
     /**
@@ -220,11 +70,27 @@ public abstract class PDVariableText extends PDField
      * 
      * @return the DA element of the dictionary object
      */
-    public COSString getDefaultAppearance()
+    public String getDefaultAppearance()
     {
-        COSBase daValue = getInheritableAttribute(getDictionary(),COSName.DA);
-        defaultAppearance = (COSString) daValue;
-        return defaultAppearance;
+        COSString defaultAppearance = (COSString) getInheritableAttribute(COSName.DA);
+        return defaultAppearance.getString();
+    }
+
+    /**
+     * Get the default appearance.
+     *
+     * This is an inheritable attribute.
+     *
+     * The default appearance contains a set of default graphics and text operators
+     * to define the field’s text size and color.
+     *
+     * @return the DA element of the dictionary object
+     */
+    PDAppearanceString getDefaultAppearanceString() throws IOException
+    {
+        COSString da = (COSString) getInheritableAttribute(COSName.DA);
+        PDResources dr = getAcroForm().getDefaultResources();
+        return new PDAppearanceString(da, dr);
     }
 
     /**
@@ -239,20 +105,47 @@ public abstract class PDVariableText extends PDField
      */
     public void setDefaultAppearance(String daValue)
     {
-        if (daValue != null)
-        {
-            defaultAppearance = new COSString(daValue);
-            getDictionary().setItem(COSName.DA, defaultAppearance);
-        }
-        else
-        {
-            defaultAppearance = null;
-            getDictionary().removeItem(COSName.DA);
-        }
+        dictionary.setString(COSName.DA, daValue);
     }
 
     /**
+     * Get the default style string.
+     * 
+     * The default style string defines the default style for
+     * rich text fields.
+     * 
+     * @return the DS element of the dictionary object
+     */
+    public String getDefaultStyleString()
+    {
+        COSString defaultStyleString = (COSString) dictionary.getDictionaryObject(COSName.DS);
+        return defaultStyleString.getString();
+    }
+
+    /**
+     * Set the default style string.
+     * 
+     * Providing null as the value will remove the default style string.
+     * 
+     * @param defaultStyleString a string describing the default style.
+     */
+    public void setDefaultStyleString(String defaultStyleString)
+    {
+        if (defaultStyleString != null)
+        {
+            dictionary.setItem(COSName.DS, new COSString(defaultStyleString));
+        }
+        else
+        {
+            dictionary.removeItem(COSName.DS);
+        }
+    }    
+
+    /**
      * This will get the 'quadding' or justification of the text to be displayed.
+     * 
+     * This is an inheritable attribute.
+     * 
      * 0 - Left(default)<br/>
      * 1 - Centered<br />
      * 2 - Right<br />
@@ -263,16 +156,12 @@ public abstract class PDVariableText extends PDField
     public int getQ()
     {
         int retval = 0;
-        COSNumber number = (COSNumber)getDictionary().getDictionaryObject( COSName.Q );
-        if( number != null )
+
+        COSNumber number = (COSNumber)getInheritableAttribute(COSName.Q);
+        
+        if (number != null)
         {
             retval = number.intValue();
-        }
-        else
-        {
-            // the Q value is inheritable
-            // the acroform should provide a Q default value
-            retval = getAcroForm().getQ();
         }
         return retval;
     }
@@ -282,21 +171,74 @@ public abstract class PDVariableText extends PDField
      *
      * @param q The new text justification.
      */
-    public void setQ( int q )
+    public void setQ(int q)
     {
-        getDictionary().setInt( COSName.Q, q );
+        dictionary.setInt(COSName.Q, q);
     }
     
-    @Override
-    public Object getDefaultValue()
+    /**
+     * Get the fields rich text value.
+     * 
+     * @return the rich text value string
+     * @throws IOException if the field dictionary entry is not a text type
+     */
+    public String getRichTextValue() throws IOException
     {
-        return getDictionary().getDictionaryObject(COSName.DV);
+        return getStringOrStream(getInheritableAttribute(COSName.RV));
+    }
+    
+    /**
+     * Set the fields rich text value.
+     * 
+     * <p>
+     * Setting the rich text value will not generate the appearance
+     * for the field.
+     * <br/>
+     * You can set {@link PDAcroForm#setNeedAppearances(Boolean)} to
+     * signal a conforming reader to generate the appearance stream.
+     * </p>
+     * 
+     * Providing null as the value will remove the default style string.
+     * 
+     * @param richTextValue a rich text string
+     */
+    public void setRichTextValue(String richTextValue)
+    {
+        if (richTextValue != null)
+        {
+            dictionary.setItem(COSName.RV, new COSString(richTextValue));
+        }
+        else
+        {
+            dictionary.removeItem(COSName.RV);
+        }        
     }
 
-    public void setDefaultValue(Object value)
+    /**
+     * Get a text as text stream.
+     *
+     * Some dictionary entries allow either a text or a text stream.
+     *
+     * @param base the potential text or text stream
+     * @return the text stream
+     */
+    protected final String getStringOrStream(COSBase base)
     {
-        // Text fields don't support the "DV" entry.
-        throw new RuntimeException( "Text fields don't support the \"DV\" entry." );
+        if (base == null)
+        {
+            return "";
+        }
+        else if (base instanceof COSString)
+        {
+            return ((COSString)base).getString();
+        }
+        else if (base instanceof COSStream)
+        {
+            return ((COSStream)base).getString();
+        }
+        else
+        {
+            return "";
+        }
     }
-
 }

@@ -47,7 +47,7 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.persistence.util.COSObjectKey;
+import org.apache.pdfbox.cos.COSObjectKey;
 import org.apache.pdfbox.preflight.PreflightConstants;
 import org.apache.pdfbox.preflight.PreflightContext;
 import org.apache.pdfbox.preflight.ValidationResult.ValidationError;
@@ -71,8 +71,8 @@ public class TrailerValidationProcess extends AbstractProcess
             // and it must have the same ID than the last trailer.
             // According to the PDF version, trailers are available by the trailer key word (pdf <= 1.4)
             // or in the dictionary of the XRef stream ( PDF >= 1.5)
-            String pdfVersion = pdfDoc.getDocument().getHeaderString();
-            if (pdfVersion != null && pdfVersion.matches("%PDF-1\\.[1-4]"))
+            float pdfVersion = pdfDoc.getVersion();
+            if (pdfVersion <= 1.4f)
             {
                 checkTrailersForLinearizedPDF14(ctx);
             }
@@ -95,14 +95,14 @@ public class TrailerValidationProcess extends AbstractProcess
      */
     protected void checkTrailersForLinearizedPDF14(PreflightContext ctx)
     {
-        COSDictionary first = ctx.getXrefTableResolver().getFirstTrailer();
+        COSDictionary first = ctx.getXrefTrailerResolver().getFirstTrailer();
         if (first == null)
         {
             addValidationError(ctx, new ValidationError(ERROR_SYNTAX_TRAILER, "There are no trailer in the PDF file"));
         }
         else
         {
-            COSDictionary last = ctx.getXrefTableResolver().getLastTrailer();
+            COSDictionary last = ctx.getXrefTrailerResolver().getLastTrailer();
             COSDocument cosDoc = new COSDocument();
             checkMainTrailer(ctx, first);
             if (!compareIds(first, last, cosDoc))

@@ -16,14 +16,8 @@
  */
 package org.apache.pdfbox.printing;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-
-import javax.print.attribute.PrintRequestAttributeSet;
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
@@ -36,13 +30,16 @@ import java.awt.print.PrinterException;
 import java.awt.print.PrinterIOException;
 import java.awt.print.PrinterJob;
 import java.io.IOException;
+import javax.print.attribute.PrintRequestAttributeSet;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.rendering.PDFRenderer;
 
 /**
  * Prints a PDF document using AWT.
  * This class may be overridden in order to perform custom printing.
  *
- * @author Andreas Lehmkühler
  * @author John Hewson
  */
 public class PDFPrinter
@@ -152,7 +149,7 @@ public class PDFPrinter
         this.scaling = scaling;
         this.orientation = orientation;
         this.showPageBorder = showPageBorder;
-        this.paper = paper;
+        this.paper = paper != null ? paper : printerJob.defaultPage().getPaper();
         this.dpi = dpi;
     }
 
@@ -270,7 +267,7 @@ public class PDFPrinter
             {
                 if (job.printDialog(attributes))
                 {
-                    job.print();
+                    job.print(attributes);
                     return true;
                 }
             }
@@ -281,7 +278,7 @@ public class PDFPrinter
     /**
      * Returns the Pageable instance used in this class. Can be overridden by subclasses.
      */
-    public PDFPageable getPageable()
+    public Pageable getPageable()
     {
       return new PDFPageable();
     }
@@ -295,7 +292,7 @@ public class PDFPrinter
         }
 
         @Override
-        public PageFormat getPageFormat(int pageIndex) throws IndexOutOfBoundsException
+        public PageFormat getPageFormat(int pageIndex)
         {
             // note: PDFPrintable#print() is responsible for fitting the current page to
             //       the printer's actual paper size, so this method must return the full
@@ -336,11 +333,11 @@ public class PDFPrinter
         }
 
         @Override
-        public Printable getPrintable(int i) throws IndexOutOfBoundsException
+        public Printable getPrintable(int i)
         {
             if (i >= getNumberOfPages())
             {
-                throw new IndexOutOfBoundsException(i + " >= " +  getNumberOfPages());
+                throw new IndexOutOfBoundsException(i + " >= " + getNumberOfPages());
             }
             return new PDFPrintable();
         }
@@ -355,8 +352,8 @@ public class PDFPrinter
     private PDRectangle getRotatedCropBox(PDPage page)
     {
         PDRectangle cropBox = page.getCropBox();
-        int rotation = page.getRotation();
-        if (rotation == 90 || rotation == 270)
+        int rotationAngle = page.getRotation();
+        if (rotationAngle == 90 || rotationAngle == 270)
         {
             return new PDRectangle(cropBox.getLowerLeftY(), cropBox.getLowerLeftX(),
                     cropBox.getHeight(), cropBox.getWidth());

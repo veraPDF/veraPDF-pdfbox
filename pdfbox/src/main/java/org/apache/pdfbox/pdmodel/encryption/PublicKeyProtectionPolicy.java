@@ -55,7 +55,7 @@ import java.util.List;
  * @see org.apache.pdfbox.pdmodel.PDDocument#protect(ProtectionPolicy)
  * @see AccessPermission
  * @see PublicKeyRecipient
- * @author Benoit Guillon (benoit.guillon@snv.jussieu.fr)
+ * @author Benoit Guillon
  */
 public final class PublicKeyProtectionPolicy extends ProtectionPolicy
 {
@@ -108,7 +108,7 @@ public final class PublicKeyProtectionPolicy extends ProtectionPolicy
     }
 
     /**
-     * Sets the the decryption certificate
+     * Sets the decryption certificate
      * @param decryptionCertificate the new decryption certificate.
      */
     public void setDecryptionCertificate(X509Certificate decryptionCertificate)

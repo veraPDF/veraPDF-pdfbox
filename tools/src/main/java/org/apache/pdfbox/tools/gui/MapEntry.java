@@ -22,8 +22,7 @@ import org.apache.pdfbox.cos.COSName;
 /**
  * This is a simple class that will contain a key and a value.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.3 $
+ * @author Ben Litchfield
  */
 public class MapEntry
 {
@@ -75,6 +74,7 @@ public class MapEntry
      *
      * @return A string representation of this class.
      */
+    @Override
     public String toString()
     {
         String retval = null;

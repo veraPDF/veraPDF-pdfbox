@@ -21,13 +21,13 @@ import java.io.IOException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.edit.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.util.Matrix;
 
 /**
  * This is an example of how to create a page with a landscape orientation.
- * @version $Revision: 1.0 $
  */
 public class CreateLandscapePDF
 {
@@ -68,21 +68,33 @@ public class CreateLandscapePDF
             PDPageContentStream contentStream = new PDPageContentStream(doc, page, false, false);
             // add the rotation using the current transformation matrix
             // including a translation of pageWidth to use the lower left corner as 0,0 reference
-            contentStream.concatenate2CTM(0, 1, -1, 0, pageWidth, 0);
+            contentStream.transform(new Matrix(0, 1, -1, 0, pageWidth, 0));
             contentStream.setFont( font, fontSize );
             contentStream.beginText();
-            contentStream.moveTextPositionByAmount(startX, startY);
-            contentStream.drawString( message);
-            contentStream.moveTextPositionByAmount(0, 100);
-            contentStream.drawString( message);
-            contentStream.moveTextPositionByAmount(100, 100);
-            contentStream.drawString( message);
+            contentStream.newLineAtOffset(startX, startY);
+            contentStream.showText(message);
+            contentStream.newLineAtOffset(0, 100);
+            contentStream.showText(message);
+            contentStream.newLineAtOffset(100, 100);
+            contentStream.showText(message);
             contentStream.endText();
-            
-            contentStream.drawLine(startX-2, startY-2, startX-2, startY+200+fontSize);
-            contentStream.drawLine(startX-2, startY+200+fontSize, startX+100+stringWidth+2, startY+200+fontSize);
-            contentStream.drawLine(startX+100+stringWidth+2, startY+200+fontSize, startX+100+stringWidth+2, startY-2);
-            contentStream.drawLine(startX+100+stringWidth+2, startY-2, startX-2, startY-2);
+
+            contentStream.moveTo(startX-2, startY-2);
+            contentStream.lineTo(startX-2, startY+200+fontSize);
+            contentStream.stroke();
+
+            contentStream.moveTo(startX-2, startY+200+fontSize);
+            contentStream.lineTo(startX+100+stringWidth+2, startY+200+fontSize);
+            contentStream.stroke();
+
+            contentStream.moveTo(startX+100+stringWidth+2, startY+200+fontSize);
+            contentStream.lineTo(startX+100+stringWidth+2, startY-2);
+            contentStream.stroke();
+
+            contentStream.moveTo(startX+100+stringWidth+2, startY-2);
+            contentStream.lineTo(startX-2, startY-2);
+            contentStream.stroke();
+
             contentStream.close();
 
             doc.save( outfile );

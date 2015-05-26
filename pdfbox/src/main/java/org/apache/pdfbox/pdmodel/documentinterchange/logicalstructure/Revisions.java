@@ -21,14 +21,12 @@ import java.util.List;
 
 /**
  * 
- * @author Koch
- * @version $Revision: $
- *
+ * @author Johannes Koch
+
  * @param <T> the type of object to store the revision numbers with
  */
 public class Revisions<T>
 {
-
     private List<T> objects;
     private List<Integer> revisionNumbers;
 
@@ -50,14 +48,12 @@ public class Revisions<T>
         return this.revisionNumbers;
     }
 
-
     /**
      * 
      */
     public Revisions()
     {
     }
-
 
     /**
      * Returns the object at the specified position.
@@ -66,7 +62,7 @@ public class Revisions<T>
      * @return the object
      * @throws IndexOutOfBoundsException if the index is out of range
      */
-    public T getObject(int index) throws IndexOutOfBoundsException
+    public T getObject(int index)
     {
         return this.getObjects().get(index);
     }
@@ -78,7 +74,7 @@ public class Revisions<T>
      * @return the revision number
      * @throws IndexOutOfBoundsException if the index is out of range
      */
-    public int getRevisionNumber(int index) throws IndexOutOfBoundsException
+    public int getRevisionNumber(int index)
     {
         return this.getRevisionNumbers().get(index);
     }
@@ -123,6 +119,7 @@ public class Revisions<T>
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString()
     {
         StringBuilder sb = new StringBuilder();

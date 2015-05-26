@@ -20,6 +20,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GraphicsDevice;
 import java.awt.Paint;
 import java.awt.RenderingHints;
 import java.awt.Shape;
@@ -35,60 +36,59 @@ import java.awt.image.Raster;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.contentstream.PDFGraphicsStreamEngine;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDCIDFontType0;
 import org.apache.pdfbox.pdmodel.font.PDCIDFontType2;
-import org.apache.pdfbox.pdmodel.graphics.color.PDPattern;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
-import org.apache.pdfbox.pdmodel.graphics.pattern.PDAbstractPattern;
-import org.apache.pdfbox.pdmodel.graphics.pattern.PDShadingPattern;
-import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
-import org.apache.pdfbox.rendering.font.CIDType0Glyph2D;
-import org.apache.pdfbox.rendering.font.Glyph2D;
-import org.apache.pdfbox.rendering.font.TTFGlyph2D;
-import org.apache.pdfbox.rendering.font.Type1Glyph2D;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1CFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.PDLineDashPattern;
-import org.apache.pdfbox.pdmodel.graphics.state.PDSoftMask;
 import org.apache.pdfbox.pdmodel.graphics.blend.SoftMaskPaint;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
+import org.apache.pdfbox.pdmodel.graphics.color.PDPattern;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
+import org.apache.pdfbox.pdmodel.graphics.pattern.PDAbstractPattern;
+import org.apache.pdfbox.pdmodel.graphics.pattern.PDShadingPattern;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
 import org.apache.pdfbox.pdmodel.graphics.state.PDGraphicsState;
+import org.apache.pdfbox.pdmodel.graphics.state.PDSoftMask;
+import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.util.Matrix;
-import org.apache.pdfbox.contentstream.PDFGraphicsStreamEngine;
 import org.apache.pdfbox.util.Vector;
 
 /**
- * Paints a page in a PDF document to a Graphics context.
+ * Paints a page in a PDF document to a Graphics context. May be subclassed to provide custom
+ * rendering.
+ * 
+ * <p>If you want to do custom graphics processing rather than Graphics2D rendering, then you should
+ * subclass PDFGraphicsStreamEngine instead. Subclassing PageDrawer is only suitable for cases
+ * where the goal is to render onto a Graphics2D surface.
  * 
  * @author Ben Litchfield
  */
-public final class PageDrawer extends PDFGraphicsStreamEngine
+public class PageDrawer extends PDFGraphicsStreamEngine
 {
     private static final Log LOG = LogFactory.getLog(PageDrawer.class);
 
-    // parent document renderer
+    // parent document renderer - note: this is needed for not-yet-implemented resource caching
     private final PDFRenderer renderer;
-
+    
     // the graphics device to draw to, xform is the initial transform of the device (i.e. DPI)
     private Graphics2D graphics;
     private AffineTransform xform;
 
     // the page box to draw (usually the crop box but may be another)
-    PDRectangle pageSize;
+    private PDRectangle pageSize;
     
     // clipping winding rule used for the clipping path
     private int clipWindingRule = -1;
@@ -100,27 +100,43 @@ public final class PageDrawer extends PDFGraphicsStreamEngine
     // buffered clipping area for text being drawn
     private Area textClippingArea;
 
+    // glyph cache
     private final Map<PDFont, Glyph2D> fontGlyph2D = new HashMap<PDFont, Glyph2D>();
     
     /**
      * Constructor.
-     * 
-     * @param renderer renderer to render the page.
-     * @param page the page that is to be rendered.
+     *
+     * @param parameters Parameters for page drawing.
      * @throws IOException If there is an error loading properties from the file.
      */
-    public PageDrawer(PDFRenderer renderer, PDPage page) throws IOException
+    public PageDrawer(PageDrawerParameters parameters) throws IOException
     {
-        super(page);
-        this.renderer = renderer;
+        super(parameters.getPage());
+        this.renderer = parameters.getRenderer();
     }
 
     /**
      * Returns the parent renderer.
      */
-    public PDFRenderer getRenderer()
+    public final PDFRenderer getRenderer()
     {
         return renderer;
+    }
+
+    /**
+     * Returns the underlying Graphics2D. May be null if drawPage has not yet been called.
+     */
+    protected final Graphics2D getGraphics()
+    {
+        return graphics;
+    }
+
+    /**
+     * Returns the current line path. This is reset to empty after each fill/stroke.
+     */
+    protected final GeneralPath getLinePath()
+    {
+        return linePath;
     }
 
     /**
@@ -151,7 +167,7 @@ public final class PageDrawer extends PDFGraphicsStreamEngine
 
         setRenderingHints();
 
-        graphics.translate(0, (int) pageSize.getHeight());
+        graphics.translate(0, pageSize.getHeight());
         graphics.scale(1, -1);
 
         // TODO use getStroke() to set the initial stroke
@@ -177,9 +193,10 @@ public final class PageDrawer extends PDFGraphicsStreamEngine
      * @param pattern The tiling pattern to be used.
      * @param colorSpace color space for this tiling.
      * @param color color for this tiling.
+     * @param patternMatrix the pattern matrix
      * @throws IOException If there is an IO error while drawing the page.
      */
-    public void drawTilingPattern(Graphics2D g, PDTilingPattern pattern, PDColorSpace colorSpace,
+    void drawTilingPattern(Graphics2D g, PDTilingPattern pattern, PDColorSpace colorSpace,
                                   PDColor color, Matrix patternMatrix) throws IOException
     {
         Graphics2D oldGraphics = graphics;
@@ -202,7 +219,7 @@ public final class PageDrawer extends PDFGraphicsStreamEngine
     /**
      * Returns an AWT paint for the given PDColor.
      */
-    private Paint getPaint(PDColor color) throws IOException
+    protected Paint getPaint(PDColor color) throws IOException
     {
         PDColorSpace colorSpace = color.getColorSpace();
         if (!(colorSpace instanceof PDPattern))
@@ -384,10 +401,7 @@ public final class PageDrawer extends PDFGraphicsStreamEngine
         else if (font instanceof PDType1CFont)
         {
             PDType1CFont type1CFont = (PDType1CFont)font;
-            if (type1CFont.getCFFType1Font() != null) // todo: could be null (need to incorporate fallback)
-            {
-                glyph2D = new Type1Glyph2D(type1CFont);
-            }
+            glyph2D = new Type1Glyph2D(type1CFont);
         }
         else if (font instanceof PDType0Font)
         {
@@ -511,7 +525,8 @@ public final class PageDrawer extends PDFGraphicsStreamEngine
             // apply the CTM
             for (int i = 0; i < dashArray.length; ++i)
             {
-                dashArray[i] = transformWidth(dashArray[i]);
+                // minimum line dash width avoids JVM crash, see PDFBOX-2373
+                dashArray[i] = Math.max(transformWidth(dashArray[i]), 0.016f);
             }
             phaseStart = (int)transformWidth(phaseStart);
 
@@ -546,8 +561,12 @@ public final class PageDrawer extends PDFGraphicsStreamEngine
 
         // disable anti-aliasing for rectangular paths, this is a workaround to avoid small stripes
         // which occur when solid fills are used to simulate piecewise gradients, see PDFBOX-2302
-        boolean isRectangular = isRectangular(linePath);
-        if (isRectangular)
+        // note that we ignore paths with a width/height under 1 as these are fills used as strokes,
+        // see PDFBOX-1658 for an example
+        Rectangle2D bounds = linePath.getBounds2D();
+        boolean noAntiAlias = isRectangular(linePath) && bounds.getWidth() > 1 &&
+                                                         bounds.getHeight() > 1;
+        if (noAntiAlias)
         {
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                                       RenderingHints.VALUE_ANTIALIAS_OFF);
@@ -556,7 +575,7 @@ public final class PageDrawer extends PDFGraphicsStreamEngine
         graphics.fill(linePath);
         linePath.reset();
 
-        if (isRectangular)
+        if (noAntiAlias)
         {
             // JDK 1.7 has a bug where rendering hints are reset by the above call to
             // the setRenderingHint method, so we re-set all hints, see PDFBOX-2302
@@ -692,44 +711,44 @@ public final class PageDrawer extends PDFGraphicsStreamEngine
         Matrix ctm = getGraphicsState().getCurrentTransformationMatrix();
         AffineTransform at = ctm.createAffineTransform();
 
+        if (!pdImage.getInterpolate())
+        {
+            boolean isScaledUp = pdImage.getWidth() < Math.round(at.getScaleX()) ||
+                                 pdImage.getHeight() < Math.round(at.getScaleY());
+
+            // if the image is scaled down, we use smooth interpolation, eg PDFBOX-2364
+            // only when scaled up do we use nearest neighbour, eg PDFBOX-2302 / mori-cvpr01.pdf
+            // stencils are excluded from this rule (see survey.pdf)
+            if (isScaledUp || pdImage.isStencil())
+            {
+                graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            }
+        }
+
         if (pdImage.isStencil())
         {
             // fill the image with paint
-            PDColor color = getGraphicsState().getNonStrokingColor();
-            BufferedImage image = pdImage.getStencilImage(getPaint(color));
+            BufferedImage image = pdImage.getStencilImage(getNonStrokingPaint());
 
             // draw the image
             drawBufferedImage(image, at);
         }
         else
         {
-            if (!pdImage.getInterpolate())
-            {
-                boolean isScaledUp = Math.round(pdImage.getWidth()) < Math.round(at.getScaleX()) ||
-                                     Math.round(pdImage.getHeight()) < Math.round(at.getScaleY());
-
-                // if the image is scaled down, we use smooth interpolation, eg PDFBOX-2364
-                // only when scaled up do we use nearest neighbour, eg PDFBOX-2302 / mori-cvpr01.pdf
-                if (isScaledUp)
-                {
-                    graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                                              RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-                }
-            }
-
             // draw the image
             drawBufferedImage(pdImage.getImage(), at);
+        }
 
-            if (!pdImage.getInterpolate())
-            {
-                // JDK 1.7 has a bug where rendering hints are reset by the above call to
-                // the setRenderingHint method, so we re-set all hints, see PDFBOX-2302
-                setRenderingHints();
-            }
+        if (!pdImage.getInterpolate())
+        {
+            // JDK 1.7 has a bug where rendering hints are reset by the above call to
+            // the setRenderingHint method, so we re-set all hints, see PDFBOX-2302
+            setRenderingHints();
         }
     }
 
-    public void drawBufferedImage(BufferedImage image, AffineTransform at) throws IOException
+    private void drawBufferedImage(BufferedImage image, AffineTransform at) throws IOException
     {
         graphics.setComposite(getGraphicsState().getNonStrokingJavaComposite());
         setClip();
@@ -776,6 +795,20 @@ public final class PageDrawer extends PDFGraphicsStreamEngine
     public void showAnnotation(PDAnnotation annotation) throws IOException
     {
         lastClip = null;
+        //TODO support more annotation flags (Invisible, NoZoom, NoRotate)
+        int deviceType = graphics.getDeviceConfiguration().getDevice().getType();
+        if (deviceType == GraphicsDevice.TYPE_PRINTER && !annotation.isPrinted())
+        {
+            return;
+        }
+        if (deviceType == GraphicsDevice.TYPE_RASTER_SCREEN && annotation.isNoView())
+        {
+            return;
+        }
+        if (annotation.isHidden())
+        {
+            return;
+        }
         super.showAnnotation(annotation);
     }
 

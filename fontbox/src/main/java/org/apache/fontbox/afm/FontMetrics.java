@@ -16,8 +16,6 @@
  */
 package org.apache.fontbox.afm;
 
-import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,7 +55,7 @@ public class FontMetrics
     private float xHeight;
     private float ascender;
     private float descender;
-    private List<String> comments = new ArrayList<String>();
+    private final List<String> comments = new ArrayList<String>();
 
     private float underlinePosition;
     private float underlineThickness;
@@ -68,7 +66,7 @@ public class FontMetrics
     private float standardVerticalWidth;
 
     private List<CharMetric> charMetrics = new ArrayList<CharMetric>();
-    private Map<String,CharMetric> charMetricsMap = new HashMap<String,CharMetric>();
+    private final Map<String,CharMetric> charMetricsMap = new HashMap<String,CharMetric>();
     private List<TrackKern> trackKern = new ArrayList<TrackKern>();
     private List<Composite> composites = new ArrayList<Composite>();
     private List<KernPair> kernPairs = new ArrayList<KernPair>();
@@ -91,13 +89,11 @@ public class FontMetrics
      */
     public float getCharacterWidth( String name )
     {
-        float result = 0;
+        float result;
         CharMetric metric = charMetricsMap.get( name );
         if( metric == null )
         {
             result=0;
-            //don't throw an exception right away.
-            //throw new IOException( "Unknown AFM(" + getFullName() + ") characer '" + name + "'" );
         }
         else
         {
@@ -114,13 +110,11 @@ public class FontMetrics
      */
     public float getCharacterHeight( String name )
     {
-        float result = 0;
+        float result;
         CharMetric metric = charMetricsMap.get( name );
         if( metric == null )
         {
             result=0;
-            //don't throw an exception right away.
-            //throw new IOException( "Unknown AFM(" + getFullName() + ") characer '" + name + "'" );
         }
         else
         {
@@ -141,8 +135,6 @@ public class FontMetrics
      * This will get the average width of a character.
      *
      * @return The width of the character.
-     *
-     * @throws IOException If this AFM file does not handle the character.
      */
     public float getAverageCharacterWidth()
     {

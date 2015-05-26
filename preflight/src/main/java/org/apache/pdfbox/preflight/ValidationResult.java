@@ -270,6 +270,10 @@ public class ValidationResult
             {
                 this.details = "CrossRef Syntax error";
             }
+            else if (errorCode.startsWith(PreflightConstants.ERROR_SYNTAX_TRAILER_OUTLINES_INVALID))
+            {
+                this.details = "Outlines invalid";
+            }
             else if (errorCode.startsWith(PreflightConstants.ERROR_SYNTAX_TRAILER))
             {
                 this.details = "Trailer Syntax error";
@@ -412,7 +416,8 @@ public class ValidationResult
         }
 
         @Override
-        public int hashCode() {
+        public int hashCode()
+        {
             return errorCode.hashCode();
         }
 

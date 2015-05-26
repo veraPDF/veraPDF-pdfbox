@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.List;
 import java.awt.geom.Point2D;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSNumber;
 import org.apache.pdfbox.contentstream.operator.Operator;
@@ -31,6 +33,8 @@ import org.apache.pdfbox.contentstream.operator.Operator;
  */
 public class LineTo extends GraphicsOperatorProcessor
 {
+    private static final Log LOG = LogFactory.getLog(LineTo.class);
+    
     @Override
     public void process(Operator operator, List<COSBase> operands) throws IOException
     {
@@ -38,8 +42,17 @@ public class LineTo extends GraphicsOperatorProcessor
         COSNumber x = (COSNumber)operands.get(0);
         COSNumber y = (COSNumber)operands.get(1);
 
-        Point2D pos = context.transformedPoint(x.doubleValue(), y.doubleValue());
-        context.lineTo((float) pos.getX(), (float) pos.getY());
+        Point2D.Float pos = context.transformedPoint(x.floatValue(), y.floatValue());
+
+        if (context.getCurrentPoint() == null)
+        {
+            LOG.warn("LineTo (" + pos.x + "," + pos.y + ") without initial MoveTo");
+            context.moveTo(pos.x, pos.y);
+        }
+        else
+        {
+            context.lineTo(pos.x, pos.y);
+        }
     }
 
     @Override

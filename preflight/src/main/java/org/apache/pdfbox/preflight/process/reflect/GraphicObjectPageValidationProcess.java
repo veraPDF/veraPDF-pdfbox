@@ -40,6 +40,7 @@ import org.apache.pdfbox.preflight.ValidationResult.ValidationError;
 public class GraphicObjectPageValidationProcess extends AbstractProcess
 {
 
+    @Override
     public void validate(PreflightContext context) throws ValidationException
     {
         PreflightPath vPath = context.getValidationPath();
@@ -59,14 +60,17 @@ public class GraphicObjectPageValidationProcess extends AbstractProcess
         }
         else if (!vPath.isEmpty() && vPath.isExpectedType(COSStream.class))
         {
-            context.addValidationError(new ValidationError(PreflightConstants.ERROR_GRAPHIC_XOBJECT_INVALID_TYPE, "Invalid XObject subtype"));
+            context.addValidationError(new ValidationError(PreflightConstants.ERROR_GRAPHIC_XOBJECT_INVALID_TYPE,
+                    "Invalid XObject subtype"));
         }
         else
         {
-            context.addValidationError(new ValidationError(PreflightConstants.ERROR_GRAPHIC_MISSING_OBJECT, "Graphic validation process needs at least one PDXObject"));
+            context.addValidationError(new ValidationError(PreflightConstants.ERROR_GRAPHIC_MISSING_OBJECT,
+                    "Graphic validation process needs at least one PDXObject"));
         }
 
-        if (validator != null) {
+        if (validator != null)
+        {
             validator.validate();
         }
     }

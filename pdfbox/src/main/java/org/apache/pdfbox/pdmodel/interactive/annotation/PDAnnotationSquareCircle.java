@@ -19,15 +19,14 @@ package org.apache.pdfbox.pdmodel.interactive.annotation;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.pdmodel.graphics.color.PDGamma;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
 
 /**
  * This is the class that represents a rectangular or eliptical annotation
  * Introduced in PDF 1.3 specification .
  *
  * @author Paul King
- * @version $Revision: 1.1 $
  */
 public class PDAnnotationSquareCircle extends PDAnnotationMarkup
 {
@@ -66,39 +65,26 @@ public class PDAnnotationSquareCircle extends PDAnnotationMarkup
 
 
     /**
-     * This will set interior colour of the drawn area
-     * Colour is in DeviceRGB colourspace.
+     * This will set interior color of the drawn area
+     * color is in DeviceRGB colo rspace.
      *
-     * @param ic
-     *            colour in the DeviceRGB colourspace.
+     * @param ic color in the DeviceRGB color space.
      *
      */
-    public void setInteriorColour( PDGamma ic )
+    public void setInteriorColor( PDColor ic )
     {
-        getDictionary().setItem( "IC", ic );
+        getCOSObject().setItem(COSName.IC, ic.toCOSArray());
     }
 
     /**
-     * This will retrieve the interior colour of the drawn area
-     * Colour is in DeviceRGB colourspace.
+     * This will retrieve the interior color of the drawn area
+     * color is in DeviceRGB color space.
      *
-     *
-     * @return PDGamma object representing the colour.
-     *
+     * @return  object representing the color.
      */
-    public PDGamma getInteriorColour()
+    public PDColor getInteriorColor()
     {
-
-        COSArray ic = (COSArray) getDictionary().getItem(
-                COSName.getPDFName( "IC" ) );
-        if (ic != null)
-        {
-            return new PDGamma( ic );
-        }
-        else
-        {
-            return null;
-        }
+        return getColor(COSName.IC);
     }
 
 
@@ -111,7 +97,7 @@ public class PDAnnotationSquareCircle extends PDAnnotationMarkup
      */
     public void setBorderEffect( PDBorderEffectDictionary be )
     {
-        getDictionary().setItem( "BE", be );
+        getCOSObject().setItem(COSName.BE, be );
     }
 
     /**
@@ -122,7 +108,7 @@ public class PDAnnotationSquareCircle extends PDAnnotationMarkup
      */
     public PDBorderEffectDictionary getBorderEffect()
     {
-        COSDictionary be = (COSDictionary) getDictionary().getDictionaryObject( "BE" );
+        COSDictionary be = (COSDictionary) getCOSObject().getDictionaryObject(COSName.BE);
         if (be != null)
         {
             return new PDBorderEffectDictionary( be );
@@ -143,7 +129,7 @@ public class PDAnnotationSquareCircle extends PDAnnotationMarkup
      */
     public void setRectDifference( PDRectangle rd )
     {
-        getDictionary().setItem( "RD", rd );
+        getCOSObject().setItem(COSName.RD, rd );
     }
 
     /**
@@ -155,7 +141,7 @@ public class PDAnnotationSquareCircle extends PDAnnotationMarkup
      */
     public PDRectangle getRectDifference()
     {
-        COSArray rd = (COSArray) getDictionary().getDictionaryObject( "RD" );
+        COSArray rd = (COSArray) getCOSObject().getDictionaryObject(COSName.RD);
         if (rd != null)
         {
             return new PDRectangle( rd );
@@ -174,7 +160,7 @@ public class PDAnnotationSquareCircle extends PDAnnotationMarkup
      */
     public void setSubtype( String subType )
     {
-        getDictionary().setName( COSName.SUBTYPE, subType );
+        getCOSObject().setName( COSName.SUBTYPE, subType );
     }
 
     /**
@@ -183,9 +169,10 @@ public class PDAnnotationSquareCircle extends PDAnnotationMarkup
      *
      * @return The subtype of this annotation, see the SUB_TYPE_XXX constants.
      */
+    @Override
     public String getSubtype()
     {
-        return getDictionary().getNameAsString( COSName.SUBTYPE);
+        return getCOSObject().getNameAsString( COSName.SUBTYPE);
     }
 
     /**
@@ -198,7 +185,7 @@ public class PDAnnotationSquareCircle extends PDAnnotationMarkup
      */
     public void setBorderStyle( PDBorderStyleDictionary bs )
     {
-        this.getDictionary().setItem( "BS", bs);
+        this.getCOSObject().setItem(COSName.BS, bs);
     }
 
     /**
@@ -210,8 +197,7 @@ public class PDAnnotationSquareCircle extends PDAnnotationMarkup
      */
     public PDBorderStyleDictionary getBorderStyle()
     {
-        COSDictionary bs = (COSDictionary) this.getDictionary().getItem(
-                COSName.getPDFName( "BS" ) );
+        COSDictionary bs = (COSDictionary) this.getCOSObject().getItem(COSName.BS);
         if (bs != null)
         {
             return new PDBorderStyleDictionary( bs );

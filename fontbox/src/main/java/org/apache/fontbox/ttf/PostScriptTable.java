@@ -18,12 +18,10 @@ package org.apache.fontbox.ttf;
 
 import java.io.IOException;
 
-import org.apache.fontbox.encoding.Encoding;
-
 /**
  * A table in a true type font.
  * 
- * @author Ben Litchfield (ben@benlitchfield.com)
+ * @author Ben Litchfield
  */
 public class PostScriptTable extends TTFTable
 {
@@ -50,6 +48,7 @@ public class PostScriptTable extends TTFTable
      * @param data The stream to read the data from.
      * @throws IOException If there is an error reading the data.
      */
+    @Override
     public void read(TrueTypeFont ttf, TTFDataStream data) throws IOException
     {
         formatType = data.read32Fixed();
@@ -225,7 +224,7 @@ public class PostScriptTable extends TTFTable
     /**
      * @return Returns the mimMemType1.
      */
-    public long getMimMemType1()
+    public long getMinMemType1()
     {
         return mimMemType1;
     }
@@ -307,7 +306,7 @@ public class PostScriptTable extends TTFTable
      */
     public String getName(int gid)
     {
-        if (gid < 0 || gid > glyphNames.length)
+        if (gid < 0 || glyphNames == null || gid > glyphNames.length)
         {
             return null;
         }

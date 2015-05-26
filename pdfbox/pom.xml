@@ -95,20 +95,12 @@
         </resources>
         <plugins>
             <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <showDeprecation>true</showDeprecation>
-                    <target>1.6</target>
-                    <source>1.6</source>
-                </configuration>
-            </plugin>
-            <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>-Xmx128m</argLine>
                     <excludes>
                         <exclude>org/apache/pdfbox/TestAll.java</exclude>
-                        <exclude>org/apache/pdfbox/util/TestPDFToImage.java</exclude>
+                        <exclude>org/apache/pdfbox/rendering/TestPDFToImage.java</exclude>
                     </excludes>
                     <systemPropertyVariables>
                         <java.util.logging.config.file>src/test/resources/logging.properties</java.util.logging.config.file>

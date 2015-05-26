@@ -40,8 +40,8 @@ class Standard14Fonts
     {
     }
 
-    private final static Set<String> STANDARD_14_NAMES = new HashSet<String>();
-    private final static Map<String, String> STANDARD_14_MAPPING = new HashMap<String, String>();
+    private static final Set<String> STANDARD_14_NAMES = new HashSet<String>();
+    private static final Map<String, String> STANDARD_14_MAPPING = new HashMap<String, String>();
     private static final Map<String, FontMetrics> STANDARD14_AFM_MAP;
     static
     {
@@ -82,6 +82,10 @@ class Standard14Fonts
             addAFM("Symbol,Italic", "Symbol");
             addAFM("Symbol,Bold", "Symbol");
             addAFM("Symbol,BoldItalic", "Symbol");
+            addAFM("Times", "Times-Roman");
+            addAFM("Times,Italic", "Times-Italic");
+            addAFM("Times,Bold", "Times-Bold");
+            addAFM("Times,BoldItalic", "Times-BoldItalic");
         }
         catch (IOException e)
         {

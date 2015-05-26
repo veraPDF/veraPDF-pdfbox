@@ -21,8 +21,7 @@ import java.io.IOException;
 /**
  * This class represents an abstract number in a PDF document.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.10 $
+ * @author Ben Litchfield
  */
 public abstract class COSNumber extends COSBase
 {
@@ -30,11 +29,13 @@ public abstract class COSNumber extends COSBase
     /**
      * @deprecated Use the {@link COSInteger#ZERO} constant instead
      */
+    @Deprecated
     public static final COSInteger ZERO = COSInteger.ZERO;
 
     /**
      * @deprecated Use the {@link COSInteger#ONE} constant instead
      */
+    @Deprecated
     public static final COSInteger ONE = COSInteger.ONE;
 
     /**
@@ -97,11 +98,15 @@ public abstract class COSNumber extends COSBase
         {
             try
             {
-                return COSInteger.get( Long.parseLong( number ) );
+                if (number.charAt(0) == '+')
+                {
+                    return COSInteger.get(Long.parseLong(number.substring(1)));
+                }
+                return COSInteger.get(Long.parseLong(number));
             }
             catch( NumberFormatException e )
             {
-                throw new IOException( "Value is not an integer: " + number );
+                throw new IOException( "Value is not an integer: " + number, e );
             }
         } 
         else 

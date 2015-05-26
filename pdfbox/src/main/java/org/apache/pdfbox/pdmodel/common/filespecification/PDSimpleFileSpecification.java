@@ -22,8 +22,7 @@ import org.apache.pdfbox.cos.COSString;
 /**
  * A file specification that is just a string.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.2 $
+ * @author Ben Litchfield
  */
 public class PDSimpleFileSpecification extends PDFileSpecification
 {
@@ -53,6 +52,7 @@ public class PDSimpleFileSpecification extends PDFileSpecification
      *
      * @return The file name.
      */
+    @Override
     public String getFile()
     {
     return file.getString();
@@ -63,6 +63,7 @@ public class PDSimpleFileSpecification extends PDFileSpecification
      *
      * @param fileName The name of the file.
      */
+    @Override
     public void setFile( String fileName )
     {
     file = new COSString( fileName );
@@ -73,6 +74,7 @@ public class PDSimpleFileSpecification extends PDFileSpecification
      *
      * @return The cos object that matches this Java object.
      */
+    @Override
     public COSBase getCOSObject()
     {
         return file;

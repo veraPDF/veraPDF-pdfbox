@@ -23,14 +23,13 @@ import java.io.IOException;
  * This class allows a section of a RandomAccessFile to be accessed as an
  * input stream.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.5 $
+ * @author Ben Litchfield
  */
 public class RandomAccessFileInputStream extends InputStream
 {
-    private RandomAccess file;
+    private final RandomAccess file;
     private long currentPosition;
-    private long endPosition;
+    private final long endPosition;
 
     /**
      * Constructor.
@@ -48,6 +47,7 @@ public class RandomAccessFileInputStream extends InputStream
     /**
      * {@inheritDoc}
      */
+    @Override
     public int available()
     {
         return (int)(endPosition - currentPosition);
@@ -55,6 +55,7 @@ public class RandomAccessFileInputStream extends InputStream
     /**
      * {@inheritDoc}
      */
+    @Override
     public void close()
     {
         //do nothing because we want to leave the random access file open.
@@ -62,6 +63,7 @@ public class RandomAccessFileInputStream extends InputStream
     /**
      * {@inheritDoc}
      */
+    @Override
     public int read() throws IOException
     {
         synchronized(file)
@@ -79,6 +81,7 @@ public class RandomAccessFileInputStream extends InputStream
     /**
      * {@inheritDoc}
      */
+    @Override
     public int read( byte[] b, int offset, int length ) throws IOException
     {
         //only allow a read of the amount available.
@@ -108,6 +111,7 @@ public class RandomAccessFileInputStream extends InputStream
     /**
      * {@inheritDoc}
      */
+    @Override
     public long skip( long amountToSkip )
     {
         long amountSkipped = Math.min( amountToSkip, available() );

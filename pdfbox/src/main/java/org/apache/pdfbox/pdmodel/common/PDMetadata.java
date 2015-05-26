@@ -19,6 +19,7 @@ package org.apache.pdfbox.pdmodel.common;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import org.apache.pdfbox.cos.COSName;
 
 
 import org.apache.pdfbox.cos.COSStream;
@@ -28,8 +29,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 /**
  * This class represents metadata for various objects in a PDF document.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.3 $
+ * @author Ben Litchfield
  */
 public class PDMetadata extends PDStream
 {
@@ -42,8 +42,8 @@ public class PDMetadata extends PDStream
     public PDMetadata( PDDocument document )
     {
         super( document );
-        getStream().setName( "Type", "Metadata" );
-        getStream().setName( "Subtype", "XML" );
+        getStream().setName( COSName.TYPE, "Metadata" );
+        getStream().setName( COSName.SUBTYPE, "XML" );
     }
 
     /**
@@ -58,8 +58,8 @@ public class PDMetadata extends PDStream
     public PDMetadata( PDDocument doc, InputStream str, boolean filtered ) throws IOException
     {
         super( doc, str, filtered );
-        getStream().setName( "Type", "Metadata" );
-        getStream().setName( "Subtype", "XML" );
+        getStream().setName( COSName.TYPE, "Metadata" );
+        getStream().setName( COSName.SUBTYPE, "XML" );
     }
 
     /**

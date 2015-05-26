@@ -57,7 +57,12 @@
       <groupId>${project.groupId}</groupId>
       <artifactId>xmpbox</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>preflight</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
         <groupId>org.apache.lucene</groupId>
@@ -91,7 +96,7 @@
     <resources>
       <resource>
         <directory>src/main/resources</directory>
-        <filtering>true</filtering>
+        <filtering>false</filtering>
       </resource>
     </resources>
     <plugins>

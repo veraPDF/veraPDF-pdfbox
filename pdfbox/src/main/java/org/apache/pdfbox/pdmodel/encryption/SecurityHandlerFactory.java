@@ -37,7 +37,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 public final class SecurityHandlerFactory
 {
     /** Singleton instance */
-    public static SecurityHandlerFactory INSTANCE = new SecurityHandlerFactory();
+    public static final SecurityHandlerFactory INSTANCE = new SecurityHandlerFactory();
 
     static
     {
@@ -90,7 +90,7 @@ public final class SecurityHandlerFactory
     /**
      * Returns a new security handler for the given protection policy, or null none is available.
      * @param policy the protection policy for which to create a security handler
-     * @return a new SecurityHandler instance, or null none is available
+     * @return a new SecurityHandler instance, or null if none is available
      */
     public SecurityHandler newSecurityHandlerForPolicy(ProtectionPolicy policy)
     {
@@ -100,42 +100,17 @@ public final class SecurityHandlerFactory
             return null;
         }
 
-        Class[] argsClasses = { policy.getClass() };
+        Class<?>[] argsClasses = { policy.getClass() };
         Object[] args = { policy };
-        try
-        {
-            Constructor<? extends SecurityHandler> ctor =
-                    handlerClass.getDeclaredConstructor(argsClasses);
-            return ctor.newInstance(args);
-        }
-        catch(NoSuchMethodException e)
-        {
-            // should not happen in normal operation
-            throw new RuntimeException(e);
-        }
-        catch(IllegalAccessException e)
-        {
-            // should not happen in normal operation
-            throw new RuntimeException(e);
-        }
-        catch(InstantiationException e)
-        {
-            // should not happen in normal operation
-            throw new RuntimeException(e);
-        }
-        catch(InvocationTargetException e)
-        {
-            // should not happen in normal operation
-            throw new RuntimeException(e);
-        }
+        return newSecurityHandler(handlerClass, argsClasses, args);
     }
 
     /**
      * Returns a new security handler for the given Filter name, or null none is available.
      * @param name the Filter name from the PDF encryption dictionary
-     * @return a new SecurityHandler instance, or null none is available
+     * @return a new SecurityHandler instance, or null if none is available
      */
-    public SecurityHandler newSecurityHandler(String name)
+    public SecurityHandler newSecurityHandlerForFilter(String name)
     {
         Class<? extends SecurityHandler> handlerClass = nameToHandler.get(name);
         if (handlerClass == null)
@@ -143,8 +118,21 @@ public final class SecurityHandlerFactory
             return null;
         }
 
-        Class[] argsClasses = { };
+        Class<?>[] argsClasses = { };
         Object[] args = { };
+        return newSecurityHandler(handlerClass, argsClasses, args);
+    }
+
+    /* Returns a new security handler for the given parameters, or null none is available.
+     *
+     * @param handlerClass the handler class.
+     * @param argsClasses the parameter array.
+     * @param args array of objects to be passed as arguments to the constructor call.
+     * @return a new SecurityHandler instance, or null if none is available.
+     */
+    private SecurityHandler newSecurityHandler(Class<? extends SecurityHandler> handlerClass, 
+            Class<?>[] argsClasses, Object[] args)
+    {
         try
         {
             Constructor<? extends SecurityHandler> ctor =

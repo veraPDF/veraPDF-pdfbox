@@ -20,17 +20,12 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.pdfparser.PDFObjectStreamParser;
-import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
-import org.apache.pdfbox.persistence.util.COSObjectKey;
 
 /**
  * This is the in-memory representation of the PDF document.  You need to call
@@ -67,18 +62,10 @@ public class COSDocument extends COSBase implements Closeable
      */
     private COSDictionary trailer;
     
-    /**
-     * Signature interface.
-     */
-    private SignatureInterface signatureInterface;
-
-    private String headerString = "%PDF-" + version;
-
     private boolean warnMissingClose = true;
     
     /** 
-     * signal that document is already decrypted, 
-     * e.g. with {@link org.apache.pdfbox.pdfparser.NonSequentialPDFParser} 
+     * Signal that document is already decrypted. 
      */
     private boolean isDecrypted = false;
     
@@ -91,34 +78,16 @@ public class COSDocument extends COSBase implements Closeable
     private final File scratchDirectory;
     
     private final boolean useScratchFile;
-    
-    /**
-     * Flag to skip malformed or otherwise unparseable input where possible.
-     */
-    private final boolean forceParsing;
 
     /**
      * Constructor.
      *
-     * @param forceParsingValue flag to skip malformed or otherwise unparseable
-     *                     document content where possible
-     */
-    public COSDocument(boolean forceParsingValue) 
-    {
-        this(null, forceParsingValue, false);
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param forceParsingValue flag to skip malformed or otherwise unparseable
-     *                     document content where possible
      * @param useScratchFiles enables the usage of a scratch file if set to true
      *                     
      */
-    public COSDocument(boolean forceParsingValue, boolean useScratchFiles) 
+    public COSDocument(boolean useScratchFiles)
     {
-        this(null, forceParsingValue, useScratchFiles);
+        this(null, useScratchFiles);
     }
 
     /**
@@ -128,14 +97,11 @@ public class COSDocument extends COSBase implements Closeable
      *
      * @param scratchDir directory for the temporary file,
      *                   or <code>null</code> to use the system default
-     * @param forceParsingValue flag to skip malformed or otherwise unparseable
-     *                     document content where possible
      * @param useScratchFiles enables the usage of a scratch file if set to true
      * 
      */
-    public COSDocument(File scratchDir, boolean forceParsingValue, boolean useScratchFiles) 
+    public COSDocument(File scratchDir, boolean useScratchFiles)
     {
-        forceParsing = forceParsingValue;
         scratchDirectory = scratchDir;
         useScratchFile = useScratchFiles;
     }
@@ -145,7 +111,7 @@ public class COSDocument extends COSBase implements Closeable
      */
     public COSDocument()
     {
-        this(false, false);
+        this(false);
     }
 
     /**
@@ -189,7 +155,7 @@ public class COSDocument extends COSBase implements Closeable
                 {
                     COSDictionary dic = (COSDictionary)realObject;
                     COSBase typeItem = dic.getItem(COSName.TYPE);
-                    if (typeItem != null && typeItem instanceof COSName)
+                    if (typeItem instanceof COSName)
                     {
                         COSName objectType = (COSName) typeItem;
                         if (objectType.equals(type))
@@ -244,7 +210,7 @@ public class COSDocument extends COSBase implements Closeable
                 {
                     COSDictionary dic = (COSDictionary)realObject;
                     COSBase typeItem = dic.getItem(COSName.TYPE);
-                    if (typeItem != null && typeItem instanceof COSName)
+                    if (typeItem instanceof COSName)
                     {
                         COSName objectType = (COSName) typeItem;
                         if (objectType.equals(type))
@@ -278,24 +244,19 @@ public class COSDocument extends COSBase implements Closeable
     }
 
     /**
-     * This will set the version of this PDF document.
+     * This will set the header version of this PDF document.
      *
      * @param versionValue The version of the PDF document.
      */
     public void setVersion( float versionValue )
     {
-        // update header string
-        if (versionValue != version) 
-        {
-            headerString = headerString.replaceFirst(String.valueOf(version), String.valueOf(versionValue));
-        }
         version = versionValue;
     }
 
     /**
-     * This will get the version of this PDF document.
+     * This will get the version extracted from the header of this PDF document.
      *
-     * @return This documents version.
+     * @return The header version.
      */
     public float getVersion()
     {
@@ -304,8 +265,6 @@ public class COSDocument extends COSBase implements Closeable
 
     /** 
      * Signals that the document is decrypted completely.
-     * Needed e.g. by {@link org.apache.pdfbox.pdfparser.NonSequentialPDFParser} to circumvent
-     * additional decryption later on. 
      */
     public void setDecrypted()
     {
@@ -314,7 +273,6 @@ public class COSDocument extends COSBase implements Closeable
 
     /** 
      * Indicates if a encrypted pdf is already decrypted after parsing.
-     * Does make sense only if the {@link org.apache.pdfbox.pdfparser.NonSequentialPDFParser} is used.
      * 
      *  @return true indicates that the pdf is decrypted.
      */
@@ -350,15 +308,6 @@ public class COSDocument extends COSBase implements Closeable
     }
 
     /**
-     * This will return the signature interface.
-     * @return the signature interface 
-     */
-    public SignatureInterface getSignatureInterface() 
-    {
-        return signatureInterface;
-    }
-    
-    /**
      * This will set the encryption dictionary, this should only be called when
      * encrypting the document.
      *
@@ -367,66 +316,6 @@ public class COSDocument extends COSBase implements Closeable
     public void setEncryptionDictionary( COSDictionary encDictionary )
     {
         trailer.setItem( COSName.ENCRYPT, encDictionary );
-    }
-
-    /**
-     * This will return a list of signature dictionaries as COSDictionary.
-     *
-     * @return list of signature dictionaries as COSDictionary
-     * @throws IOException if no document catalog can be found
-     */
-    public List<COSDictionary> getSignatureDictionaries() throws IOException
-    {
-        List<COSDictionary> signatureFields = getSignatureFields(false);
-        List<COSDictionary> signatures = new LinkedList<COSDictionary>();
-        for ( COSDictionary dict : signatureFields )
-        {
-            COSBase dictionaryObject = dict.getDictionaryObject(COSName.V);
-            if (dictionaryObject != null)
-            {
-                signatures.add((COSDictionary)dictionaryObject);
-            }
-        }
-        return signatures;
-    }
-
-    /**
-     * This will return a list of signature fields.
-     *
-     * @return list of signature dictionaries as COSDictionary
-     * @throws IOException if no document catalog can be found
-     */
-    public List<COSDictionary> getSignatureFields(boolean onlyEmptyFields) throws IOException
-    {
-        COSObject documentCatalog = getCatalog();
-        if (documentCatalog != null)
-        {
-            COSDictionary acroForm = (COSDictionary)documentCatalog.getDictionaryObject(COSName.ACRO_FORM);
-            if (acroForm != null)
-            {
-                COSArray fields = (COSArray)acroForm.getDictionaryObject(COSName.FIELDS);
-                if (fields != null)
-                {
-                    // Some fields may contain twice references to a single field. 
-                    // This will prevent such double entries.
-                    HashMap<COSObjectKey, COSDictionary> signatures = new HashMap<COSObjectKey, COSDictionary>();
-                    for ( Object object : fields )
-                    {
-                        COSObject dict = (COSObject)object;
-                        if (COSName.SIG.equals(dict.getItem(COSName.FT)))
-                        {
-                            COSBase dictionaryObject = dict.getDictionaryObject(COSName.V);
-                            if (dictionaryObject == null || (dictionaryObject != null && !onlyEmptyFields))
-                            {
-                                signatures.put(new COSObjectKey(dict), (COSDictionary)dict.getObject());
-                            }
-                        }
-                    }
-                    return new LinkedList<COSDictionary>(signatures.values());
-                }
-            }
-        }
-        return Collections.emptyList();
     }
     
     /**
@@ -449,15 +338,6 @@ public class COSDocument extends COSBase implements Closeable
         getTrailer().setItem(COSName.ID, id);
     }
     
-    /**
-     * Set the signature interface to the given value.
-     * @param sigInterface the signature interface
-     */
-    public void setSignatureInterface(SignatureInterface sigInterface) 
-    {
-        signatureInterface = sigInterface;
-    }
-
     /**
      * This will get the document catalog.
      *
@@ -526,41 +406,34 @@ public class COSDocument extends COSBase implements Closeable
      *
      *  @throws IOException If there is an error close resources.
      */
+    @Override
     public void close() throws IOException
     {
         if (!closed) 
         {
-            if (trailer != null)
-            {
-                trailer.clear();
-                trailer = null;
-            }
-            // Clear object pool
+            // close all open I/O streams
             List<COSObject> list = getObjects();
-            if (list != null && !list.isEmpty()) 
+            if (list != null) 
             {
                 for (COSObject object : list) 
                 {
                     COSBase cosObject = object.getObject();
-                    // clear the resources of the pooled objects
                     if (cosObject instanceof COSStream)
                     {
                         ((COSStream)cosObject).close();
                     }
-                    else if (cosObject instanceof COSDictionary)
-                    {
-                        ((COSDictionary)cosObject).clear();
-                    }
-                    else if (cosObject instanceof COSArray)
-                    {
-                        ((COSArray)cosObject).clear();
-                    }
-                    // TODO are there other kind of COSObjects to be cleared?
                 }
-                list.clear();
             }
             closed = true;
         }
+    }
+
+    /**
+     * Returns true if this document has been closed.
+     */
+    public boolean isClosed()
+    {
+        return closed;
     }
 
     /**
@@ -595,21 +468,6 @@ public class COSDocument extends COSBase implements Closeable
     }
 
     /**
-     * @return Returns the headerString.
-     */
-    public String getHeaderString()
-    {
-        return headerString;
-    }
-    /**
-     * @param header The headerString to set.
-     */
-    public void setHeaderString(String header)
-    {
-        headerString = header;
-    }
-
-    /**
      * This method will search the list of objects for types of ObjStm.  If it finds
      * them then it will parse out all of the objects from the stream that is contains.
      *
@@ -620,19 +478,26 @@ public class COSDocument extends COSBase implements Closeable
         for( COSObject objStream : getObjectsByType( COSName.OBJ_STM ) )
         {
             COSStream stream = (COSStream)objStream.getObject();
-            PDFObjectStreamParser parser =
-                new PDFObjectStreamParser(stream, this, forceParsing);
-            parser.parse();
-            for( COSObject next : parser.getObjects() )
+            PDFObjectStreamParser parser = new PDFObjectStreamParser(stream, this);
+            try
             {
-                COSObjectKey key = new COSObjectKey( next );
-                if ( objectPool.get(key) == null || objectPool.get(key).getObject() == null ||
-                     // xrefTable stores negated objNr of objStream for objects in objStreams
-                     (xrefTable.containsKey(key) && xrefTable.get(key) == -objStream.getObjectNumber().longValue()) )
+                parser.parse();
+                for (COSObject next : parser.getObjects())
                 {
-                    COSObject obj = getObjectFromPool(key);
-                    obj.setObject(next.getObject());
+                    COSObjectKey key = new COSObjectKey(next);
+                    if (objectPool.get(key) == null || objectPool.get(key).getObject() == null
+                            // xrefTable stores negated objNr of objStream for objects in objStreams
+                            || (xrefTable.containsKey(key)
+                                && xrefTable.get(key) == -objStream.getObjectNumber()))
+                    {
+                        COSObject obj = getObjectFromPool(key);
+                        obj.setObject(next.getObject());
+                    }
                 }
+            }
+            finally
+            {
+                parser.close();
             }
         }
     }
@@ -659,8 +524,8 @@ public class COSDocument extends COSBase implements Closeable
             obj = new COSObject(null);
             if( key != null )
             {
-                obj.setObjectNumber( COSInteger.get( key.getNumber() ) );
-                obj.setGenerationNumber( COSInteger.get( key.getGeneration() ) );
+                obj.setObjectNumber(key.getNumber());
+                obj.setGenerationNumber(key.getGeneration());
                 objectPool.put(key, obj);
             }
         }

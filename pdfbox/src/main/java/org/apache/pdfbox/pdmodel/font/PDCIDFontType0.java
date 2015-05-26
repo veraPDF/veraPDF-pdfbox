@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.fontbox.cff.CFFCIDFont;
@@ -49,14 +48,14 @@ public class PDCIDFontType0 extends PDCIDFont
 
     private final CFFCIDFont cidFont;  // Top DICT that uses CIDFont operators
     private final CFFType1Font t1Font; // Top DICT that does not use CIDFont operators
-
+    
     private final Map<Integer, Float> glyphHeights = new HashMap<Integer, Float>();
     private final boolean isEmbedded;
     private final boolean isDamaged;
 
     private Float avgWidth = null;
     private Matrix fontMatrix;
-    private AffineTransform fontMatrixTransform;
+    private final AffineTransform fontMatrixTransform;
 
     /**
      * Constructor.
@@ -78,12 +77,17 @@ public class PDCIDFontType0 extends PDCIDFont
             }
         }
 
-        if (bytes != null)
+        boolean fontIsDamaged = false;
+        CFFFont cffFont = null;
+        if (bytes != null && bytes.length > 0 && (bytes[0] & 0xff) == '%')
         {
-            // embedded
+            // todo: PDFBOX-2642 contains a Type1 PFB font in a CIDFont, but we can't handle it yet
+            LOG.error("Unsupported: Type1 font instead of CFF in " + fd.getFontName());
+            fontIsDamaged = true;
+        }
+        else if (bytes != null)
+        {
             CFFParser cffParser = new CFFParser();
-            boolean fontIsDamaged = false;
-            CFFFont cffFont = null;
             try
             {
                 cffFont = cffParser.parse(bytes).get(0);
@@ -93,7 +97,11 @@ public class PDCIDFontType0 extends PDCIDFont
                 LOG.error("Can't read the embedded CFF font " + fd.getFontName(), e);
                 fontIsDamaged = true;
             }
-
+        }
+        
+        if (cffFont != null)
+        {
+            // embedded
             if (cffFont instanceof CFFCIDFont)
             {
                 cidFont = (CFFCIDFont)cffFont;
@@ -105,7 +113,7 @@ public class PDCIDFontType0 extends PDCIDFont
                 t1Font = (CFFType1Font)cffFont;
             }
             isEmbedded = true;
-            isDamaged = fontIsDamaged;
+            isDamaged = false;
         }
         else
         {
@@ -140,7 +148,10 @@ public class PDCIDFontType0 extends PDCIDFont
                 {
                     // this error often indicates that the user needs to install the Adobe Reader
                     // Asian and Extended Language Pack
-                    LOG.error("Missing CID-keyed font " + getBaseFont());
+                    if (!fontIsDamaged)
+                    {
+                        LOG.error("Missing CID-keyed font " + getBaseFont());
+                    }
                 }
                 else
                 {
@@ -148,7 +159,7 @@ public class PDCIDFontType0 extends PDCIDFont
                 }
             }
             isEmbedded = false;
-            isDamaged = false;
+            isDamaged = fontIsDamaged;
         }
         fontMatrixTransform = getFontMatrix().createAffineTransform();
         fontMatrixTransform.scale(1000, 1000);
@@ -235,6 +246,7 @@ public class PDCIDFontType0 extends PDCIDFont
      * @param code character code
      * @return CID
      */
+    @Override
     public int codeToCID(int code)
     {
         return parent.getCMap().toCID(code);
@@ -255,6 +267,14 @@ public class PDCIDFontType0 extends PDCIDFont
             // The CIDs shall be used directly as GID values
             return cid;
         }
+    }
+
+    @Override
+    public byte[] encode(int unicode)
+    {
+        // todo: we can use a known character collection CMap for a CIDFont
+        //       and an Encoding for Type 1-equivalent
+        throw new UnsupportedOperationException();
     }
 
     @Override

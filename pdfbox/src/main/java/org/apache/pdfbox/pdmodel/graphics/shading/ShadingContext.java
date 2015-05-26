@@ -15,7 +15,6 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
-import java.awt.Rectangle;
 import java.awt.Transparency;
 import java.awt.color.ColorSpace;
 import java.awt.geom.AffineTransform;
@@ -25,12 +24,13 @@ import java.awt.image.DataBuffer;
 import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
 import org.apache.pdfbox.util.Matrix;
 
 /**
- * A base class to handle stuff that is common to all shading types.
+ * A base class to handle what is common to all shading types.
  *
  * @author Shaola Ren
  * @author Tilman Hausherr
@@ -39,18 +39,29 @@ public abstract class ShadingContext
 {
     private static final Log LOG = LogFactory.getLog(ShadingContext.class);
 
-    protected final PDShading shading;
-    protected final Rectangle deviceBounds;
-    protected PDColorSpace shadingColorSpace;
     protected PDRectangle bboxRect;
     protected float minBBoxX, minBBoxY, maxBBoxX, maxBBoxY;
-    protected ColorModel outputColorModel;
 
+    private float[] background;
+    private int rgbBackground;
+    private final PDShading shading;
+    private ColorModel outputColorModel;
+    private PDColorSpace shadingColorSpace;
+
+    /**
+     * Constructor.
+     *
+     * @param shading the shading type to be used
+     * @param cm the color model to be used
+     * @param xform transformation for user to device space
+     * @param matrix the pattern matrix concatenated with that of the parent content stream
+     * @throws java.io.IOException if there is an error getting the color space
+     * or doing background color conversion.
+     */
     public ShadingContext(PDShading shading, ColorModel cm, AffineTransform xform,
-            Matrix ctm, Rectangle dBounds) throws IOException
+                          Matrix matrix) throws IOException
     {
         this.shading = shading;
-        deviceBounds = dBounds;
         shadingColorSpace = shading.getColorSpace();
 
         // create the output color model using RGB+alpha as color space
@@ -61,22 +72,49 @@ public abstract class ShadingContext
         bboxRect = shading.getBBox();
         if (bboxRect != null)
         {
-            transformBBox(ctm, xform);
+            transformBBox(matrix, xform);
+        }
+        
+        // get background values if available
+        COSArray bg = shading.getBackground();
+        if (bg != null)
+        {
+            background = bg.toFloatArray();
+            rgbBackground = convertToRGB(background);
         }
     }
 
-    private void transformBBox(Matrix ctm, AffineTransform xform)
+    PDColorSpace getShadingColorSpace()
+    {
+        return shadingColorSpace;
+    }
+
+    PDShading getShading()
+    {
+        return shading;
+    }
+
+    float[] getBackground()
+    {
+        return background;
+    }
+
+    int getRgbBackground()
+    {
+        return rgbBackground;
+    }
+    
+    private void transformBBox(Matrix matrix, AffineTransform xform)
     {
         float[] bboxTab = new float[4];
         bboxTab[0] = bboxRect.getLowerLeftX();
         bboxTab[1] = bboxRect.getLowerLeftY();
         bboxTab[2] = bboxRect.getUpperRightX();
         bboxTab[3] = bboxRect.getUpperRightY();
-        if (ctm != null)
-        {
-            // transform the coords using the given matrix
-            ctm.createAffineTransform().transform(bboxTab, 0, bboxTab, 0, 2);
-        }
+
+        // transform the coords using the given matrix
+        matrix.createAffineTransform().transform(bboxTab, 0, bboxTab, 0, 2);
+
         xform.transform(bboxTab, 0, bboxTab, 0, 2);
         minBBoxX = Math.min(bboxTab[0], bboxTab[2]);
         minBBoxY = Math.min(bboxTab[1], bboxTab[3]);
@@ -89,23 +127,35 @@ public abstract class ShadingContext
         }
     }
 
-    // convert color to RGB color values encoded into an integer.
-    protected int convertToRGB(float[] values)
+    /**
+     * Convert color values from shading colorspace to RGB color values encoded
+     * into an integer.
+     *
+     * @param values color values in shading colorspace.
+     * @return RGB values encoded in an integer.
+     * @throws java.io.IOException if the color conversion fails.
+     */
+    final int convertToRGB(float[] values) throws IOException
     {
-        float[] rgbValues;
-        int normRGBValues = 0;
-        try
-        {
-            rgbValues = shadingColorSpace.toRGB(values);
-            normRGBValues = (int) (rgbValues[0] * 255);
-            normRGBValues |= (((int) (rgbValues[1] * 255)) << 8);
-            normRGBValues |= (((int) (rgbValues[2] * 255)) << 16);
-        }
-        catch (IOException exception)
-        {
-            LOG.error("error processing color space", exception);
-        }
+        int normRGBValues;
+
+        float[] rgbValues = shadingColorSpace.toRGB(values);
+        normRGBValues = (int) (rgbValues[0] * 255);
+        normRGBValues |= (int) (rgbValues[1] * 255) << 8;
+        normRGBValues |= (int) (rgbValues[2] * 255) << 16;
+
         return normRGBValues;
+    }
+    
+    ColorModel getColorModel()
+    {
+        return outputColorModel;
+    }
+
+    void dispose()
+    {
+        outputColorModel = null;
+        shadingColorSpace = null;
     }
 
 }

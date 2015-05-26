@@ -25,8 +25,7 @@ import org.apache.pdfbox.cos.COSString;
 /**
  * This represents a destination to a page by referencing it with a name.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.3 $
+ * @author Ben Litchfield
  */
 public class PDNamedDestination extends PDDestination
 {
@@ -109,13 +108,7 @@ public class PDNamedDestination extends PDDestination
      */
     public void setNamedDestination( String dest ) throws IOException
     {
-        if( namedDestination instanceof COSString )
-        {
-            COSString string = ((COSString)namedDestination);
-            string.reset();
-            string.append( dest.getBytes("ISO-8859-1") );
-        }
-        else if( dest == null )
+        if (dest == null)
         {
             namedDestination = null;
         }
@@ -124,5 +117,4 @@ public class PDNamedDestination extends PDDestination
             namedDestination = new COSString( dest );
         }
     }
-
 }

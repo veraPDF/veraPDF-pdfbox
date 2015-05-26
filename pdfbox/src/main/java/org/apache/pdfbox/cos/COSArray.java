@@ -27,12 +27,11 @@ import org.apache.pdfbox.pdmodel.common.COSObjectable;
 /**
  * An array of PDFBase objects as part of the PDF document.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.24 $
+ * @author Ben Litchfield
  */
 public class COSArray extends COSBase implements Iterable<COSBase>
 {
-    private List<COSBase> objects = new ArrayList<COSBase>();
+    private final List<COSBase> objects = new ArrayList<COSBase>();
 
     /**
      * Constructor.
@@ -198,7 +197,7 @@ public class COSArray extends COSBase implements Iterable<COSBase>
     }
 
     /**
-     * This will get an object from the array.  This will NOT derefernce
+     * This will get an object from the array.  This will NOT dereference
      * the COS object.
      *
      * @param index The index into the array to get the object.
@@ -422,6 +421,7 @@ public class COSArray extends COSBase implements Iterable<COSBase>
      *
      * @return an iterator over the array elements
      */
+    @Override
     public Iterator<COSBase> iterator()
     {
         return objects.iterator();
@@ -464,13 +464,10 @@ public class COSArray extends COSBase implements Iterable<COSBase>
                 retval = i;
                 break;
             }
-            else if (item instanceof COSObject)
+            else if (item instanceof COSObject && ((COSObject) item).getObject().equals(object))
             {
-                if (((COSObject) item).getObject().equals(object))
-                {
-                    retval = i;
-                    break;
-                }
+                retval = i;
+                break;
             }
         }
         return retval;

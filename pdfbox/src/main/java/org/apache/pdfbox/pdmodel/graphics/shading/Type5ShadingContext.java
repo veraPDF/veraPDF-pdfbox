@@ -23,6 +23,7 @@ import java.awt.image.ColorModel;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
 import org.apache.commons.logging.Log;
@@ -48,25 +49,24 @@ class Type5ShadingContext extends GouraudShadingContext
      * @param shading the shading type to be used
      * @param cm the color model to be used
      * @param xform transformation for user to device space
-     * @param ctm current transformation matrix
+     * @param matrix the pattern matrix concatenated with that of the parent content stream
      * @throws IOException if something went wrong
      */
-    public Type5ShadingContext(PDShadingType5 shading, ColorModel cm, AffineTransform xform,
-            Matrix ctm, Rectangle dBounds) throws IOException
+    Type5ShadingContext(PDShadingType5 shading, ColorModel cm, AffineTransform xform,
+                               Matrix matrix, Rectangle deviceBounds) throws IOException
     {
-        super(shading, cm, xform, ctm, dBounds);
+        super(shading, cm, xform, matrix);
 
         LOG.debug("Type5ShadingContext");
 
-        triangleList = getTriangleList(xform, ctm);
-        pixelTable = calcPixelTable();
+        setTriangleList(collectTriangles(shading, xform, matrix));
+        createPixelTable(deviceBounds);
     }
 
-    private ArrayList<ShadedTriangle> getTriangleList(AffineTransform xform, Matrix ctm) throws IOException
+    private List<ShadedTriangle> collectTriangles(PDShadingType5 latticeTriangleShadingType,
+            AffineTransform xform, Matrix matrix) throws IOException
     {
-        ArrayList<ShadedTriangle> list = new ArrayList<ShadedTriangle>();
-        PDShadingType5 latticeTriangleShadingType = (PDShadingType5) shading;
-        COSDictionary cosDictionary = latticeTriangleShadingType.getCOSDictionary();
+        COSDictionary cosDictionary = latticeTriangleShadingType.getCOSObject();
         PDRange rangeX = latticeTriangleShadingType.getDecodeForParameter(0);
         PDRange rangeY = latticeTriangleShadingType.getDecodeForParameter(1);
         int numPerRow = latticeTriangleShadingType.getVerticesPerRow();
@@ -75,30 +75,39 @@ class Type5ShadingContext extends GouraudShadingContext
         {
             colRange[i] = latticeTriangleShadingType.getDecodeForParameter(2 + i);
         }
-        ArrayList<Vertex> vlist = new ArrayList<Vertex>();
+        List<Vertex> vlist = new ArrayList<Vertex>();
         long maxSrcCoord = (long) Math.pow(2, bitsPerCoordinate) - 1;
         long maxSrcColor = (long) Math.pow(2, bitsPerColorComponent) - 1;
         COSStream cosStream = (COSStream) cosDictionary;
 
         ImageInputStream mciis = new MemoryCacheImageInputStream(cosStream.getUnfilteredStream());
-        while (true)
+        try
         {
-            Vertex p;
-            try
+            while (true)
             {
-                p = readVertex(mciis, maxSrcCoord, maxSrcColor, rangeX, rangeY, colRange, ctm, xform);
-                vlist.add(p);
+                Vertex p;
+                try
+                {
+                    p = readVertex(mciis, maxSrcCoord, maxSrcColor, rangeX, rangeY, colRange, matrix, xform);
+                    vlist.add(p);
+                }
+                catch (EOFException ex)
+                {
+                    break;
+                }
             }
-            catch (EOFException ex)
-            {
-                break;
-            }
+        }
+        finally
+        {
+            mciis.close();
         }
         int sz = vlist.size(), rowNum = sz / numPerRow;
         Vertex[][] latticeArray = new Vertex[rowNum][numPerRow];
+        List<ShadedTriangle> list = new ArrayList<ShadedTriangle>();
         if (rowNum < 2)
         {
-            return triangleList;
+            // must have at least two rows; if not, return empty list
+            return list;
         }
         for (int i = 0; i < rowNum; i++)
         {
@@ -112,23 +121,28 @@ class Type5ShadingContext extends GouraudShadingContext
         {
             for (int j = 0; j < numPerRow - 1; j++)
             {
-                Point2D[] ps = new Point2D[]
-                {
-                    latticeArray[i][j].point, latticeArray[i][j + 1].point, latticeArray[i + 1][j].point
-                };
-                float[][] cs = new float[][]
-                {
-                    latticeArray[i][j].color, latticeArray[i][j + 1].color, latticeArray[i + 1][j].color
-                };
+                Point2D[] ps = new Point2D[] {
+                    latticeArray[i][j].point,
+                    latticeArray[i][j + 1].point,
+                    latticeArray[i + 1][j].point  };
+
+                float[][] cs = new float[][] {
+                    latticeArray[i][j].color,
+                    latticeArray[i][j + 1].color,
+                    latticeArray[i + 1][j].color };
+
                 list.add(new ShadedTriangle(ps, cs));
-                ps = new Point2D[]
-                {
-                    latticeArray[i][j + 1].point, latticeArray[i + 1][j].point, latticeArray[i + 1][j + 1].point
-                };
-                cs = new float[][]
-                {
-                    latticeArray[i][j + 1].color, latticeArray[i + 1][j].color, latticeArray[i + 1][j + 1].color
-                };
+
+                ps = new Point2D[] {
+                    latticeArray[i][j + 1].point,
+                    latticeArray[i + 1][j].point,
+                    latticeArray[i + 1][j + 1].point };
+
+                cs = new float[][]{
+                    latticeArray[i][j + 1].color,
+                    latticeArray[i + 1][j].color,
+                    latticeArray[i + 1][j + 1].color };
+
                 list.add(new ShadedTriangle(ps, cs));
             }
         }

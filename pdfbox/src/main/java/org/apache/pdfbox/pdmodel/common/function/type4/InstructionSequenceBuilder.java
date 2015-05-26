@@ -23,13 +23,12 @@ import java.util.regex.Pattern;
 /**
  * Basic parser for Type 4 functions which is used to build up instruction sequences.
  *
- * @version $Revision$
  */
-public class InstructionSequenceBuilder extends Parser.AbstractSyntaxHandler
+public final class InstructionSequenceBuilder extends Parser.AbstractSyntaxHandler
 {
 
-    private InstructionSequence mainSequence = new InstructionSequence();
-    private Stack<InstructionSequence> seqStack = new Stack<InstructionSequence>();
+    private final InstructionSequence mainSequence = new InstructionSequence();
+    private final Stack<InstructionSequence> seqStack = new Stack<InstructionSequence>();
 
     private InstructionSequenceBuilder()
     {
@@ -67,6 +66,7 @@ public class InstructionSequenceBuilder extends Parser.AbstractSyntaxHandler
     private static final Pattern REAL_PATTERN = Pattern.compile("[\\-]?\\d*\\.\\d*([Ee]\\-?\\d+)?");
 
     /** {@inheritDoc} */
+    @Override
     public void token(CharSequence text)
     {
         String token = text.toString();

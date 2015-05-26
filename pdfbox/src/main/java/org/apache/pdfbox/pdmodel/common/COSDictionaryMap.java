@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,13 +34,12 @@ import org.apache.pdfbox.cos.COSString;
 /**
  * This is a Map that will automatically sync the contents to a COSDictionary.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.10 $
+ * @author Ben Litchfield
  */
 public class COSDictionaryMap<K,V> implements Map<K,V>
 {
-    private COSDictionary map;
-    private Map<K,V> actuals;
+    private final COSDictionary map;
+    private final Map<K,V> actuals;
 
     /**
      * Constructor for this map.
@@ -59,6 +57,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public int size()
     {
         return map.size();
@@ -67,6 +66,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isEmpty()
     {
         return size() == 0;
@@ -75,6 +75,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean containsKey(Object key)
     {
         return map.keySet().contains( key );
@@ -83,6 +84,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean containsValue(Object value)
     {
         return actuals.containsValue( value );
@@ -91,6 +93,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public V get(Object key)
     {
         return actuals.get( key );
@@ -99,6 +102,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public V put(K key, V value)
     {
         COSObjectable object = (COSObjectable)value;
@@ -110,6 +114,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public V remove(Object key)
     {
         map.removeItem( COSName.getPDFName( (String)key ) );
@@ -119,6 +124,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void putAll(Map<? extends K, ? extends V> t)
     {
         throw new RuntimeException( "Not yet implemented" );
@@ -127,6 +133,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public void clear()
     {
         map.clear();
@@ -136,6 +143,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<K> keySet()
     {
         return actuals.keySet();
@@ -144,6 +152,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public Collection<V> values()
     {
         return actuals.values();
@@ -152,6 +161,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<Map.Entry<K, V>> entrySet()
     {
         return Collections.unmodifiableSet(actuals.entrySet());
@@ -160,6 +170,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals(Object o)
     {
         boolean retval = false;
@@ -174,6 +185,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString()
     {
         return actuals.toString();
@@ -182,6 +194,7 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
     /**
      * {@inheritDoc}
      */
+    @Override
     public int hashCode()
     {
         return map.hashCode();
@@ -189,20 +202,19 @@ public class COSDictionaryMap<K,V> implements Map<K,V>
 
     /**
      * This will take a map&lt;java.lang.String,org.apache.pdfbox.pdmodel.COSObjectable&gt;
-     * and convert it into a COSDictionary&lt;COSName,COSBase&gt;.
+     * and convert it into a COSDictionary.
      *
      * @param someMap A map containing COSObjectables
      *
      * @return A proper COSDictionary
      */
-    public static COSDictionary convert( Map<?,?> someMap )
+    public static COSDictionary convert(Map<String, ?> someMap)
     {
-        Iterator<?> iter = someMap.keySet().iterator();
         COSDictionary dic = new COSDictionary();
-        while( iter.hasNext() )
+        for (Entry<String, ?> entry : someMap.entrySet())
         {
-            String name = (String)iter.next();
-            COSObjectable object = (COSObjectable)someMap.get( name );
+            String name = entry.getKey();
+            COSObjectable object = (COSObjectable) entry.getValue();
             dic.setItem( COSName.getPDFName( name ), object.getCOSObject() );
         }
         return dic;

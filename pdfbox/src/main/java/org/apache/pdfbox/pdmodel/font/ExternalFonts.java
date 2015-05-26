@@ -113,7 +113,7 @@ public final class ExternalFonts
     }
 
     /** Map of PostScript name substitutes, in priority order. */
-    private final static Map<String, List<String>> substitutes = new HashMap<String, List<String>>();
+    private static final Map<String, List<String>> substitutes = new HashMap<String, List<String>>();
     static
     {
         // substitutes for standard 14 fonts
@@ -154,8 +154,8 @@ public final class ExternalFonts
                 Arrays.asList("TimesNewRomanPS-BoldItalicMT", "TimesNewRomanPS-BoldItalic",
                              "TimesNewRoman-BoldItalic", "LiberationSerif-BoldItalic",
                              "NimbusRomNo9L-MediItal"));
-        substitutes.put("Symbol", Arrays.asList("SymbolMT", "StandardSymL"));
-        substitutes.put("ZapfDingbats", Arrays.asList("ZapfDingbatsITC", "Dingbats"));
+        substitutes.put("Symbol", Arrays.asList("Symbol", "SymbolMT", "StandardSymL"));
+        substitutes.put("ZapfDingbats", Arrays.asList("ZapfDingbatsITC", "Dingbats", "MS-Gothic"));
 
         // extra substitute mechanism for CJK CIDFonts when all we know is the ROS
         substitutes.put("$Adobe-CNS1", Arrays.asList("AdobeMingStd-Light"));
@@ -238,12 +238,9 @@ public final class ExternalFonts
             for (String substituteName : getSubstitutes("$" + registryOrdering))
             {
                 CFFFont cff = getProvider().getCFFFont(substituteName);
-                if (cff != null)
+                if (cff instanceof CFFCIDFont)
                 {
-                    if (cff instanceof CFFCIDFont)
-                    {
-                        return (CFFCIDFont)cff;
-                    }
+                    return (CFFCIDFont) cff;
                 }
             }
         }
@@ -260,14 +257,9 @@ public final class ExternalFonts
         Type1Equivalent type1Equivalent = getType1EquivalentFont(fontName);
         if (type1Equivalent == null)
         {
-            String message = fontProvider.toDebugString();
-            if (message != null)
-            {
-                // if we couldn't get a PFB font by now then there's no point continuing
-                log.error("No fallback font for '" + fontName + "', dumping debug information:");
-                log.error(message);
-            }
-            throw new IllegalStateException("No fonts available on the system for " + fontName);
+            // only systems with no fonts should reach this point, so we return a basic fallback
+            log.error("No fallback font for '" + fontName + "'");
+            return ttfFallbackFont;
         }
         return type1Equivalent;
     }
@@ -302,7 +294,10 @@ public final class ExternalFonts
             String name = fontDescriptor.getFontName();
             if (name != null)
             {
-                isBold = fontDescriptor.getFontName().toLowerCase().contains("bold");
+                String lower = fontDescriptor.getFontName().toLowerCase();
+                isBold = lower.contains("bold") ||
+                         lower.contains("black") ||
+                         lower.contains("heavy");
             }
 
             // font descriptor flags should describe the style

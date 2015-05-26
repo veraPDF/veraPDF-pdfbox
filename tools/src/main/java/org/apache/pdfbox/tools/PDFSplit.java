@@ -24,7 +24,7 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdfwriter.COSWriter;
-import org.apache.pdfbox.util.Splitter;
+import org.apache.pdfbox.multipdf.Splitter;
 
 /**
  * This is the main program that will take a pdf document and split it into
@@ -38,6 +38,7 @@ public class PDFSplit
     private static final String SPLIT = "-split";
     private static final String START_PAGE = "-startPage";
     private static final String END_PAGE = "-endPage";
+    private static final String OUTPUT_PREFIX = "-outputPrefix";
 
     private PDFSplit()
     {
@@ -66,6 +67,7 @@ public class PDFSplit
         String endPage = null;
         Splitter splitter = new Splitter();
         String pdfFile = null;
+        String outputPrefix = null;
         for( int i=0; i<args.length; i++ )
         {
             if( args[i].equals( PASSWORD ) )
@@ -104,6 +106,11 @@ public class PDFSplit
                 }
                 endPage = args[i];
             }
+            else if( args[i].equals( OUTPUT_PREFIX ) )
+            {
+                i++;
+                outputPrefix = args[i];
+            }
             else
             {
                 if( pdfFile == null )
@@ -118,7 +125,11 @@ public class PDFSplit
             usage();
         }
         else
-        {
+        {          
+            if (outputPrefix == null)
+            {
+                outputPrefix = pdfFile.substring(0, pdfFile.lastIndexOf('.'));
+            }
             PDDocument document = null;
             List<PDDocument> documents = null;
             try
@@ -161,7 +172,7 @@ public class PDFSplit
                 for( int i=0; i<documents.size(); i++ )
                 {
                     PDDocument doc = documents.get( i );
-                    String fileName = pdfFile.substring(0, pdfFile.length()-4 ) + "-" + i + ".pdf";
+                    String fileName = outputPrefix + "-" + (i + 1) + ".pdf";
                     writeDocument( doc, fileName );
                     doc.close();
                 }
@@ -175,14 +186,14 @@ public class PDFSplit
                 }
                 for( int i=0; documents != null && i<documents.size(); i++ )
                 {
-                    PDDocument doc = (PDDocument)documents.get( i );
+                    PDDocument doc = documents.get(i);
                     doc.close();
                 }
             }
         }
     }
 
-    private static final void writeDocument( PDDocument doc, String fileName ) throws IOException
+    private static void writeDocument( PDDocument doc, String fileName ) throws IOException
     {
         FileOutputStream output = null;
         COSWriter writer = null;
@@ -215,7 +226,7 @@ public class PDFSplit
             "  -split     <integer>   split after this many pages (default 1, if startPage and endPage are unset)\n"+
             "  -startPage <integer>   start page\n" +
             "  -endPage   <integer>   end page\n" +
-            "  -nonSeq                Enables the new non-sequential parser\n" +
+            "  -outputPrefix <output prefix>  Filename prefix for image files\n" +    
             "  <PDF file>             The PDF document to use\n"
             );
         System.exit( 1 );

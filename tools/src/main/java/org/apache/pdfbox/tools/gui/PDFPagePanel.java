@@ -32,15 +32,13 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 /**
  * This is a simple JPanel that can be used to display a PDF page.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.4 $
+ * @author Ben Litchfield
  */
 public class PDFPagePanel extends JPanel
 {
     private static final long serialVersionUID = -4629033339560890669L;
 
     private PDFRenderer renderer;
-    private PDPage page;
     private int pageNum;
     private Dimension pageDimension = null;
     private Dimension drawDimension = null;
@@ -56,13 +54,12 @@ public class PDFPagePanel extends JPanel
     public void setPage(PDFRenderer renderer, PDPage page, int pageNum) throws IOException
     {
         this.renderer = renderer;
-        this.page = page;
         this.pageNum = pageNum;
 
         PDRectangle cropBox = page.getCropBox();
         drawDimension = new Dimension((int)cropBox.getWidth(), (int)cropBox.getHeight());
-        int rotation = page.getRotation();
-        if (rotation == 90 || rotation == 270)
+        int rotationAngle = page.getRotation();
+        if (rotationAngle == 90 || rotationAngle == 270)
         {
             pageDimension = new Dimension(drawDimension.height, drawDimension.width);
         }

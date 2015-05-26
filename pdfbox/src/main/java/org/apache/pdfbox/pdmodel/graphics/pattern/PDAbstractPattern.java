@@ -16,16 +16,18 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.pattern;
 
+import java.awt.geom.AffineTransform;
 import java.io.IOException;
 
-import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSFloat;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
+import org.apache.pdfbox.util.Matrix;
 
 /**
  * A Pattern dictionary from a page's resources.
- * @author Andreas Lehmkühler
  */
 public abstract class PDAbstractPattern implements COSObjectable
 {
@@ -59,7 +61,7 @@ public abstract class PDAbstractPattern implements COSObjectable
         return pattern;
     }
 
-    private COSDictionary patternDictionary;
+    private final COSDictionary patternDictionary;
 
     /**
      * Creates a new Pattern dictionary.
@@ -83,16 +85,8 @@ public abstract class PDAbstractPattern implements COSObjectable
      * This will get the underlying dictionary.
      * @return The dictionary for these pattern resources.
      */
-    public COSDictionary getCOSDictionary()
-    {
-        return patternDictionary;
-    }
-
-    /**
-     * Convert this standard java object to a COS object.
-     * @return The cos object that matches this Java object.
-     */
-    public COSBase getCOSObject()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return patternDictionary;
     }
@@ -165,4 +159,38 @@ public abstract class PDAbstractPattern implements COSObjectable
      * @return The pattern type
      */
     public abstract int getPatternType();
+
+    /**
+     * Returns the pattern matrix, or the identity matrix is none is available.
+     */
+    public Matrix getMatrix()
+    {
+        COSArray array = (COSArray)getCOSObject().getDictionaryObject(COSName.MATRIX);
+        if (array != null)
+        {
+            return new Matrix(array);
+        }
+        else
+        {
+            // default value is the identity matrix
+            return new Matrix();
+        }
+    }
+
+    /**
+     * Sets the optional Matrix entry for the Pattern.
+     * @param transform the transformation matrix
+     */
+    public void setMatrix(AffineTransform transform)
+    {
+        COSArray matrix = new COSArray();
+        double[] values = new double[6];
+        transform.getMatrix(values);
+        for (double v : values)
+        {
+            matrix.add(new COSFloat((float)v));
+        }
+        getCOSObject().setItem(COSName.MATRIX, matrix);
+    }
+
 }

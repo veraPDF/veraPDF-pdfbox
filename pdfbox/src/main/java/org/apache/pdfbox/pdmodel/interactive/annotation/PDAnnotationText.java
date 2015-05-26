@@ -23,7 +23,6 @@ import org.apache.pdfbox.cos.COSName;
  * This is the class that represents a text annotation.
  *
  * @author Paul King
- * @version $Revision: 1.1 $
  */
 public class PDAnnotationText extends PDAnnotationMarkup
 {
@@ -79,7 +78,7 @@ public class PDAnnotationText extends PDAnnotationMarkup
     public PDAnnotationText()
     {
         super();
-        getDictionary()
+        getCOSObject()
                 .setItem( COSName.SUBTYPE, COSName.getPDFName( SUB_TYPE ) );
     }
 
@@ -103,7 +102,7 @@ public class PDAnnotationText extends PDAnnotationMarkup
      */
     public void setOpen( boolean open )
     {
-        getDictionary().setBoolean( COSName.getPDFName( "Open" ), open );
+        getCOSObject().setBoolean( COSName.getPDFName( "Open" ), open );
     }
 
     /**
@@ -114,7 +113,7 @@ public class PDAnnotationText extends PDAnnotationMarkup
      */
     public boolean getOpen()
     {
-        return getDictionary().getBoolean( COSName.getPDFName( "Open" ), false );
+        return getCOSObject().getBoolean( COSName.getPDFName( "Open" ), false );
     }
 
     /**
@@ -126,7 +125,7 @@ public class PDAnnotationText extends PDAnnotationMarkup
      */
     public void setName( String name )
     {
-        getDictionary().setName( COSName.NAME, name );
+        getCOSObject().setName( COSName.NAME, name );
     }
 
     /**
@@ -137,7 +136,7 @@ public class PDAnnotationText extends PDAnnotationMarkup
      */
     public String getName()
     {
-        return getDictionary().getNameAsString( COSName.NAME, NAME_NOTE );
+        return getCOSObject().getNameAsString( COSName.NAME, NAME_NOTE );
     }
 
     /**
@@ -147,7 +146,7 @@ public class PDAnnotationText extends PDAnnotationMarkup
      */
     public String getState()
     {
-        return this.getDictionary().getString("State");
+        return this.getCOSObject().getString(COSName.STATE);
     }
 
     /**
@@ -157,7 +156,7 @@ public class PDAnnotationText extends PDAnnotationMarkup
      */
     public void setState(String state)
     {
-        this.getDictionary().setString("State", state);
+        this.getCOSObject().setString(COSName.STATE, state);
     }
 
     /**
@@ -167,7 +166,7 @@ public class PDAnnotationText extends PDAnnotationMarkup
      */
     public String getStateModel()
     {
-        return this.getDictionary().getString("StateModel");
+        return this.getCOSObject().getString(COSName.STATE_MODEL);
     }
 
     /**
@@ -178,7 +177,7 @@ public class PDAnnotationText extends PDAnnotationMarkup
      */
     public void setStateModel(String stateModel)
     {
-        this.getDictionary().setString("StateModel", stateModel);
+        this.getCOSObject().setString(COSName.STATE_MODEL, stateModel);
     }
 
 }

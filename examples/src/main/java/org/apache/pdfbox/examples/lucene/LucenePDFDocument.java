@@ -37,7 +37,7 @@ import org.apache.lucene.document.TextField;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
-import org.apache.pdfbox.util.PDFTextStripper;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 /**
  * This class is used to create a document for the lucene search engine. This should easily plug into the IndexPDFFiles
@@ -397,24 +397,10 @@ public class LucenePDFDocument
             if (info != null)
             {
                 addTextField(document, "Author", info.getAuthor());
-                try
-                {
-                    addTextField(document, "CreationDate", info.getCreationDate());
-                }
-                catch (IOException io)
-                {
-                    // ignore, bad date but continue with indexing
-                }
+                addTextField(document, "CreationDate", info.getCreationDate());
                 addTextField(document, "Creator", info.getCreator());
                 addTextField(document, "Keywords", info.getKeywords());
-                try
-                {
-                    addTextField(document, "ModificationDate", info.getModificationDate());
-                }
-                catch (IOException io)
-                {
-                    // ignore, bad date but continue with indexing
-                }
+                addTextField(document, "ModificationDate", info.getModificationDate());
                 addTextField(document, "Producer", info.getProducer());
                 addTextField(document, "Subject", info.getSubject());
                 addTextField(document, "Title", info.getTitle());
@@ -429,7 +415,7 @@ public class LucenePDFDocument
         catch (InvalidPasswordException e)
         {
             // they didn't suppply a password and the default of "" was wrong.
-            throw new IOException("Error: The document(" + documentLocation + ") is encrypted and will not be indexed.");
+            throw new IOException("Error: The document(" + documentLocation + ") is encrypted and will not be indexed.", e);
         }
         finally
         {

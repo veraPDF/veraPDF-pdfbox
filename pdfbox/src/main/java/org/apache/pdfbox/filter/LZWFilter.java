@@ -23,8 +23,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+
 import javax.imageio.stream.MemoryCacheImageInputStream;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -34,7 +37,7 @@ import org.apache.pdfbox.cos.COSName;
  *
  * This is the filter used for the LZWDecode filter.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
+ * @author Ben Litchfield
  * @author Tilman Hausherr
  */
 public class LZWFilter extends Filter
@@ -61,7 +64,7 @@ public class LZWFilter extends Filter
      * {@inheritDoc}
      */
     @Override
-    public final DecodeResult decode(InputStream encoded, OutputStream decoded,
+    public DecodeResult decode(InputStream encoded, OutputStream decoded,
             COSDictionary parameters, int index) throws IOException
     {
         int predictor = -1;
@@ -79,6 +82,7 @@ public class LZWFilter extends Filter
         }
         if (predictor > 1)
         {
+            @SuppressWarnings("null")
             int colors = Math.min(decodeParams.getInt(COSName.COLORS, 1), 32);
             int bitsPerPixel = decodeParams.getInt(COSName.BITS_PER_COMPONENT, 8);
             int columns = decodeParams.getInt(COSName.COLUMNS, 1);
@@ -99,10 +103,10 @@ public class LZWFilter extends Filter
 
     private void doLZWDecode(InputStream encoded, OutputStream decoded, int earlyChange) throws IOException
     {
-        ArrayList<byte[]> codeTable = null;
+        List<byte[]> codeTable = new ArrayList<byte[]>();
         int chunk = 9;
-        MemoryCacheImageInputStream in = new MemoryCacheImageInputStream(encoded);
-        long nextCommand = 0;
+        final MemoryCacheImageInputStream in = new MemoryCacheImageInputStream(encoded);
+        long nextCommand;
         long prevCommand = -1;
 
         try
@@ -155,14 +159,14 @@ public class LZWFilter extends Filter
      * {@inheritDoc}
      */
     @Override
-    protected final void encode(InputStream rawData, OutputStream encoded, COSDictionary parameters)
+    protected void encode(InputStream rawData, OutputStream encoded, COSDictionary parameters)
             throws IOException
     {
-        ArrayList<byte[]> codeTable = createCodeTable();
+        List<byte[]> codeTable = createCodeTable();
         int chunk = 9;
 
         byte[] inputPattern = null;
-        MemoryCacheImageOutputStream out = new MemoryCacheImageOutputStream(encoded);
+        final MemoryCacheImageOutputStream out = new MemoryCacheImageOutputStream(encoded);
         out.writeBits(CLEAR_TABLE, chunk);
         int foundCode = -1;
         int r;
@@ -171,10 +175,7 @@ public class LZWFilter extends Filter
             byte by = (byte) r;
             if (inputPattern == null)
             {
-                inputPattern = new byte[]
-                {
-                    by
-                };
+                inputPattern = new byte[] { by };
                 foundCode = by & 0xff;
             }
             else
@@ -194,14 +195,10 @@ public class LZWFilter extends Filter
                     {
                         // code table is full
                         out.writeBits(CLEAR_TABLE, chunk);
-                        chunk = 9;
                         codeTable = createCodeTable();
                     }
 
-                    inputPattern = new byte[]
-                    {
-                        by
-                    };
+                    inputPattern = new byte[] { by };
                     foundCode = by & 0xff;
                 }
                 else
@@ -224,8 +221,13 @@ public class LZWFilter extends Filter
         chunk = calculateChunk(codeTable.size(), 1);
 
         out.writeBits(EOD, chunk);
-        out.writeBits(0, 7); // pad with 0
-        out.flush(); // must do or file will be empty :-(
+        
+        // pad with 0
+        out.writeBits(0, 7);
+        
+        // must do or file will be empty :-(
+        out.flush();
+        out.close();
     }
 
     /**
@@ -236,7 +238,7 @@ public class LZWFilter extends Filter
      * @return The index of the longest matching pattern or -1 if nothing is
      * found.
      */
-    private int findPatternCode(ArrayList<byte[]> codeTable, byte[] pattern)
+    private int findPatternCode(List<byte[]> codeTable, byte[] pattern)
     {
         int foundCode = -1;
         int foundLen = 0;
@@ -247,21 +249,20 @@ public class LZWFilter extends Filter
                 // we're in the single byte area
                 if (foundCode != -1)
                 {
-                    return foundCode; // we already found pattern with size > 1
+                    // we already found pattern with size > 1
+                    return foundCode; 
                 }
                 else if (pattern.length > 1)
                 {
-                    return -1; // we won't find anything here anyway
+                    // we won't find anything here anyway
+                    return -1;
                 }
             }
             byte[] tryPattern = codeTable.get(i);
-            if (foundCode != -1 || tryPattern.length > foundLen)
+            if ((foundCode != -1 || tryPattern.length > foundLen) && Arrays.equals(tryPattern, pattern))
             {
-                if (Arrays.equals(tryPattern, pattern))
-                {
-                    foundCode = i;
-                    foundLen = tryPattern.length;
-                }
+                foundCode = i;
+                foundLen = tryPattern.length;
             }
         }
         return foundCode;
@@ -271,15 +272,12 @@ public class LZWFilter extends Filter
      * Init the code table with 1 byte entries and the EOD and CLEAR_TABLE
      * markers.
      */
-    private ArrayList<byte[]> createCodeTable()
+    private List<byte[]> createCodeTable()
     {
-        ArrayList<byte[]> codeTable = new ArrayList<byte[]>(4096);
+        List<byte[]> codeTable = new ArrayList<byte[]>(4096);
         for (int i = 0; i < 256; ++i)
         {
-            codeTable.add(new byte[]
-            {
-                (byte) (i & 0xFF)
-            });
+            codeTable.add(new byte[] { (byte) (i & 0xFF) });
         }
         codeTable.add(null); // 256 EOD
         codeTable.add(null); // 257 CLEAR_TABLE

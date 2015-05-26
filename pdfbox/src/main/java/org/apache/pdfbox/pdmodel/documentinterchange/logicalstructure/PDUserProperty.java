@@ -24,8 +24,7 @@ import org.apache.pdfbox.pdmodel.common.PDDictionaryWrapper;
 /**
  * A user property.
  * 
- * @author <a href="mailto:Johannes%20Koch%20%3Ckoch@apache.org%3E">Johannes Koch</a>
- * @version $Revision: $
+ * @author Johannes Koch
  */
 public class PDUserProperty extends PDDictionaryWrapper
 {
@@ -63,7 +62,7 @@ public class PDUserProperty extends PDDictionaryWrapper
      */
     public String getName()
     {
-        return this.getCOSDictionary().getNameAsString(COSName.N);
+        return this.getCOSObject().getNameAsString(COSName.N);
     }
 
     /**
@@ -74,7 +73,7 @@ public class PDUserProperty extends PDDictionaryWrapper
     public void setName(String name)
     {
         this.potentiallyNotifyChanged(this.getName(), name);
-        this.getCOSDictionary().setName(COSName.N, name);
+        this.getCOSObject().setName(COSName.N, name);
     }
 
     /**
@@ -84,7 +83,7 @@ public class PDUserProperty extends PDDictionaryWrapper
      */
     public COSBase getValue()
     {
-        return this.getCOSDictionary().getDictionaryObject(COSName.V);
+        return this.getCOSObject().getDictionaryObject(COSName.V);
     }
 
     /**
@@ -95,7 +94,7 @@ public class PDUserProperty extends PDDictionaryWrapper
     public void setValue(COSBase value)
     {
         this.potentiallyNotifyChanged(this.getValue(), value);
-        this.getCOSDictionary().setItem(COSName.V, value);
+        this.getCOSObject().setItem(COSName.V, value);
     }
 
     /**
@@ -105,7 +104,7 @@ public class PDUserProperty extends PDDictionaryWrapper
      */
     public String getFormattedValue()
     {
-        return this.getCOSDictionary().getString(COSName.F);
+        return this.getCOSObject().getString(COSName.F);
     }
 
     /**
@@ -116,7 +115,7 @@ public class PDUserProperty extends PDDictionaryWrapper
     public void setFormattedValue(String formattedValue)
     {
         this.potentiallyNotifyChanged(this.getFormattedValue(), formattedValue);
-        this.getCOSDictionary().setString(COSName.F, formattedValue);
+        this.getCOSObject().setString(COSName.F, formattedValue);
     }
 
     /**
@@ -127,7 +126,7 @@ public class PDUserProperty extends PDDictionaryWrapper
      */
     public boolean isHidden()
     {
-        return this.getCOSDictionary().getBoolean(COSName.H, false);
+        return this.getCOSObject().getBoolean(COSName.H, false);
     }
 
     /**
@@ -139,7 +138,7 @@ public class PDUserProperty extends PDDictionaryWrapper
     public void setHidden(boolean hidden)
     {
         this.potentiallyNotifyChanged(this.isHidden(), hidden);
-        this.getCOSDictionary().setBoolean(COSName.H, hidden);
+        this.getCOSObject().setBoolean(COSName.H, hidden);
     }
 
 
@@ -182,6 +181,46 @@ public class PDUserProperty extends PDDictionaryWrapper
             return newEntry != null;
         }
         return !oldEntry.equals(newEntry);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result
+                + ((userAttributeObject == null) ? 0 : userAttributeObject.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (!super.equals(obj))
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+        PDUserProperty other = (PDUserProperty) obj;
+        if (userAttributeObject == null)
+        {
+            if (other.userAttributeObject != null)
+            {
+                return false;
+            }
+        }
+        else if (!userAttributeObject.equals(other.userAttributeObject))
+        {
+            return false;
+        }
+        return true;
     }
 
 }

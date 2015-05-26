@@ -30,9 +30,8 @@ import org.apache.pdfbox.pdmodel.interactive.documentnavigation.destination.PDDe
 /**
  * This is the class that represents a link annotation.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
+ * @author Ben Litchfield
  * @author Paul King
- * @version $Revision: 1.3 $
  */
 public class PDAnnotationLink extends PDAnnotation
 {
@@ -67,7 +66,7 @@ public class PDAnnotationLink extends PDAnnotation
     public PDAnnotationLink()
     {
         super();
-        getDictionary().setItem( COSName.SUBTYPE, COSName.getPDFName( SUB_TYPE ) );
+        getCOSObject().setItem( COSName.SUBTYPE, COSName.getPDFName( SUB_TYPE ) );
     }
 
     /**
@@ -91,7 +90,7 @@ public class PDAnnotationLink extends PDAnnotation
     public PDAction getAction()
     {
         COSDictionary action = (COSDictionary)
-            this.getDictionary().getDictionaryObject( COSName.A );
+            this.getCOSObject().getDictionaryObject( COSName.A );
         return PDActionFactory.createAction( action );
     }
 
@@ -103,7 +102,7 @@ public class PDAnnotationLink extends PDAnnotation
      */
     public void setAction( PDAction action )
     {
-        this.getDictionary().setItem( COSName.A, action );
+        this.getCOSObject().setItem( COSName.A, action );
     }
 
     /**
@@ -114,9 +113,9 @@ public class PDAnnotationLink extends PDAnnotation
      * TODO not all annotations may have a BS entry
      *
      */
-    public void setBorderStyle( PDBorderStyleDictionary bs )
+    public void setBorderStyle(PDBorderStyleDictionary bs)
     {
-        this.getDictionary().setItem( "BS", bs);
+        this.getCOSObject().setItem(COSName.BS, bs);
     }
 
     /**
@@ -124,15 +123,13 @@ public class PDAnnotationLink extends PDAnnotation
      * dash pattern used in drawing the line.
      *
      * @return the border style dictionary.
-     * TODO not all annotations may have a BS entry
      */
     public PDBorderStyleDictionary getBorderStyle()
     {
-        COSDictionary bs = (COSDictionary) this.getDictionary().getItem(
-                COSName.getPDFName( "BS" ) );
-        if (bs != null)
+        COSBase bs = this.getCOSObject().getDictionaryObject(COSName.BS);
+        if (bs instanceof COSDictionary)
         {
-            return new PDBorderStyleDictionary( bs );
+            return new PDBorderStyleDictionary((COSDictionary) bs);
         }
         else
         {
@@ -150,7 +147,7 @@ public class PDAnnotationLink extends PDAnnotation
      */
     public PDDestination getDestination() throws IOException
     {
-        COSBase base = getDictionary().getDictionaryObject( COSName.DEST );
+        COSBase base = getCOSObject().getDictionaryObject( COSName.DEST );
         PDDestination retval = PDDestination.create( base );
 
         return retval;
@@ -163,7 +160,7 @@ public class PDAnnotationLink extends PDAnnotation
      */
     public void setDestination( PDDestination dest )
     {
-        getDictionary().setItem( COSName.DEST, dest );
+        getCOSObject().setItem( COSName.DEST, dest );
     }
 
     /**
@@ -174,7 +171,7 @@ public class PDAnnotationLink extends PDAnnotation
      */
     public String getHighlightMode()
     {
-        return getDictionary().getNameAsString( COSName.H, HIGHLIGHT_MODE_INVERT );
+        return getCOSObject().getNameAsString( COSName.H, HIGHLIGHT_MODE_INVERT );
     }
 
     /**
@@ -184,7 +181,7 @@ public class PDAnnotationLink extends PDAnnotation
      */
     public void setHighlightMode( String mode )
     {
-        getDictionary().setName( COSName.H, mode );
+        getCOSObject().setName( COSName.H, mode );
     }
 
     /**
@@ -195,7 +192,7 @@ public class PDAnnotationLink extends PDAnnotation
      */
     public void setPreviousURI( PDActionURI pa )
     {
-        getDictionary().setItem( "PA", pa );
+        getCOSObject().setItem( "PA", pa );
     }
 
     /**
@@ -206,7 +203,7 @@ public class PDAnnotationLink extends PDAnnotation
      */
     public PDActionURI getPreviousURI()
     {
-        COSDictionary pa = (COSDictionary) getDictionary().getDictionaryObject("PA");
+        COSDictionary pa = (COSDictionary) getCOSObject().getDictionaryObject("PA");
         if ( pa != null )
         {
             return new PDActionURI( pa );
@@ -228,7 +225,7 @@ public class PDAnnotationLink extends PDAnnotation
     {
         COSArray newQuadPoints = new COSArray();
         newQuadPoints.setFloatArray( quadPoints );
-        getDictionary().setItem( "QuadPoints", newQuadPoints );
+        getCOSObject().setItem( "QuadPoints", newQuadPoints );
     }
 
     /**
@@ -239,7 +236,7 @@ public class PDAnnotationLink extends PDAnnotation
      */
     public float[] getQuadPoints()
     {
-        COSArray quadPoints = (COSArray) getDictionary().getDictionaryObject( "QuadPoints" );
+        COSArray quadPoints = (COSArray) getCOSObject().getDictionaryObject( "QuadPoints" );
         if (quadPoints != null)
         {
             return quadPoints.toFloatArray();

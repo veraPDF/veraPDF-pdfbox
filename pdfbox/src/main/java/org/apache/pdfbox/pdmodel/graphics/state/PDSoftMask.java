@@ -32,7 +32,7 @@ import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 /**
  * Soft mask.
  *
- * @author Kühn & Weyh Software, GmbH
+ * @author KÃ¼hn & Weyh Software, GmbH
  */
 public final class PDSoftMask implements COSObjectable
 {
@@ -68,7 +68,7 @@ public final class PDSoftMask implements COSObjectable
 
     private static final Log LOG = LogFactory.getLog(PDSoftMask.class);
 
-    private COSDictionary dictionary;
+    private final COSDictionary dictionary;
     private COSName subType = null;
     private PDFormXObject group = null;
     private COSArray backdropColor = null;
@@ -83,12 +83,8 @@ public final class PDSoftMask implements COSObjectable
         this.dictionary = dictionary;
     }
 
-    public COSBase getCOSObject()
-    {
-        return dictionary;
-    }
-
-    public COSDictionary getCOSDictionary()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return dictionary;
     }
@@ -100,7 +96,7 @@ public final class PDSoftMask implements COSObjectable
     {
         if (subType == null)
         {
-            subType = (COSName) getCOSDictionary().getDictionaryObject(COSName.S);
+            subType = (COSName) getCOSObject().getDictionaryObject(COSName.S);
         }
         return subType;
     }
@@ -115,7 +111,7 @@ public final class PDSoftMask implements COSObjectable
     {
         if (group == null)
         {
-            COSBase cosGroup = getCOSDictionary().getDictionaryObject(COSName.G);
+            COSBase cosGroup = getCOSObject().getDictionaryObject(COSName.G);
             if (cosGroup != null)
             {
                 group = (PDFormXObject) PDXObject
@@ -132,7 +128,7 @@ public final class PDSoftMask implements COSObjectable
     {
         if (backdropColor == null)
         {
-            backdropColor = (COSArray) getCOSDictionary().getDictionaryObject(COSName.BC);
+            backdropColor = (COSArray) getCOSObject().getDictionaryObject(COSName.BC);
         }
         return backdropColor;
     }
@@ -144,7 +140,7 @@ public final class PDSoftMask implements COSObjectable
     {
         if (transferFunction == null)
         {
-            COSBase cosTF = getCOSDictionary().getDictionaryObject(COSName.TR);
+            COSBase cosTF = getCOSObject().getDictionaryObject(COSName.TR);
             if (cosTF != null)
             {
                 transferFunction = PDFunction.create(cosTF);

@@ -30,7 +30,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 
 import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
-import org.apache.pdfbox.pdmodel.edit.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
@@ -38,8 +38,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 /**
  * This is an example that creates a simple document and embeds a file into it..
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.2 $
+ * @author Ben Litchfield
  */
 public class EmbeddedFiles
 {
@@ -73,8 +72,8 @@ public class EmbeddedFiles
             PDPageContentStream contentStream = new PDPageContentStream(doc, page);
             contentStream.beginText();
             contentStream.setFont( font, 12 );
-            contentStream.moveTextPositionByAmount( 100, 700 );
-            contentStream.drawString( "Go to Document->File Attachments to View Embedded Files" );
+            contentStream.newLineAtOffset(100, 700);
+            contentStream.showText("Go to Document->File Attachments to View Embedded Files");
             contentStream.endText();
             contentStream.close();
 

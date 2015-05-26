@@ -25,8 +25,7 @@ import java.awt.geom.Point2D;
  */
 class CubicBezierCurve
 {
-    protected final Point2D[] controlPoints;
-
+    private final Point2D[] controlPoints;
     private final int level;
     private final Point2D[] curve;
 
@@ -38,7 +37,7 @@ class CubicBezierCurve
      * into 2^0 = 1 segments, if l = n, one cubic Bezier curve is divided into
      * 2^n segments
      */
-    public CubicBezierCurve(Point2D[] ctrlPnts, int l)
+    CubicBezierCurve(Point2D[] ctrlPnts, int l)
     {
         controlPoints = ctrlPnts.clone();
         level = l;
@@ -50,7 +49,7 @@ class CubicBezierCurve
      *
      * @return level
      */
-    public int getLevel()
+    int getLevel()
     {
         return level;
     }
@@ -87,7 +86,7 @@ class CubicBezierCurve
      *
      * @return sampled points
      */
-    public Point2D[] getCubicBezierCurve()
+    Point2D[] getCubicBezierCurve()
     {
         return curve;
     }
@@ -95,15 +94,15 @@ class CubicBezierCurve
     @Override
     public String toString()
     {
-        String pointStr = "";
+        StringBuilder sb = new StringBuilder();
         for (Point2D p : controlPoints)
         {
-            if (!pointStr.isEmpty())
+            if (sb.length() > 0)
             {
-                pointStr += " ";
+                sb.append(' ');
             }
-            pointStr += p;
+            sb.append(p);
         }
-        return "Cubic Bezier curve{control points p0, p1, p2, p3: " + pointStr + "}";
+        return "Cubic Bezier curve{control points p0, p1, p2, p3: " + sb + "}";
     }
 }

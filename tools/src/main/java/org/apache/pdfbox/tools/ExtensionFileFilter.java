@@ -24,13 +24,12 @@ import javax.swing.filechooser.FileFilter;
 /**
  * A FileFilter that will only accept files of a certain extension.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.2 $
+ * @author Ben Litchfield
  */
 public class ExtensionFileFilter extends FileFilter
 {
     private String[] extensions = null;
-    private String desc;
+    private final String desc;
 
     /**
      * Constructor.
@@ -47,6 +46,7 @@ public class ExtensionFileFilter extends FileFilter
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean accept(File pathname)
     {
         if (pathname.isDirectory())
@@ -68,6 +68,7 @@ public class ExtensionFileFilter extends FileFilter
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getDescription()
     {
         return desc;

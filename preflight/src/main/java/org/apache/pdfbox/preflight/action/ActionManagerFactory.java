@@ -21,6 +21,24 @@
 
 package org.apache.pdfbox.preflight.action;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSDocument;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSObject;
+import org.apache.pdfbox.cos.COSObjectKey;
+import org.apache.pdfbox.preflight.PreflightConstants;
+import org.apache.pdfbox.preflight.PreflightContext;
+import org.apache.pdfbox.preflight.ValidationResult.ValidationError;
+import org.apache.pdfbox.preflight.exception.ValidationException;
+import org.apache.pdfbox.preflight.utils.COSUtils;
+
+
 import static org.apache.pdfbox.preflight.PreflightConstants.ACTION_DICTIONARY_KEY_NEXT;
 import static org.apache.pdfbox.preflight.PreflightConstants.ACTION_DICTIONARY_VALUE_ATYPE_GOTO;
 import static org.apache.pdfbox.preflight.PreflightConstants.ACTION_DICTIONARY_VALUE_ATYPE_GOTOR;
@@ -40,23 +58,6 @@ import static org.apache.pdfbox.preflight.PreflightConstants.ACTION_DICTIONARY_V
 import static org.apache.pdfbox.preflight.PreflightConstants.ACTION_DICTIONARY_VALUE_TYPE;
 import static org.apache.pdfbox.preflight.PreflightConstants.DICTIONARY_KEY_ADDITIONAL_ACTION;
 import static org.apache.pdfbox.preflight.PreflightConstants.DICTIONARY_KEY_OPEN_ACTION;
-import org.apache.pdfbox.preflight.ValidationResult.ValidationError;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSDocument;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSObject;
-import org.apache.pdfbox.persistence.util.COSObjectKey;
-import org.apache.pdfbox.preflight.PreflightConstants;
-import org.apache.pdfbox.preflight.PreflightContext;
-import org.apache.pdfbox.preflight.exception.ValidationException;
-import org.apache.pdfbox.preflight.utils.COSUtils;
 
 public class ActionManagerFactory
 {
@@ -89,15 +90,11 @@ public class ActionManagerFactory
 
         COSDocument cosDocument = ctx.getDocument().getDocument();
         COSBase oaDict = dictionary.getDictionaryObject(DICTIONARY_KEY_OPEN_ACTION);
-        if (oaDict != null)
+        if (oaDict != null && !COSUtils.isArray(oaDict, cosDocument))
         {
-            if (!COSUtils.isArray(oaDict, cosDocument))
-            {
-                callCreateAction(oaDict, ctx, result, alreadyCreated);
-            }
-            // else Nothing to do because of an array contains a Destination not an
-            // action.
+            callCreateAction(oaDict, ctx, result, alreadyCreated);
         }
+        // else nothing to do because an array contains a Destination and not an Action.
 
         COSBase aa = dictionary.getDictionaryObject(DICTIONARY_KEY_ADDITIONAL_ACTION);
         if (aa != null)

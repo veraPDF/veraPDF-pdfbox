@@ -21,13 +21,13 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.cos.COSString;
-
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.common.COSArrayList;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDFileSpecification;
@@ -43,6 +43,9 @@ import org.w3c.dom.NodeList;
  */
 public class FDFDictionary implements COSObjectable
 {
+    
+    private static final Log LOG = LogFactory.getLog(FDFDictionary.class);
+    
     private COSDictionary fdf;
 
     /**
@@ -84,15 +87,14 @@ public class FDFDictionary implements COSObjectable
                     PDSimpleFileSpecification fs = new PDSimpleFileSpecification();
                     fs.setFile( child.getAttribute( "href" ) );
                     setFile(fs);
-
                 }
                 else if( child.getTagName().equals( "ids" ) )
                 {
                     COSArray ids = new COSArray();
                     String original = child.getAttribute( "original" );
                     String modified = child.getAttribute( "modified" );
-                    ids.add( COSString.createFromHexString( original ) );
-                    ids.add( COSString.createFromHexString( modified ) );
+                    ids.add( COSString.parseHex( original ) );
+                    ids.add( COSString.parseHex( modified ) );
                     setID( ids );
                 }
                 else if( child.getTagName().equals( "fields" ) )
@@ -102,12 +104,9 @@ public class FDFDictionary implements COSObjectable
                     for( int f=0; f<fields.getLength(); f++ )
                     {
                         Node currentNode = fields.item( f );
-                        if (currentNode instanceof Element) 
+                        if (currentNode instanceof Element && ((Element) currentNode).getTagName().equals("field"))
                         {
-                            if (((Element)currentNode).getTagName().equals("field")) 
-                            {
-                                fieldList.add( new FDFField( (Element)fields.item( f ) ) );
-                            }
+                            fieldList.add(new FDFField((Element) fields.item(f)));
                         }
                     }
                     setFields( fieldList );
@@ -118,17 +117,85 @@ public class FDFDictionary implements COSObjectable
                     List<FDFAnnotation> annotList = new ArrayList<FDFAnnotation>();
                     for( int j=0; j<annots.getLength(); j++ )
                     {
-                        Node annotNode = annots.item( i );
+                        Node annotNode = annots.item( j );
                         if( annotNode instanceof Element )
                         {
+                            
+                            // the node name defines the annotation type
                             Element annot = (Element)annotNode;
-                            if( annot.getNodeName().equals( "text" ) )
+                            String annotationName = annot.getNodeName();
+
+                            if (annotationName.equals("text"))
                             {
-                                annotList.add( new FDFAnnotationText( annot ) );
+                                annotList.add(new FDFAnnotationText(annot));
+                            }
+                            else if (annotationName.equals("caret"))
+                            {
+                                annotList.add(new FDFAnnotationCaret(annot));
+                            }
+                            else if (annotationName.equals("freetext"))
+                            {
+                                annotList.add(new FDFAnnotationFreeText(annot));
+                            }
+                            else if (annotationName.equals("fileattachment"))
+                            {
+                                annotList.add(new FDFAnnotationFileAttachment(annot));
+                            }
+                            else if (annotationName.equals("highlight"))
+                            {
+                                annotList.add(new FDFAnnotationHighlight(annot));
+                            }
+                            else if (annotationName.equals("ink"))
+                            {
+                                annotList.add(new FDFAnnotationInk(annot));
+                            }
+                            else if (annotationName.equals("line"))
+                            {
+                                annotList.add(new FDFAnnotationLine(annot));
+                            }
+                            else if (annotationName.equals("link"))
+                            {
+                                annotList.add(new FDFAnnotationLink(annot));
+                            }
+                            else if (annotationName.equals("circle"))
+                            {
+                                annotList.add(new FDFAnnotationCircle(annot));
+                            }
+                            else if (annotationName.equals("square"))
+                            {
+                                annotList.add(new FDFAnnotationSquare(annot));
+                            }
+                            else if (annotationName.equals("polygon"))
+                            {
+                                annotList.add(new FDFAnnotationPolygon(annot));
+                            }
+                            else if (annotationName.equals("polyline"))
+                            {
+                                annotList.add(new FDFAnnotationPolyline(annot));
+                            }
+                            else if (annotationName.equals("sound"))
+                            {
+                                annotList.add(new FDFAnnotationSound(annot));
+                            }                            
+                            else if (annotationName.equals("squiggly"))
+                            {
+                                annotList.add(new FDFAnnotationSquiggly(annot));
+                            }                            
+                            else if (annotationName.equals("stamp"))
+                            {
+                                annotList.add(new FDFAnnotationStamp(annot));
+                            }                            
+                            else if (annotationName.equals("strikeout"))
+                            {
+                                annotList.add(new FDFAnnotationStrikeOut(annot));
+                            }
+                            else if (annotationName.equals("underline"))
+                            {
+                                annotList.add(new FDFAnnotationUnderline(annot));
                             }
                             else
                             {
-                                throw new IOException( "Error: Unknown annotation type '" + annot.getNodeName() );
+                                LOG.warn("Unknown or unsupported annotation type '" + annotationName + "'" );
                             }
                         }
                     }
@@ -157,8 +224,8 @@ public class FDFDictionary implements COSObjectable
         {
             COSString original = (COSString)ids.getObject( 0 );
             COSString modified = (COSString)ids.getObject( 1 );
-            output.write( "<ids original=\"" + original.getHexString() + "\" " );
-            output.write( "modified=\"" + modified.getHexString() + "\" />\n");
+            output.write( "<ids original=\"" + original.toHexString() + "\" " );
+            output.write( "modified=\"" + modified.toHexString() + "\" />\n");
         }
         List<FDFField> fields = getFields();
         if( fields != null && fields.size() > 0 )
@@ -177,17 +244,8 @@ public class FDFDictionary implements COSObjectable
      *
      * @return The cos object that matches this Java object.
      */
-    public COSBase getCOSObject()
-    {
-        return fdf;
-    }
-
-    /**
-     * Convert this standard java object to a COS object.
-     *
-     * @return The cos object that matches this Java object.
-     */
-    public COSDictionary getCOSDictionary()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return fdf;
     }

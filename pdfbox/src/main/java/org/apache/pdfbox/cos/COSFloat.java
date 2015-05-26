@@ -23,7 +23,7 @@ import java.math.BigDecimal;
 /**
  * This class represents a floating point number in a PDF document.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
+ * @author Ben Litchfield
  * 
  */
 public class COSFloat extends COSNumber
@@ -38,7 +38,10 @@ public class COSFloat extends COSNumber
      */
     public COSFloat( float aFloat )
     {
-        setValue(aFloat);
+        // use a BigDecimal as intermediate state to avoid 
+        // a floating point string representation of the float value
+        value = new BigDecimal(String.valueOf(aFloat));
+        valueAsString = removeNullDigits(value.toPlainString());
     }
 
     /**
@@ -57,34 +60,21 @@ public class COSFloat extends COSNumber
         }
         catch( NumberFormatException e )
         {
-            throw new IOException( "Error expected floating point number actual='" +aFloat + "'" );
+            throw new IOException( "Error expected floating point number actual='" +aFloat + "'", e );
         }
     }
 
-    /**
-     * Set the value of the float object.
-     *
-     * @param floatValue The new float value.
-     */
-    public void setValue( float floatValue )
-    {
-        // use a BigDecimal as intermediate state to avoid 
-        // a floating point string representation of the float value
-        value = new BigDecimal(String.valueOf(floatValue));
-        valueAsString = removeNullDigits(value.toPlainString());
-    }
-
-    private String removeNullDigits(String value)
+    private String removeNullDigits(String plainStringValue)
     {
         // remove fraction digit "0" only
-        if (value.indexOf('.') > -1 && !value.endsWith(".0"))
+        if (plainStringValue.indexOf('.') > -1 && !plainStringValue.endsWith(".0"))
         {
-            while (value.endsWith("0") && !value.endsWith(".0"))
+            while (plainStringValue.endsWith("0") && !plainStringValue.endsWith(".0"))
             {
-                value = value.substring(0,value.length()-1);
+                plainStringValue = plainStringValue.substring(0,plainStringValue.length()-1);
             }
         }
-        return value;
+        return plainStringValue;
     }
 
     /**
@@ -92,6 +82,7 @@ public class COSFloat extends COSNumber
      *
      * @return The value of this object.
      */
+    @Override
     public float floatValue()
     {
         return value.floatValue();
@@ -102,6 +93,7 @@ public class COSFloat extends COSNumber
      *
      * @return The double of this object.
      */
+    @Override
     public double doubleValue()
     {
         return value.doubleValue();
@@ -112,6 +104,7 @@ public class COSFloat extends COSNumber
      *
      * @return The long value of this object,
      */
+    @Override
     public long longValue()
     {
         return value.longValue();
@@ -122,6 +115,7 @@ public class COSFloat extends COSNumber
      *
      * @return The int value of this object,
      */
+    @Override
     public int intValue()
     {
         return value.intValue();
@@ -130,14 +124,17 @@ public class COSFloat extends COSNumber
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals( Object o )
     {
-        return o instanceof COSFloat && Float.floatToIntBits(((COSFloat)o).value.floatValue()) == Float.floatToIntBits(value.floatValue());
+        return o instanceof COSFloat && 
+                Float.floatToIntBits(((COSFloat)o).value.floatValue()) == Float.floatToIntBits(value.floatValue());
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public int hashCode()
     {
         return value.hashCode();
@@ -146,6 +143,7 @@ public class COSFloat extends COSNumber
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString()
     {
         return "COSFloat{" + valueAsString + "}";
@@ -158,6 +156,7 @@ public class COSFloat extends COSNumber
      * @return any object, depending on the visitor implementation, or null
      * @throws IOException If an error occurs while visiting this object.
      */
+    @Override
     public Object accept(ICOSVisitor visitor) throws IOException
     {
         return visitor.visitFromFloat(this);

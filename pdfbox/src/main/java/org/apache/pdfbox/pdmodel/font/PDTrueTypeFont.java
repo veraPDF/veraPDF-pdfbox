@@ -38,6 +38,7 @@ import org.apache.pdfbox.pdmodel.font.encoding.GlyphList;
 import org.apache.pdfbox.pdmodel.font.encoding.MacOSRomanEncoding;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.apache.pdfbox.pdmodel.font.encoding.Type1Encoding;
 
 /**
  * TrueType font.
@@ -72,7 +73,10 @@ public class PDTrueTypeFont extends PDSimpleFont
      * @param file a ttf file.
      * @return a PDTrueTypeFont instance.
      * @throws IOException If there is an error loading the data.
+     *
+     * @deprecated Use {@link PDType0Font#load(PDDocument, File)} instead.
      */
+    @Deprecated
     public static PDTrueTypeFont loadTTF(PDDocument doc, File file) throws IOException
     {
         return new PDTrueTypeFont(doc, new FileInputStream(file));
@@ -85,7 +89,10 @@ public class PDTrueTypeFont extends PDSimpleFont
      * @param input a ttf file stream
      * @return a PDTrueTypeFont instance.
      * @throws IOException If there is an error loading the data.
+     *
+     * @deprecated Use {@link PDType0Font#load(PDDocument, InputStream)} instead.
      */
+    @Deprecated
     public static PDTrueTypeFont loadTTF(PDDocument doc, InputStream input) throws IOException
     {
         return new PDTrueTypeFont(doc, input);
@@ -95,6 +102,7 @@ public class PDTrueTypeFont extends PDSimpleFont
     private CmapSubtable cmapWinSymbol = null;
     private CmapSubtable cmapMacRoman = null;
     private boolean cmapInitialized = false;
+    private Map<Integer, Integer> gidToCode; // for embedding
 
     private final TrueTypeFont ttf;
     private final boolean isEmbedded;
@@ -165,9 +173,17 @@ public class PDTrueTypeFont extends PDSimpleFont
     @Override
     protected Encoding readEncodingFromFont() throws IOException
     {
-        // for symbolic fonts the (3, 0) (Windows, Symbol) cmap is the font's built-in encoding
-        // but this is handled by codeToGID
-        return null;
+        if (getStandard14AFM() != null)
+        {
+            // read from AFM
+            return new Type1Encoding(getStandard14AFM());
+        }
+        else
+        {
+            // for symbolic fonts the (3, 0) (Windows, Symbol) cmap is the font's built-in encoding
+            // but this is handled by codeToGID
+            return null;
+        }
     }
 
     /**
@@ -219,11 +235,6 @@ public class PDTrueTypeFont extends PDSimpleFont
     @Override
     public float getWidthFromFont(int code) throws IOException
     {
-        if (getStandard14AFM() != null && getEncoding() != null)
-        {
-            return getStandard14Width(code);
-        }
-
         int gid = codeToGID(code);
         float width = ttf.getAdvanceWidth(gid);
         float unitsPerEM = ttf.getUnitsPerEm();
@@ -244,6 +255,74 @@ public class PDTrueTypeFont extends PDSimpleFont
             return glyph.getBoundingBox().getHeight();
         }
         return 0;
+    }
+
+    @Override
+    protected byte[] encode(int unicode) throws IOException
+    {
+        if (getEncoding() != null)
+        {
+            if (!getEncoding().contains(getGlyphList().codePointToName(unicode)))
+            {
+                throw new IllegalArgumentException(
+                    String.format("U+%04X is not available in this font's Encoding", unicode));
+            }
+
+            String name = getGlyphList().codePointToName(unicode);
+            Map<String, Integer> inverted = getInvertedEncoding();
+
+            if (!ttf.hasGlyph(name))
+            {
+                throw new IllegalArgumentException(
+                    String.format("No glyph for U+%04X in font %s", unicode, getName()));
+            }
+
+            int code = inverted.get(name);
+            return new byte[] { (byte)code };
+        }
+        else
+        {
+            // use TTF font's built-in encoding
+            String name = getGlyphList().codePointToName(unicode);
+
+            if (!ttf.hasGlyph(name))
+            {
+                throw new IllegalArgumentException(
+                    String.format("No glyph for U+%04X in font %s", unicode, getName()));
+            }
+            
+            int gid = ttf.nameToGID(name);
+            Integer code = getGIDToCode().get(gid);
+            if (code == null)
+            {
+                throw new IllegalArgumentException(
+                    String.format("U+%04X is not available in this font's Encoding", unicode));
+            }
+            
+            return new byte[] { (byte)(int)code };
+        }
+    }
+
+    /**
+     * Inverts the font's code -> GID mapping. Any duplicate (GID -> code) mappings will be lost.
+     */
+    protected Map<Integer, Integer> getGIDToCode() throws IOException
+    {
+        if (gidToCode != null)
+        {
+            return gidToCode;
+        }
+
+        gidToCode = new HashMap<Integer, Integer>();
+        for (int code = 0; code <= 255; code++)
+        {
+            int gid = codeToGID(code);
+            if (!gidToCode.containsKey(gid))
+            {
+                gidToCode.put(gid, code);
+            }
+        }
+        return gidToCode;
     }
 
     @Override
@@ -363,7 +442,7 @@ public class PDTrueTypeFont extends PDSimpleFont
             {
                 if (CmapTable.PLATFORM_WINDOWS == cmap.getPlatformId())
                 {
-                    if (CmapTable.ENCODING_WIN_UNICODE == cmap.getPlatformEncodingId())
+                    if (CmapTable.ENCODING_WIN_UNICODE_BMP == cmap.getPlatformEncodingId())
                     {
                         cmapWinUnicode = cmap;
                     }
@@ -372,12 +451,10 @@ public class PDTrueTypeFont extends PDSimpleFont
                         cmapWinSymbol = cmap;
                     }
                 }
-                else if (CmapTable.PLATFORM_MACINTOSH == cmap.getPlatformId())
+                else if (CmapTable.PLATFORM_MACINTOSH == cmap.getPlatformId()
+                        && CmapTable.ENCODING_MAC_ROMAN == cmap.getPlatformEncodingId())
                 {
-                    if (CmapTable.ENCODING_MAC_ROMAN == cmap.getPlatformEncodingId())
-                    {
-                        cmapMacRoman = cmap;
-                    }
+                    cmapMacRoman = cmap;
                 }
             }
         }

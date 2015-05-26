@@ -57,6 +57,21 @@ public final class Type1Font implements Type1CharStringReader, Type1Equivalent
     }
 
     /**
+     * Constructs a new Type1Font object from a .pfb stream.
+     *
+     * @param pfbBytes .pfb data, including headers
+     * @return a type1 font
+     *
+     * @throws IOException if something went wrong
+     */
+    public static Type1Font createWithPFB(byte[] pfbBytes) throws IOException
+    {
+        PfbParser pfb = new PfbParser(pfbBytes);
+        Type1Parser parser = new Type1Parser();
+        return parser.parse(pfb.getSegment1(), pfb.getSegment2());
+    }
+
+    /**
      * Constructs a new Type1Font object from two header-less .pfb segments.
      *
      * @param segment1 The first segment, without header
@@ -113,12 +128,17 @@ public final class Type1Font implements Type1CharStringReader, Type1Equivalent
     // private caches
     private final Map<String, Type1CharString> charStringCache =
             new ConcurrentHashMap<String, Type1CharString>();
+    
+    // raw data
+    private final byte[] segment1, segment2;
 
     /**
      * Constructs a new Type1Font, called by Type1Parser.
      */
-    Type1Font()
+    Type1Font(byte[] segment1, byte[] segment2)
     {
+        this.segment1 = segment1;
+        this.segment2 = segment2;
     }
 
     /**
@@ -200,6 +220,7 @@ public final class Type1Font implements Type1CharStringReader, Type1Equivalent
      * Returns the Encoding, if present.
      * @return the encoding or null
      */
+    @Override
     public Encoding getEncoding()
     {
         return encoding;
@@ -240,6 +261,7 @@ public final class Type1Font implements Type1CharStringReader, Type1Equivalent
      * 
      * @return the font bounding box
      */
+    @Override
     public BoundingBox getFontBBox()
     {
         return new BoundingBox(fontBBox);
@@ -500,8 +522,29 @@ public final class Type1Font implements Type1CharStringReader, Type1Equivalent
     }
 
     /**
+     * Returns the ASCII segment.
+     *
+     * @return the ASCII segment.
+     */
+    public byte[] getASCIISegment()
+    {
+        return segment1;
+    }
+
+    /**
+     * Returns the binary segment.
+     *
+     * @return the binary segment.
+     */
+    public byte[] getBinarySegment()
+    {
+        return segment2;
+    }
+
+    /**
      * {@inheritDoc}
      */
+    @Override
     public String toString()
     {
         return getClass().getName() + "[fontName=" + fontName + ", fullName=" + fullName

@@ -16,19 +16,16 @@
  */
 package org.apache.pdfbox.pdmodel.common;
 
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 
 /**
  * Contains information for a page label range.
  * 
- * @author <a href="mailto:igor.podolskiy@ievvwi.uni-stuttgart.de">Igor
- *         Podolskiy</a>
+ * @author Igor Podolskiy
  * 
  * @see PDPageLabels
  * 
- * @version $Revision$
  */
 public class PDPageLabelRange implements COSObjectable
 {
@@ -36,9 +33,9 @@ public class PDPageLabelRange implements COSObjectable
     private COSDictionary root;
 
     // Page label dictonary (PDF32000-1:2008 Section 12.4.2, Table 159)
-    private static final COSName KEY_START = COSName.getPDFName("St");
+    private static final COSName KEY_START = COSName.ST;
     private static final COSName KEY_PREFIX = COSName.P;
-    private static final COSName KEY_STYLE = COSName.getPDFName("S");
+    private static final COSName KEY_STYLE = COSName.S;
 
     // Style entry values (PDF32000-1:2008 Section 12.4.2, Table 159)
 
@@ -93,12 +90,8 @@ public class PDPageLabelRange implements COSObjectable
      * 
      * @return the underlying dictionary.
      */
-    public COSDictionary getCOSDictionary()
-    {
-        return root;
-    }
-
-    public COSBase getCOSObject()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return root;
     }

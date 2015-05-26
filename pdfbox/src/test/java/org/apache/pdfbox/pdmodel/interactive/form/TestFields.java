@@ -18,11 +18,9 @@ package org.apache.pdfbox.pdmodel.interactive.form;
 
 import java.io.File;
 import java.io.IOException;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -30,8 +28,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 /**
  * This will test the form fields in PDFBox.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.4 $
+ * @author Ben Litchfield
  */
 public class TestFields extends TestCase
 {
@@ -144,23 +141,60 @@ public class TestFields extends TestCase
             PDAcroForm form = doc.getDocumentCatalog().getAcroForm();
             assertNotNull(form);
             
+            // assert that there is no value, set the field value and
+            // ensure it has been set 
+            PDTextField textField = (PDTextField)form.getField("TextField");
+            assertNull(textField.getCOSObject().getItem(COSName.V));
+            textField.setValue("field value");
+            assertNotNull(textField.getCOSObject().getItem(COSName.V));
+            assertEquals(textField.getValue(),"field value");
+            
+            // assert when setting to null the key has also been removed
+            assertNotNull(textField.getCOSObject().getItem(COSName.V));
+            textField.setValue(null);
+            assertNull(textField.getCOSObject().getItem(COSName.V));
+            
             // get the RadioButton with a DV entry
-            PDFieldTreeNode field = form.getField("RadioButtonGroup-DefaultValue");
-            assertNotNull(field);
-            assertEquals(field.getDefaultValue(),COSName.getPDFName("RadioButton01"));
-            assertEquals(field.getDefaultValue(),field.getDictionary().getDictionaryObject(COSName.DV));
+            PDRadioButton radio = (PDRadioButton)form.getField("RadioButtonGroup-DefaultValue");
+            assertNotNull(radio);
+            assertEquals(radio.getDefaultValue(),"RadioButton01");
+            assertEquals(COSName.getPDFName(radio.getDefaultValue()),
+                    radio.getCOSObject().getDictionaryObject(COSName.DV));
 
             // get the Checkbox with a DV entry
-            field = form.getField("Checkbox-DefaultValue");
-            assertNotNull(field);
-            assertEquals(field.getDefaultValue(),COSName.getPDFName("Yes"));
-            assertEquals(field.getDefaultValue(),field.getDictionary().getDictionaryObject(COSName.DV));
+            PDCheckbox checkBox = (PDCheckbox)form.getField("Checkbox-DefaultValue");
+            assertNotNull(checkBox);
+            assertEquals(Boolean.TRUE, checkBox.getDefaultValue());
+            assertEquals(COSName.YES, checkBox.getCOSObject().getDictionaryObject(COSName.DV));
             
             // get the TextField with a DV entry
-            field = form.getField("TextField-DefaultValue");
-            assertNotNull(field);
-            assertEquals(((COSString) field.getDefaultValue()).getString(),"DefaultValue");
-            assertEquals(field.getDefaultValue(),field.getDictionary().getDictionaryObject(COSName.DV));
+            textField = (PDTextField)form.getField("TextField-DefaultValue");
+            assertNotNull(textField);
+            assertEquals(textField.getDefaultValue(),"DefaultValue");
+            assertEquals(textField.getDefaultValue(),
+                    ((COSString)textField.getCOSObject().getDictionaryObject(COSName.DV)).getString());
+            assertEquals(textField.getDefaultAppearance(),"/Helv 12 Tf 0 g");
+
+            // get a rich text field with a  DV entry
+            textField = (PDTextField)form.getField("RichTextField-DefaultValue");
+            assertNotNull(textField);
+            assertEquals(textField.getDefaultValue(),"DefaultValue");
+            assertEquals(textField.getDefaultValue(),
+                    ((COSString)textField.getCOSObject().getDictionaryObject(COSName.DV)).getString());
+            assertEquals(textField.getValue(), "DefaultValue");
+            assertEquals(textField.getDefaultAppearance(), "/Helv 12 Tf 0 g");
+            assertEquals(textField.getDefaultStyleString(),
+                    "font: Helvetica,sans-serif 12.0pt; text-align:left; color:#000000 ");
+            // do not test for the full content as this is a rather long xml string
+            assertEquals(textField.getRichTextValue().length(),338);
+            
+            // get a rich text field with a text stream for the value
+            textField = (PDTextField)form.getField("LongRichTextField");
+            assertNotNull(textField);
+            assertEquals(textField.getCOSObject().getDictionaryObject(
+                    COSName.V).getClass().getName(),
+                    "org.apache.pdfbox.cos.COSStream");
+            assertEquals(textField.getValue().length(),145396);
             
         }
         finally

@@ -17,13 +17,11 @@
 package org.apache.pdfbox.pdmodel.documentinterchange.taggedpdf;
 
 import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement;
 
 /**
  * A Table attribute object.
  * 
- * @author <a href="mailto:Johannes%20Koch%20%3Ckoch@apache.org%3E">Johannes Koch</a>
- * @version $Revision: $
+ * @author Johannes Koch
  */
 public class PDTableAttributeObject extends PDStandardAttributeObject
 {
@@ -119,7 +117,7 @@ public class PDTableAttributeObject extends PDStandardAttributeObject
     /**
      * Gets the headers (Headers). An array of byte strings, where each string
      * shall be the element identifier (see the
-     * {@link PDStructureElement#getElementIdentifier()}) for a TH structure
+     * {@link org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement#getElementIdentifier()}) for a TH structure
      * element that shall be used as a header associated with this cell.
      * 
      * @return the headers.
@@ -132,7 +130,7 @@ public class PDTableAttributeObject extends PDStandardAttributeObject
     /**
      * Sets the headers (Headers). An array of byte strings, where each string
      * shall be the element identifier (see the
-     * {@link PDStructureElement#getElementIdentifier()}) for a TH structure
+     * {@link org.apache.pdfbox.pdmodel.documentinterchange.logicalstructure.PDStructureElement#getElementIdentifier()}) for a TH structure
      * element that shall be used as a header associated with this cell.
      * 
      * @param headers the headers

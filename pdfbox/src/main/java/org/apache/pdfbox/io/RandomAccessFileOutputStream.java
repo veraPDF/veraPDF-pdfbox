@@ -27,13 +27,12 @@ import org.apache.pdfbox.cos.COSNumber;
  * This will write to a RandomAccessFile in the filesystem and keep track
  * of the position it is writing to and the length of the stream.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.6 $
+ * @author Ben Litchfield
  */
 public class RandomAccessFileOutputStream extends OutputStream
 {
-    private RandomAccess file;
-    private long position;
+    private final RandomAccess file;
+    private final long position;
     private long lengthWritten = 0;
     private COSBase expectedLength = null;
 
@@ -103,6 +102,7 @@ public class RandomAccessFileOutputStream extends OutputStream
     /**
      * {@inheritDoc}
      */
+    @Override
     public void write( byte[] b, int offset, int length ) throws IOException
     {
         file.seek( position+lengthWritten );
@@ -113,6 +113,7 @@ public class RandomAccessFileOutputStream extends OutputStream
     /**
      * {@inheritDoc}
      */
+    @Override
     public void write( int b ) throws IOException
     {
         file.seek( position+lengthWritten );

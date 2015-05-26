@@ -16,6 +16,7 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
+import java.awt.Color;
 import java.awt.Paint;
 import java.awt.PaintContext;
 import java.awt.Rectangle;
@@ -32,25 +33,24 @@ import org.apache.pdfbox.util.Matrix;
 /**
  * AWT Paint for radial shading.
  *
- * @author Andreas Lehmkühler
  */
 public class RadialShadingPaint implements Paint
 {
     private static final Log LOG = LogFactory.getLog(RadialShadingPaint.class);
 
-    private PDShadingType3 shading;
-    private Matrix ctm;
+    private final PDShadingType3 shading;
+    private final Matrix matrix;
 
     /**
      * Constructor.
      *
      * @param shading the shading resources
-     * @param ctm current transformation matrix
+     * @param matrix the pattern matrix concatenated with that of the parent content stream
      */
-    RadialShadingPaint(PDShadingType3 shading, Matrix ctm)
+    RadialShadingPaint(PDShadingType3 shading, Matrix matrix)
     {
         this.shading = shading;
-        this.ctm = ctm;
+        this.matrix = matrix;
     }
 
     @Override
@@ -61,16 +61,16 @@ public class RadialShadingPaint implements Paint
 
     @Override
     public PaintContext createContext(ColorModel cm, Rectangle deviceBounds, Rectangle2D userBounds,
-            AffineTransform xform, RenderingHints hints)
+                                      AffineTransform xform, RenderingHints hints)
     {
         try
         {
-            return new RadialShadingContext(shading, cm, xform, ctm, deviceBounds);
+            return new RadialShadingContext(shading, cm, xform, matrix);
         }
-        catch (IOException ex)
+        catch (IOException e)
         {
-            LOG.error(ex);
-            return null;
+            LOG.error("An error occurred while painting", e);
+            return new Color(0, 0, 0, 0).createContext(cm, deviceBounds, userBounds, xform, hints);
         }
     }
 }

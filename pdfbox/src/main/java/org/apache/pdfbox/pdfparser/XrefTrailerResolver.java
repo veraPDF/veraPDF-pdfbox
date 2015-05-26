@@ -31,7 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.persistence.util.COSObjectKey;
+import org.apache.pdfbox.cos.COSObjectKey;
 
 /**
  * This class will collect all XRef/trailer objects and creates correct
@@ -51,7 +51,7 @@ import org.apache.pdfbox.persistence.util.COSObjectKey;
  * using {@link #setStartxref(long)}. This is used to build the chain of
  * active xref/trailer objects used for creating document trailer and xref table.
  *
- * @author Timo Böhme (timo.boehme at ontochem.com)
+ * @author Timo Böhme
  */
 public class XrefTrailerResolver
 {
@@ -72,22 +72,7 @@ public class XrefTrailerResolver
          */
         private XrefTrailerObj()
         {
-        }
-        
-        /**
-         * Release all used resources.
-         */
-        public void clearResources()
-        {
-            if (trailer != null)
-            {
-                trailer.clear();
-                trailer = null;
-            }
-            if (xrefTable != null)
-            {
-                xrefTable.clear();
-            }
+            xrefType = XRefType.TABLE;
         }
     }
 
@@ -249,6 +234,8 @@ public class XrefTrailerResolver
         }
         else
         {
+            // copy xref type
+            resolvedXrefTrailer.xrefType = curObj.xrefType;
             // found starting Xref object
             // add this and follow chain defined by 'Prev' keys
             xrefSeqBytePos.add( startxrefBytePosValue );
@@ -333,7 +320,7 @@ public class XrefTrailerResolver
             return null;
         }
         final Set<Long> refObjNrs = new HashSet<Long>();
-        final int       cmpVal    = - objstmObjNr;
+        final long cmpVal = - objstmObjNr;
         
         for ( Entry<COSObjectKey,Long> xrefEntry : resolvedXrefTrailer.xrefTable.entrySet() ) 
         {
@@ -344,26 +331,4 @@ public class XrefTrailerResolver
         }
         return refObjNrs;
     }
-    
-    /**
-     * Release all used resources.
-     */
-    public void clearResources()
-    {
-        if (curXrefTrailerObj != null)
-        {
-            curXrefTrailerObj.clearResources();
-            curXrefTrailerObj = null;
-        }
-        if (resolvedXrefTrailer != null)
-        {
-            resolvedXrefTrailer.clearResources();
-            resolvedXrefTrailer = null;
-        }
-        if (bytePosToXrefMap != null)
-        {
-            bytePosToXrefMap.clear();
-        }
-    }
-
 }

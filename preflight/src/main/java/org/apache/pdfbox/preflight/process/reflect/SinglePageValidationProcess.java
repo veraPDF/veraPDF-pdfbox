@@ -109,7 +109,7 @@ public class SinglePageValidationProcess extends AbstractProcess
      * @param context the preflight context.
      * @param page the page to check.
      */
-    protected void validateColorSpaces(PreflightContext context, PDPage page) throws ValidationException
+    protected void validateColorSpaces(PreflightContext context, PDPage page)
     {
         PDResources resources = page.getResources();
         if (resources != null)
@@ -204,17 +204,17 @@ public class SinglePageValidationProcess extends AbstractProcess
             {
                 if (object instanceof PDAnnotation)
                 {
-                    COSDictionary cosAnnot = ((PDAnnotation) object).getDictionary();
+                    COSDictionary cosAnnot = ((PDAnnotation) object).getCOSObject();
                     ContextHelper.validateElement(context, cosAnnot, ANNOTATIONS_PROCESS);
                 }
             }
         }
+        catch (ValidationException e)
+        {
+            throw e;
+        }
         catch (IOException e)
         {
-            if (e instanceof ValidationException)
-            {
-                throw (ValidationException) e;
-            }
             // TODO IOException probably due to Encrypt
             throw new ValidationException("Unable to access Annotation", e);
         }
@@ -237,7 +237,7 @@ public class SinglePageValidationProcess extends AbstractProcess
             if (XOBJECT_DICTIONARY_VALUE_S_TRANSPARENCY.equals(sVal))
             {
                 context.addValidationError(new ValidationError(ERROR_GRAPHIC_TRANSPARENCY_GROUP,
-                        "Group has a transparency S entry or the S entry is null."));
+                        "Group has a transparency S entry or the S entry is null"));
             }
         }
     }

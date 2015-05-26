@@ -16,14 +16,16 @@
  */
 package org.apache.pdfbox.pdmodel.interactive.action;
 
+import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.pdmodel.common.PDTextStream;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSStream;
+import org.apache.pdfbox.cos.COSString;
 
 /**
  * This represents a JavaScript action.
  *
- * @author Michael Schwarzenberger (mi2kee@gmail.com)
- * @version $Revision: 1.1 $
+ * @author Michael Schwarzenberger
  */
 public class PDActionJavaScript extends PDAction
 {
@@ -49,7 +51,7 @@ public class PDActionJavaScript extends PDAction
     public PDActionJavaScript( String js )
     {
         this();
-        setAction( js );
+        setAction(js);
     }
 
     /**
@@ -61,15 +63,7 @@ public class PDActionJavaScript extends PDAction
     {
         super(a);
     }
-
-    /**
-     * @param sAction The JavaScript.
-     */
-    public void setAction(PDTextStream sAction)
-    {
-        action.setItem("JS", sAction);
-    }
-
+    
     /**
      * @param sAction The JavaScript.
      */
@@ -81,8 +75,20 @@ public class PDActionJavaScript extends PDAction
     /**
      * @return The Javascript Code.
      */
-    public PDTextStream getAction()
+    public String getAction()
     {
-        return PDTextStream.createTextStream( action.getDictionaryObject("JS") );
+        COSBase base = action.getDictionaryObject( COSName.JS );
+        if (base instanceof COSString)
+        {
+            return ((COSString)base).getString();
+        }
+        else if (base instanceof COSStream)
+        {
+            return ((COSStream)base).getString();
+        }
+        else
+        {
+            return null;
+        }
     }
 }

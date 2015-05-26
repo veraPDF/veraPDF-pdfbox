@@ -22,10 +22,9 @@ import java.io.OutputStream;
 /**
  * This class represents an integer number in a PDF document.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.12 $
+ * @author Ben Litchfield
  */
-public class COSInteger extends COSNumber
+public final class COSInteger extends COSNumber
 {
 
     /**
@@ -86,13 +85,10 @@ public class COSInteger extends COSNumber
             }
             return STATIC[index];
         }
-        else
-        {
-            return new COSInteger(val);
-        }
+        return new COSInteger(val);
     }
 
-    private long value;
+    private final long value;
 
     /**
      * constructor.
@@ -130,16 +126,6 @@ public class COSInteger extends COSNumber
     public String toString()
     {
         return "COSInt{" + value + "}";
-    }
-
-    /**
-     * Change the value of this reference.
-     *
-     * @param newValue The new value.
-     */
-    public void setValue( long newValue )
-    {
-        value = newValue;
     }
 
     /**

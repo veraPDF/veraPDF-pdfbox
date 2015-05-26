@@ -16,7 +16,7 @@
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class is used to describe a patch for type 6 shading. This was done as
@@ -71,13 +71,14 @@ class CoonsPatch extends Patch
             4, 4
         };
         // if two opposite edges are both lines, there is a possibility to reduce the dividing level
-        if (isEdgeALine(controlPoints[0]) & isEdgeALine(controlPoints[1]))
+        if (isEdgeALine(controlPoints[0]) && isEdgeALine(controlPoints[1]))
         {
             double lc1 = getLen(controlPoints[0][0], controlPoints[0][3]),
                     lc2 = getLen(controlPoints[1][0], controlPoints[1][3]);
             // determine the dividing level by the lengths of edges
             if (lc1 > 800 || lc2 > 800)
             {
+                // keeps init value 4
             }
             else if (lc1 > 400 || lc2 > 400)
             {
@@ -94,12 +95,13 @@ class CoonsPatch extends Patch
         }
 
         // the other two opposite edges
-        if (isEdgeALine(controlPoints[2]) & isEdgeALine(controlPoints[3]))
+        if (isEdgeALine(controlPoints[2]) && isEdgeALine(controlPoints[3]))
         {
             double ld1 = getLen(controlPoints[2][0], controlPoints[2][3]),
                     ld2 = getLen(controlPoints[3][0], controlPoints[3][3]);
             if (ld1 > 800 || ld2 > 800)
             {
+                // keeps init value 4
             }
             else if (ld1 > 400 || ld2 > 400)
             {
@@ -118,7 +120,7 @@ class CoonsPatch extends Patch
     }
 
     // get a list of triangles which compose this coons patch
-    private ArrayList<ShadedTriangle> getTriangles()
+    private List<ShadedTriangle> getTriangles()
     {
         // 4 edges are 4 cubic Bezier curves
         CubicBezierCurve eC1 = new CubicBezierCurve(controlPoints[0], level[0]);
@@ -162,12 +164,12 @@ class CoonsPatch extends Patch
      the rule to calculate the coordinate is defined in page 195 of PDF32000_2008.pdf, the rule to calculate the 
      cooresponding color is bilinear interpolation
      */
-    private CoordinateColorPair[][] getPatchCoordinatesColor(CubicBezierCurve C1, CubicBezierCurve C2, CubicBezierCurve D1, CubicBezierCurve D2)
+    private CoordinateColorPair[][] getPatchCoordinatesColor(CubicBezierCurve c1, CubicBezierCurve c2, CubicBezierCurve d1, CubicBezierCurve d2)
     {
-        Point2D[] curveC1 = C1.getCubicBezierCurve();
-        Point2D[] curveC2 = C2.getCubicBezierCurve();
-        Point2D[] curveD1 = D1.getCubicBezierCurve();
-        Point2D[] curveD2 = D2.getCubicBezierCurve();
+        Point2D[] curveC1 = c1.getCubicBezierCurve();
+        Point2D[] curveC2 = c2.getCubicBezierCurve();
+        Point2D[] curveD1 = d1.getCubicBezierCurve();
+        Point2D[] curveD2 = d2.getCubicBezierCurve();
 
         int numberOfColorComponents = cornerColor[0].length;
         int szV = curveD1.length;

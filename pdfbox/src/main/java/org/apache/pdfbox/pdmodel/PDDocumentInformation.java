@@ -16,13 +16,10 @@
  */
 package org.apache.pdfbox.pdmodel;
 
-import java.io.IOException;
-
 import java.util.Calendar;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 
@@ -33,14 +30,13 @@ import org.apache.pdfbox.pdmodel.common.COSObjectable;
  * it exists or null if it does not exist.  If you pass in null for the setXXX
  * method then it will clear the value.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @author  Gerardo Ortiz
+ * @author Ben Litchfield
+ * @author Gerardo Ortiz
  *
- * @version $Revision: 1.12 $
  */
 public class PDDocumentInformation implements COSObjectable
 {
-    private COSDictionary info;
+    private final COSDictionary info;
 
     /**
      * Default Constructor.
@@ -65,20 +61,26 @@ public class PDDocumentInformation implements COSObjectable
      *
      * @return The underlying info dictionary.
      */
-    public COSDictionary getDictionary()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return info;
-    }
-
+    }    
+    
     /**
-     * Convert this standard java object to a COS object.
-     *
-     * @return The cos object that matches this Java object.
+     * Return the properties String value.
+     * <p>
+     * Allows to retrieve the
+     * low level date for validation purposes.
+     * </p> 
+     * 
+     * @param propertyKey the dictionaries key
+     * @return the properties value
      */
-    public COSBase getCOSObject()
-    {
-        return info;
-    }
+     public Object getPropertyStringValue(String propertyKey)
+     {
+         return info.getString(propertyKey);
+     }    
 
     /**
      * This will get the title of the document.  This will return null if no title exists.
@@ -204,10 +206,8 @@ public class PDDocumentInformation implements COSObjectable
      * This will get the creation date of the document.  This will return null if no creation date exists.
      *
      * @return The creation date of the document.
-     *
-     * @throws IOException If there is an error creating the date.
      */
-    public Calendar getCreationDate() throws IOException
+    public Calendar getCreationDate()
     {
         return info.getDate( COSName.CREATION_DATE );
     }
@@ -226,10 +226,8 @@ public class PDDocumentInformation implements COSObjectable
      * This will get the modification date of the document.  This will return null if no modification date exists.
      *
      * @return The modification date of the document.
-     *
-     * @throws IOException If there is an error creating the date.
      */
-    public Calendar getModificationDate() throws IOException
+    public Calendar getModificationDate()
     {
         return info.getDate( COSName.MOD_DATE );
     }
@@ -264,7 +262,8 @@ public class PDDocumentInformation implements COSObjectable
     public Set<String> getMetadataKeys()
     {
         Set<String> keys = new TreeSet<String>();
-        for (COSName key : info.keySet()) {
+        for (COSName key : info.keySet())
+        {
             keys.add(key.getName());
         }
         return keys;

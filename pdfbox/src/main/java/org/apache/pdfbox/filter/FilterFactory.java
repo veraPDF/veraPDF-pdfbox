@@ -17,11 +17,9 @@
 package org.apache.pdfbox.filter;
 
 import java.io.IOException;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.pdfbox.cos.COSName;
 
 /**
@@ -34,9 +32,9 @@ public final class FilterFactory
     /**
      * Singleton instance.
      */
-    public static FilterFactory INSTANCE = new FilterFactory();
+    public static final FilterFactory INSTANCE = new FilterFactory();
 
-    private Map<COSName, Filter> filters = new HashMap<COSName, Filter>();
+    private final Map<COSName, Filter> filters = new HashMap<COSName, Filter>();
 
     private FilterFactory()
     {

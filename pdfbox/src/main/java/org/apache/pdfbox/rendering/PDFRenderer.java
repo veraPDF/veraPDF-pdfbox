@@ -30,7 +30,6 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
  * This class may be overridden in order to perform custom rendering.
  *
  * @author John Hewson
- * @author Andreas Lehmkühler
  */
 public class PDFRenderer
 {
@@ -116,16 +115,6 @@ public class PDFRenderer
         int heightPx = Math.round(heightPt * scale);
         int rotationAngle = page.getRotation();
 
-        // normalize the rotation angle
-        if (rotationAngle < 0)
-        {
-            rotationAngle += 360;
-        }
-        else if (rotationAngle >= 360)
-        {
-            rotationAngle -= 360;
-        }
-
         // swap width and height
         BufferedImage image;
         if (rotationAngle == 90 || rotationAngle == 270)
@@ -188,6 +177,7 @@ public class PDFRenderer
 
         PDRectangle cropBox = page.getCropBox();
         int rotationAngle = page.getRotation();
+        
         if (rotationAngle != 0)
         {
             float translateX = 0;
@@ -209,7 +199,17 @@ public class PDFRenderer
             graphics.rotate((float) Math.toRadians(rotationAngle));
         }
 
-        PageDrawer drawer = new PageDrawer(this, page);
+        // the end-user may provide a custom PageDrawer
+        PageDrawerParameters parameters = new PageDrawerParameters(this, page);
+        PageDrawer drawer = createPageDrawer(parameters);
         drawer.drawPage(graphics, cropBox);
+    }
+
+    /**
+     * Returns a new PageDrawer instance, using the given parameters. May be overridden.
+     */
+    protected PageDrawer createPageDrawer(PageDrawerParameters parameters) throws IOException
+    {
+        return new PageDrawer(parameters);
     }
 }

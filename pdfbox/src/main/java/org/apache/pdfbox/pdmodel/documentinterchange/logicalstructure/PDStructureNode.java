@@ -28,14 +28,11 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.pdmodel.common.COSArrayList;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
-import org.apache.pdfbox.pdmodel.graphics.PDXObject;
-import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 
 /**
  * A node in the structure tree.
  * 
- * @author Koch
- * @version $Revision: $
+ * @author Johannes Koch
  */
 public abstract class PDStructureNode implements COSObjectable
 {
@@ -62,9 +59,12 @@ public abstract class PDStructureNode implements COSObjectable
     }
 
 
-    private COSDictionary dictionary;
+    private final COSDictionary dictionary;
 
-    protected COSDictionary getCOSDictionary()
+    /**
+     * {@inheritDoc}
+     */
+    public COSDictionary getCOSObject()
     {
         return dictionary;
     }
@@ -91,21 +91,13 @@ public abstract class PDStructureNode implements COSObjectable
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public COSBase getCOSObject()
-    {
-        return this.dictionary;
-    }
-
-    /**
      * Returns the type.
      * 
      * @return the type
      */
     public String getType()
     {
-        return this.getCOSDictionary().getNameAsString(COSName.TYPE);
+        return this.getCOSObject().getNameAsString(COSName.TYPE);
     }
 
     /**
@@ -116,7 +108,7 @@ public abstract class PDStructureNode implements COSObjectable
     public List<Object> getKids()
     {
         List<Object> kidObjects = new ArrayList<Object>();
-        COSBase k = this.getCOSDictionary().getDictionaryObject(COSName.K);
+        COSBase k = this.getCOSObject().getDictionaryObject(COSName.K);
         if (k instanceof COSArray)
         {
             Iterator<COSBase> kids = ((COSArray) k).iterator();
@@ -148,7 +140,7 @@ public abstract class PDStructureNode implements COSObjectable
      */
     public void setKids(List<Object> kids)
     {
-        this.getCOSDictionary().setItem(COSName.K,
+        this.getCOSObject().setItem(COSName.K,
             COSArrayList.converterToCOSArray(kids));
     }
 
@@ -188,11 +180,11 @@ public abstract class PDStructureNode implements COSObjectable
         {
             return;
         }
-        COSBase k = this.getCOSDictionary().getDictionaryObject(COSName.K);
+        COSBase k = this.getCOSObject().getDictionaryObject(COSName.K);
         if (k == null)
         {
             // currently no kid: set new kid as kids
-            this.getCOSDictionary().setItem(COSName.K, object);
+            this.getCOSObject().setItem(COSName.K, object);
         }
         else if (k instanceof COSArray)
         {
@@ -206,7 +198,7 @@ public abstract class PDStructureNode implements COSObjectable
             COSArray array = new COSArray();
             array.add(k);
             array.add(object);
-            this.getCOSDictionary().setItem(COSName.K, array);
+            this.getCOSObject().setItem(COSName.K, array);
         }
     }
 
@@ -244,11 +236,11 @@ public abstract class PDStructureNode implements COSObjectable
      */
     protected void insertBefore(COSBase newKid, Object refKid)
     {
-        if ((newKid == null) || (refKid == null))
+        if (newKid == null || refKid == null)
         {
             return;
         }
-        COSBase k = this.getCOSDictionary().getDictionaryObject(COSName.K);
+        COSBase k = this.getCOSObject().getDictionaryObject(COSName.K);
         if (k == null)
         {
             return;
@@ -260,7 +252,7 @@ public abstract class PDStructureNode implements COSObjectable
         }
         else if (refKid instanceof COSInteger)
         {
-            refKidBase = (COSInteger) refKid;
+            refKidBase = (COSBase) refKid;
         }
         if (k instanceof COSArray)
         {
@@ -281,7 +273,7 @@ public abstract class PDStructureNode implements COSObjectable
                 COSArray array = new COSArray();
                 array.add(newKid);
                 array.add(refKidBase);
-                this.getCOSDictionary().setItem(COSName.K, array);
+                this.getCOSObject().setItem(COSName.K, array);
             }
         }
     }
@@ -329,7 +321,7 @@ public abstract class PDStructureNode implements COSObjectable
         {
             return false;
         }
-        COSBase k = this.getCOSDictionary().getDictionaryObject(COSName.K);
+        COSBase k = this.getCOSObject().getDictionaryObject(COSName.K);
         if (k == null)
         {
             // no kids: objectable is not a kid
@@ -343,7 +335,7 @@ public abstract class PDStructureNode implements COSObjectable
             // if now only one kid: set remaining kid as kids
             if (array.size() == 1)
             {
-                this.getCOSDictionary().setItem(COSName.K, array.getObject(0));
+                this.getCOSObject().setItem(COSName.K, array.getObject(0));
             }
             return removed;
         }
@@ -358,7 +350,7 @@ public abstract class PDStructureNode implements COSObjectable
             }
             if (onlyKid)
             {
-                this.getCOSDictionary().setItem(COSName.K, null);
+                this.getCOSObject().setItem(COSName.K, null);
                 return true;
             }
             return false;
@@ -370,8 +362,8 @@ public abstract class PDStructureNode implements COSObjectable
      * The type of object depends on the type of the kid. It can be
      * <ul>
      * <li>a {@link PDStructureElement},</li>
-     * <li>a {@link PDAnnotation},</li>
-     * <li>a {@link PDXObject},</li>
+     * <li>a {@link org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation PDAnnotation},</li>
+     * <li>a {@link org.apache.pdfbox.pdmodel.graphics.PDXObject PDXObject},</li>
      * <li>a {@link PDMarkedContentReference}</li>
      * <li>a {@link Integer}</li>
      * </ul>

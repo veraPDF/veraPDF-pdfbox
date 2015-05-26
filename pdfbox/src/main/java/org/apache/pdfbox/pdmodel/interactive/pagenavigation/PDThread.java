@@ -16,7 +16,6 @@
  */
 package org.apache.pdfbox.pdmodel.interactive.pagenavigation;
 
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -25,8 +24,7 @@ import org.apache.pdfbox.pdmodel.common.COSObjectable;
 /**
  * This a single thread in a PDF document.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.2 $
+ * @author Ben Litchfield
  */
 public class PDThread implements COSObjectable
 {
@@ -59,17 +57,8 @@ public class PDThread implements COSObjectable
      *
      * @return The underlying info dictionary.
      */
-    public COSDictionary getDictionary()
-    {
-        return thread;
-    }
-
-    /**
-     * Convert this standard java object to a COS object.
-     *
-     * @return The cos object that matches this Java object.
-     */
-    public COSBase getCOSObject()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return thread;
     }

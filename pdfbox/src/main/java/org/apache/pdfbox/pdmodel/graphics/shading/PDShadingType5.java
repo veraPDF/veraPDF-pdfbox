@@ -16,11 +16,11 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
+import java.awt.Paint;
+
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.util.Matrix;
-
-import java.awt.Paint;
 
 /**
  * Resources for a shading type 5 (Lattice-Form Gouraud-Shade Triangle Mesh).
@@ -51,7 +51,7 @@ public class PDShadingType5 extends PDTriangleBasedShadingType
      */
     public int getVerticesPerRow()
     {
-        return getCOSDictionary().getInt(COSName.VERTICES_PER_ROW, -1);
+        return getCOSObject().getInt(COSName.VERTICES_PER_ROW, -1);
     }
 
     /**
@@ -61,7 +61,7 @@ public class PDShadingType5 extends PDTriangleBasedShadingType
      */
     public void setVerticesPerRow(int verticesPerRow)
     {
-        getCOSDictionary().setInt(COSName.VERTICES_PER_ROW, verticesPerRow);
+        getCOSObject().setInt(COSName.VERTICES_PER_ROW, verticesPerRow);
     }
 
     @Override

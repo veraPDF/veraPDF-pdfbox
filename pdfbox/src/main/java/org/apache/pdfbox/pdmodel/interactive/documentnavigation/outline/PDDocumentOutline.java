@@ -17,14 +17,14 @@
 package org.apache.pdfbox.pdmodel.interactive.documentnavigation.outline;
 
 import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
 
 /**
  * This represents an outline in a pdf document.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.2 $
+ * @author Ben Litchfield
  */
-public class PDDocumentOutline extends PDOutlineNode
+public final class PDDocumentOutline extends PDOutlineNode
 {
 
     /**
@@ -32,8 +32,7 @@ public class PDDocumentOutline extends PDOutlineNode
      */
     public PDDocumentOutline()
     {
-        super();
-        node.setName( "Type", "Outlines" );
+        getCOSObject().setName(COSName.TYPE, COSName.OUTLINES.getName());
     }
 
     /**
@@ -44,5 +43,24 @@ public class PDDocumentOutline extends PDOutlineNode
     public PDDocumentOutline( COSDictionary dic )
     {
         super( dic );
+        getCOSObject().setName(COSName.TYPE, COSName.OUTLINES.getName());
+    }
+
+    @Override
+    public boolean isNodeOpen()
+    {
+        return true;
+    }
+
+    @Override
+    public void openNode()
+    {
+        // The root of the outline hierarchy is not an OutlineItem and cannot be opened or closed
+    }
+
+    @Override
+    public void closeNode()
+    {
+        // The root of the outline hierarchy is not an OutlineItem and cannot be opened or closed
     }
 }

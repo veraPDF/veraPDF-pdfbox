@@ -21,14 +21,15 @@ import java.io.IOException;
 /**
  * This class represents a PDF object.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.37 $
+ * @author Ben Litchfield
+ * 
  */
-public class COSObject extends COSBase
+public class COSObject extends COSBase implements COSUpdateInfo
 {
     private COSBase baseObject;
-    private COSInteger objectNumber;
-    private COSInteger generationNumber;
+    private long objectNumber;
+    private int generationNumber;
+    private boolean needToBeUpdated;
 
     /**
      * Constructor.
@@ -94,100 +95,52 @@ public class COSObject extends COSBase
      *
      * @throws IOException If there is an error setting the updated object.
      */
-    public void setObject( COSBase object ) throws IOException
+    public final void setObject( COSBase object ) throws IOException
     {
         baseObject = object;
-        /*if( baseObject == null )
-        {
-            baseObject = object;
-        }
-        else
-        {
-            //This is for when an object appears twice in the
-            //pdf file we really want to replace it such that
-            //object references still work correctly.
-            //see owcp-as-received.pdf for an example
-            if( baseObject instanceof COSDictionary )
-            {
-                COSDictionary dic = (COSDictionary)baseObject;
-                COSDictionary dicObject = (COSDictionary)object;
-                dic.clear();
-                dic.addAll( dicObject );
-            }
-            else if( baseObject instanceof COSArray )
-            {
-                COSArray array = (COSArray)baseObject;
-                COSArray arrObject = (COSArray)object;
-                array.clear();
-                for( int i=0; i<arrObject.size(); i++ )
-                {
-                    array.add( arrObject.get( i ) );
-                }
-            }
-            else if( baseObject instanceof COSStream )
-            {
-                COSStream oldStream = (COSStream)baseObject;
-                System.out.println( "object:" +  object.getClass().getName() );
-                COSStream newStream = (COSStream)object;
-                oldStream.replaceWithStream( newStream );
-            }
-            else if( baseObject instanceof COSInteger )
-            {
-                COSInteger oldInt = (COSInteger)baseObject;
-                COSInteger newInt = (COSInteger)object;
-                oldInt.setValue( newInt.longValue() );
-            }
-            else if( baseObject == null )
-            {
-                baseObject = object;
-            }
-            else
-            {
-                throw new IOException( "Unknown object substitution type:" + baseObject );
-            }
-        }*/
-
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString()
     {
-        return "COSObject{" +
-            (objectNumber == null ? "unknown" : "" + objectNumber.intValue() ) + ", " +
-            (generationNumber == null ? "unknown" : "" + generationNumber.intValue() ) +
-            "}";
+        return "COSObject{" + Long.toString(objectNumber) + ", " + Integer.toString(generationNumber) + "}";
     }
 
-    /** Getter for property objectNumber.
+    /** 
+     * Getter for property objectNumber.
      * @return Value of property objectNumber.
      */
-    public COSInteger getObjectNumber()
+    public long getObjectNumber()
     {
         return objectNumber;
     }
 
-    /** Setter for property objectNumber.
+    /** 
+     * Setter for property objectNumber.
      * @param objectNum New value of property objectNumber.
      */
-    public void setObjectNumber(COSInteger objectNum)
+    public void setObjectNumber(long objectNum)
     {
         objectNumber = objectNum;
     }
 
-    /** Getter for property generationNumber.
+    /** 
+     * Getter for property generationNumber.
      * @return Value of property generationNumber.
      */
-    public COSInteger getGenerationNumber()
+    public int getGenerationNumber()
     {
         return generationNumber;
     }
 
-    /** Setter for property generationNumber.
+    /** 
+     * Setter for property generationNumber.
      * @param generationNumberValue New value of property generationNumber.
      */
-    public void setGenerationNumber(COSInteger generationNumberValue)
+    public void setGenerationNumber(int generationNumberValue)
     {
         generationNumber = generationNumberValue;
     }
@@ -199,8 +152,32 @@ public class COSObject extends COSBase
      * @return any object, depending on the visitor implementation, or null
      * @throws IOException If an error occurs while visiting this object.
      */
+    @Override
     public Object accept( ICOSVisitor visitor ) throws IOException
     {
         return getObject() != null ? getObject().accept( visitor ) : COSNull.NULL.accept( visitor );
     }
+    
+    /**
+     * Get the update state for the COSWriter.
+     * 
+     * @return the update state.
+     */
+    @Override
+    public boolean isNeedToBeUpdated() 
+    {
+        return needToBeUpdated;
+    }
+    
+    /**
+     * Set the update state of the dictionary for the COSWriter.
+     * 
+     * @param flag the update state.
+     */
+    @Override
+    public void setNeedToBeUpdated(boolean flag) 
+    {
+        needToBeUpdated = flag;
+    }
+
 }

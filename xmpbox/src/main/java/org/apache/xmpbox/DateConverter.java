@@ -28,17 +28,24 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.SimpleTimeZone;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class is used to convert dates to strings and back using the PDF date standards. Date are described in
  * PDFReference1.4 section 3.8.2
  * 
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @author <a href="mailto:chris@oezbek.net">Christopher Oezbek</a>
+ * <p>
+ * <strong>This is (and will not be) a Java date parsing library and will likely still have limited
+ * support for various strings as it’s main use case it to parse from PDF date strings.</strong>
+ * </p>
  * 
- * @version $Revision: 1.3 $
+ * @author Ben Litchfield
+ * @author Christopher Oezbek
+ * 
  */
-public class DateConverter
+public final class DateConverter
 {
 
     // The Date format is supposed to be the PDF_DATE_FORMAT, but not all PDF
@@ -47,13 +54,17 @@ public class DateConverter
     // to try if the original one does not work.
     private static final SimpleDateFormat[] POTENTIAL_FORMATS = new SimpleDateFormat[] {
             new SimpleDateFormat("EEEE, dd MMM yyyy hh:mm:ss a"),
-            new SimpleDateFormat("EEEE, MMM dd, yyyy hh:mm:ss a"), new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"),
-            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssz") };
+            new SimpleDateFormat("EEEE, MMM dd, yyyy hh:mm:ss a"),
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'"),
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssz"),
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"),
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S")
+        };
 
     /**
      * According to check-style, Utility classes should not have a public or default constructor.
      */
-    protected DateConverter()
+    private DateConverter()
     {
     };
 
@@ -74,7 +85,6 @@ public class DateConverter
         if ((date != null) && (date.trim().length() > 0))
         {
             // these are the default values
-            int year = 0;
             int month = 1;
             int day = 1;
             int hour = 0;
@@ -84,7 +94,13 @@ public class DateConverter
             try
             {
                 SimpleTimeZone zone = null;
-                if (date.startsWith("D:"))
+                
+                if (Pattern.matches("^\\d{4}-\\d{2}-\\d{2}T.*", date))
+                {
+                    // Assuming ISO860 date string
+                    return fromISO8601(date);
+                }
+                else if (date.startsWith("D:"))
                 {
                     date = date.substring(2, date.length());
                 }
@@ -95,7 +111,7 @@ public class DateConverter
                 {
                     throw new IOException("Error: Invalid date format '" + date + "'");
                 }
-                year = Integer.parseInt(date.substring(0, 4));
+                int year = Integer.parseInt(date.substring(0, 4));
                 if (date.length() >= 6)
                 {
                     month = Integer.parseInt(date.substring(4, 6));
@@ -207,32 +223,13 @@ public class DateConverter
                 if (retval == null)
                 {
                     // we didn't find a valid date format so throw an exception
-                    IOException ioe = new IOException("Error converting date:" + date);
-                    ioe.initCause(e);
-                    throw ioe;
+                    throw new IOException("Error converting date:" + date, e);
                 }
             }
         }
         return retval;
     }
-
-    /**
-     * Append Zero to String Buffer before number &lt; 10 ('1' become '01')
-     * 
-     * @param out
-     *            The String buffer
-     * @param number
-     *            The concerned number
-     */
-    private static void zeroAppend(StringBuffer out, int number)
-    {
-        if (number < 10)
-        {
-            out.append("0");
-        }
-        out.append(number);
-    }
-
+    
     /**
      * Convert the date to iso 8601 string format.
      * 
@@ -242,19 +239,37 @@ public class DateConverter
      */
     public static String toISO8601(Calendar cal)
     {
+        return toISO8601(cal, false);
+    }
+    
+    /**
+     * Convert the date to iso 8601 string format.
+     * 
+     * @param cal The date to convert.
+     * @param printMillis Print Milliseconds.
+     * @return The date represented as an ISO 8601 string.
+     */
+    public static String toISO8601(Calendar cal, boolean printMillis)
+    {
         StringBuffer retval = new StringBuffer();
 
         retval.append(cal.get(Calendar.YEAR));
         retval.append("-");
-        zeroAppend(retval, cal.get(Calendar.MONTH) + 1);
+        retval.append(String.format("%02d", cal.get(Calendar.MONTH) + 1));
         retval.append("-");
-        zeroAppend(retval, cal.get(Calendar.DAY_OF_MONTH));
+        retval.append(String.format("%02d", cal.get(Calendar.DAY_OF_MONTH)));
         retval.append("T");
-        zeroAppend(retval, cal.get(Calendar.HOUR_OF_DAY));
+        retval.append(String.format("%02d", cal.get(Calendar.HOUR_OF_DAY)));
         retval.append(":");
-        zeroAppend(retval, cal.get(Calendar.MINUTE));
+        retval.append(String.format("%02d", cal.get(Calendar.MINUTE)));
         retval.append(":");
-        zeroAppend(retval, cal.get(Calendar.SECOND));
+        retval.append(String.format("%02d", cal.get(Calendar.SECOND)));
+        
+        if (printMillis)
+        {
+            retval.append(".");
+            retval.append(String.format("%03d", cal.get(Calendar.MILLISECOND)));
+        }
 
         int timeZone = cal.get(Calendar.ZONE_OFFSET) + cal.get(Calendar.DST_OFFSET);
         if (timeZone < 0)
@@ -282,5 +297,50 @@ public class DateConverter
         }
         retval.append(Integer.toString(minutes));
         return retval.toString();
+    }
+    
+    /**
+     * Get a Calendar from an ISO8601 date string.
+     * 
+     * @param dateString
+     * @return the Calendar instance.
+     */
+    private static Calendar fromISO8601(String dateString)
+    {
+        // Pattern to test for a time zone string
+        Pattern timeZonePattern = Pattern.compile(
+                    "[\\d-]*T?[\\d-\\.]([A-Z]{1,4})$|(.*\\d*)([A-Z][a-z]+\\/[A-Z][a-z]+)$"
+                );
+        Matcher timeZoneMatcher = timeZonePattern.matcher(dateString);
+        
+        String timeZoneString = null;
+        
+        while (timeZoneMatcher.find())
+        {
+            for (int i = 1; i <= timeZoneMatcher.groupCount(); i++)
+            {
+                if (timeZoneMatcher.group(i) != null)
+                {
+                    timeZoneString = timeZoneMatcher.group(i);
+                }
+            }
+        }
+
+        if (timeZoneString != null)
+        {
+            
+            Calendar cal = javax.xml.bind.DatatypeConverter.parseDateTime(
+                        dateString.substring(0, dateString.indexOf(timeZoneString))
+                    );
+            
+            TimeZone z = TimeZone.getTimeZone(timeZoneString);
+            cal.setTimeZone(z);
+            
+            return cal;
+        }
+        else
+        {
+            return javax.xml.bind.DatatypeConverter.parseDateTime(dateString);
+        }
     }
 }

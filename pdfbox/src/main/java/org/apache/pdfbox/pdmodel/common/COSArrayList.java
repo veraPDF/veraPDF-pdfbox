@@ -36,13 +36,12 @@ import org.apache.pdfbox.cos.COSObject;
 /**
  * This is an implementation of a List that will sync its contents to a COSArray.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.15 $
+ * @author Ben Litchfield
  */
 public class COSArrayList<E> implements List<E>
 {
-    private COSArray array;
-    private List<E> actual;
+    private final COSArray array;
+    private final List<E> actual;
 
     private COSDictionary parentDict;
     private COSName dictKey;
@@ -169,12 +168,6 @@ public class COSArrayList<E> implements List<E>
         {
             array.add( new COSString( (String)o ) );
         }
-        else if( o instanceof DualCOSObjectable )
-        {
-            DualCOSObjectable dual = (DualCOSObjectable)o;
-            array.add( dual.getFirstCOSObject() );
-            array.add( dual.getSecondCOSObject() );
-        }
         else
         {
             if(array != null)
@@ -249,14 +242,7 @@ public class COSArrayList<E> implements List<E>
             parentDict = null;
         }
 
-        if( c.size() >0 && c.toArray()[0] instanceof DualCOSObjectable )
-        {
-            array.addAll( index*2, toCOSObjectList( c ) );
-        }
-        else
-        {
-            array.addAll( index, toCOSObjectList( c ) );
-        }
+        array.addAll( index, toCOSObjectList( c ) );
         return actual.addAll( index, c );
     }
 
@@ -439,12 +425,6 @@ public class COSArrayList<E> implements List<E>
                         COSObjectable object = (COSObjectable)next;
                         array.add( object.getCOSObject() );
                     }
-                    else if( next instanceof DualCOSObjectable )
-                    {
-                        DualCOSObjectable object = (DualCOSObjectable)next;
-                        array.add( object.getFirstCOSObject() );
-                        array.add( object.getSecondCOSObject() );
-                    }
                     else if( next == null )
                     {
                         array.add( COSNull.NULL );
@@ -470,12 +450,6 @@ public class COSArrayList<E> implements List<E>
             if( next instanceof String )
             {
                 cosObjects.add( new COSString( (String)next ) );
-            }
-            else if( next instanceof DualCOSObjectable )
-            {
-                DualCOSObjectable object = (DualCOSObjectable)next;
-                array.add( object.getFirstCOSObject() );
-                array.add( object.getSecondCOSObject() );
             }
             else
             {
@@ -516,7 +490,7 @@ public class COSArrayList<E> implements List<E>
         //in the dictionary from a single item to an array.
         if( parentDict != null )
         {
-            parentDict.setItem( dictKey, (COSBase)null );
+            parentDict.setItem( dictKey, null );
         }
         actual.clear();
         array.clear();
@@ -565,12 +539,6 @@ public class COSArrayList<E> implements List<E>
             }
             array.set( index, item );
         }
-        else if( element instanceof DualCOSObjectable )
-        {
-            DualCOSObjectable dual = (DualCOSObjectable)element;
-            array.set( index*2, dual.getFirstCOSObject() );
-            array.set( index*2+1, dual.getSecondCOSObject() );
-        }
         else
         {
             if( parentDict != null && index == 0 )
@@ -602,12 +570,6 @@ public class COSArrayList<E> implements List<E>
         {
             array.add( index, new COSString( (String)element ) );
         }
-        else if( element instanceof DualCOSObjectable )
-        {
-            DualCOSObjectable dual = (DualCOSObjectable)element;
-            array.add( index*2, dual.getFirstCOSObject() );
-            array.add( index*2+1, dual.getSecondCOSObject() );
-        }
         else
         {
             array.add( index, ((COSObjectable)element).getCOSObject() );
@@ -620,16 +582,7 @@ public class COSArrayList<E> implements List<E>
     @Override
     public E remove(int index)
     {
-        if( array.size() > index && array.get( index ) instanceof DualCOSObjectable )
-        {
-            //remove both objects
-            array.remove( index );
-            array.remove( index );
-        }
-        else
-        {
-            array.remove( index );
-        }
+        array.remove( index );
         return actual.remove( index );
     }
 

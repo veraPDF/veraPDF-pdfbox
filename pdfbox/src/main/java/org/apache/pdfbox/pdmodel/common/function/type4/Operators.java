@@ -20,7 +20,6 @@ import java.util.Map;
 
 /**
  * This class provides all the supported operators.
- * @version $Revision$
  */
 public class Operators
 {
@@ -75,7 +74,7 @@ public class Operators
     private static final Operator POP = new StackOperators.Pop();
     private static final Operator ROLL = new StackOperators.Roll();
 
-    private Map<String, Operator> operators = new java.util.HashMap<String, Operator>();
+    private final Map<String, Operator> operators = new java.util.HashMap<String, Operator>();
 
     /**
      * Creates a new Operators object with the default set of operators.

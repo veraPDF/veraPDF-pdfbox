@@ -27,17 +27,15 @@ import java.util.Map;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 
-import org.apache.pdfbox.pdmodel.edit.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
-
 
 /**
  * This will take a text file and ouput a pdf with that text.
  *
- * @author <a href="ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.4 $
+ * @author Ben Litchfield
  */
 public class TextToPDF
 {
@@ -74,7 +72,20 @@ public class TextToPDF
      */
     public PDDocument createPDFFromText( Reader text ) throws IOException
     {
-        PDDocument doc = null;
+        PDDocument doc = new PDDocument();
+        createPDFFromText(doc, text);
+        return doc;
+    }
+
+    /**
+     * Create a PDF document with some text.
+     *
+     * @param text The stream of text data.
+     *
+     * @throws IOException If there is an error writing the data.
+     */
+    public void createPDFFromText( PDDocument doc, Reader text ) throws IOException
+    {
         try
         {
 
@@ -83,7 +94,6 @@ public class TextToPDF
 
             //calculate font height and increase by 5 percent.
             height = height*fontSize*1.05f;
-            doc = new PDDocument();
             BufferedReader data = new BufferedReader( text );
             String nextLine = null;
             PDPage page = new PDPage();
@@ -137,19 +147,18 @@ public class TextToPDF
                         contentStream.setFont( font, fontSize );
                         contentStream.beginText();
                         y = page.getMediaBox().getHeight() - margin + height;
-                        contentStream.moveTextPositionByAmount(
-                            margin, y );
+                        contentStream.newLineAtOffset(
+                                margin, y);
 
                     }
-                    //System.out.println( "Drawing string at " + x + "," + y );
 
                     if( contentStream == null )
                     {
                         throw new IOException( "Error:Expected non-null content stream." );
                     }
-                    contentStream.moveTextPositionByAmount( 0, -height);
+                    contentStream.newLineAtOffset(0, -height);
                     y -= height;
-                    contentStream.drawString( nextLineToDraw.toString() );
+                    contentStream.showText(nextLineToDraw.toString());
                 }
 
 
@@ -177,7 +186,6 @@ public class TextToPDF
             }
             throw io;
         }
-        return doc;
     }
 
     /**
@@ -195,7 +203,7 @@ public class TextToPDF
         System.setProperty("apple.awt.UIElement", "true");
 
         TextToPDF app = new TextToPDF();
-        PDDocument doc = null;
+        PDDocument doc = new PDDocument();
         try
         {
             if( args.length < 2 )
@@ -214,7 +222,7 @@ public class TextToPDF
                     else if( args[i].equals( "-ttf" ))
                     {
                         i++;
-                        PDTrueTypeFont font = PDTrueTypeFont.loadTTF( doc, new File( args[i]));
+                        PDFont font = PDType0Font.load( doc, new File( args[i]) );
                         app.setFont( font );
                     }
                     else if( args[i].equals( "-fontSize" ))
@@ -227,16 +235,13 @@ public class TextToPDF
                         throw new IOException( "Unknown argument:" + args[i] );
                     }
                 }
-                doc = app.createPDFFromText( new FileReader( args[args.length-1] ) );
+                app.createPDFFromText( doc, new FileReader( args[args.length-1] ) );
                 doc.save( args[args.length-2] );
             }
         }
         finally
         {
-            if( doc != null )
-            {
-                doc.close();
-            }
+            doc.close();
         }
     }
 

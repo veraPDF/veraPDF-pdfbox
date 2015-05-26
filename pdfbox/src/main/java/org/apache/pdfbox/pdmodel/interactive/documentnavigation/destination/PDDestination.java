@@ -28,8 +28,7 @@ import org.apache.pdfbox.pdmodel.common.PDDestinationOrAction;
 /**
  * This represents a destination in a PDF document.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @version $Revision: 1.6 $
+ * @author Ben Litchfield
  */
 public abstract class PDDestination implements PDDestinationOrAction
 {
@@ -51,10 +50,12 @@ public abstract class PDDestination implements PDDestinationOrAction
         {
             //this is ok, just return null.
         }
-        else if( base instanceof COSArray && ((COSArray)base).size() > 0 )
+        else if (base instanceof COSArray 
+                && ((COSArray) base).size() > 1 
+                && ((COSArray) base).getObject(1) instanceof COSName)
         {
             COSArray array = (COSArray)base;
-            COSName type = (COSName)array.getObject( 1 );
+            COSName type = (COSName) array.getObject(1);
             String typeString = type.getName();
             if( typeString.equals( PDPageFitDestination.TYPE ) ||
                 typeString.equals( PDPageFitDestination.TYPE_BOUNDED ))
@@ -81,7 +82,7 @@ public abstract class PDDestination implements PDDestinationOrAction
             }
             else
             {
-                throw new IOException( "Unknown destination type:" + type );
+                throw new IOException( "Unknown destination type: " + type.getName() );
             }
         }
         else if( base instanceof COSString )
@@ -99,13 +100,4 @@ public abstract class PDDestination implements PDDestinationOrAction
         return retval;
     }
 
-    /**
-     * Return a string representation of this class.
-     *
-     * @return A human readable string.
-     */
-    public String toString()
-    {
-        return super.toString();
-    }
 }

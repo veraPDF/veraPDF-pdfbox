@@ -170,11 +170,21 @@ public class Encrypt
 
 
                         CertificateFactory cf = CertificateFactory.getInstance("X.509");
-                        InputStream inStream = new FileInputStream(certFile);
-                        X509Certificate certificate = (X509Certificate)cf.generateCertificate(inStream);
-                        inStream.close();
-
-                        recip.setX509(certificate);
+                        
+                        InputStream inStream = null;
+                        try
+                        {
+                            inStream = new FileInputStream(certFile);
+                            X509Certificate certificate = (X509Certificate)cf.generateCertificate(inStream);
+                            recip.setX509(certificate);
+                        }
+                        finally
+                        {
+                            if (inStream != null)
+                            {
+                                inStream.close();
+                            }
+                        }                        
 
                         ppp.addRecipient(recip);
 
@@ -225,7 +235,7 @@ public class Encrypt
         System.err.println( "   -canModifyAnnotations <true|false>       Set the modify annots permission" );
         System.err.println( "   -canPrint <true|false>                   Set the print permission" );
         System.err.println( "   -canPrintDegraded <true|false>           Set the print degraded permission" );
-        System.err.println( "   -keyLength <length>                      The length of the key in bits(40)" );
+        System.err.println( "   -keyLength <length>                      The length of the key in bits (valid values: 40, 128 or 256, default is 40)" );
         System.err.println( "\nNote: By default all permissions are set to true!" );
         System.exit( 1 );
     }

@@ -31,9 +31,13 @@ import static org.apache.pdfbox.tools.imageio.MetaUtil.debugLogMetadata;
  * Used by ImageIOUtil to write TIFF files.
  * @author Tilman Hausherr
  */
-class TIFFUtil
+final class TIFFUtil
 {
     private static final Log LOG = LogFactory.getLog(TIFFUtil.class);
+
+    private TIFFUtil()
+    {
+    }    
 
     /**
      * Sets the ImageIO parameter compression type based on the given image.

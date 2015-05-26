@@ -135,9 +135,9 @@ public class PreflightContentStream extends PreflightStreamEngine
     }
 
     @Override
-    protected void processOperator(Operator operator, List<COSBase> arguments) throws IOException
+    protected void processOperator(Operator operator, List<COSBase> operands) throws IOException
     {
-        super.processOperator(operator, arguments);
+        super.processOperator(operator, operands);
 
         // todo: why are the checks below done here and not in OperatorProcessor classes?
 
@@ -150,10 +150,10 @@ public class PreflightContentStream extends PreflightStreamEngine
             validateImageColorSpace(operator);
         }
 
-        checkShowTextOperators(operator, arguments);
+        checkShowTextOperators(operator, operands);
         checkColorOperators(operator.getName());
-        validateRenderingIntent(operator, arguments);
-        checkSetColorSpaceOperators(operator, arguments);
+        validateRenderingIntent(operator, operands);
+        checkSetColorSpaceOperators(operator, operands);
         validateNumberOfGraphicStates(operator);
     }
 
@@ -171,11 +171,9 @@ public class PreflightContentStream extends PreflightStreamEngine
      * 
      * @param operator
      * @param arguments
-     * @throws ContentStreamException
      * @throws IOException
      */
-    protected void checkShowTextOperators(Operator operator, List<?> arguments) throws ContentStreamException,
-            IOException
+    protected void checkShowTextOperators(Operator operator, List<?> arguments) throws IOException
     {
         String op = operator.getName();
         if ("Tj".equals(op) || "'".equals(op) || "\"".equals(op))
@@ -197,11 +195,9 @@ public class PreflightContentStream extends PreflightStreamEngine
      * 
      * @param operator
      * @param arguments
-     * @throws ContentStreamException
      * @throws IOException
      */
-    private void validateStringDefinition(Operator operator, List<?> arguments) throws ContentStreamException,
-            IOException
+    private void validateStringDefinition(Operator operator, List<?> arguments) throws IOException
     {
         /*
          * For a Text operator, the arguments list should contain only one COSString object
@@ -258,10 +254,9 @@ public class PreflightContentStream extends PreflightStreamEngine
      * 
      * @param operator
      * @param arguments
-     * @throws ContentStreamException
      * @throws IOException
      */
-    private void validateStringArray(Operator operator, List<?> arguments) throws ContentStreamException, IOException
+    private void validateStringArray(Operator operator, List<?> arguments) throws IOException
     {
         for (Object object : arguments)
         {

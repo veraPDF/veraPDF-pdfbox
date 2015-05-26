@@ -21,19 +21,18 @@
 
 package org.apache.pdfbox.preflight.action;
 
-import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_ACTION_INVALID_TYPE;
 import static org.apache.pdfbox.preflight.PreflightConstants.ERROR_ACTION_MISING_KEY;
-
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSDocument;
 import org.apache.pdfbox.cos.COSName;
+import static org.apache.pdfbox.preflight.PreflightConfiguration.DESTINATION_PROCESS;
 import org.apache.pdfbox.preflight.PreflightContext;
 import org.apache.pdfbox.preflight.ValidationResult.ValidationError;
-import org.apache.pdfbox.preflight.utils.COSUtils;
+import org.apache.pdfbox.preflight.exception.ValidationException;
+import org.apache.pdfbox.preflight.utils.ContextHelper;
 
 /**
- * ActionManager for the GoTo action GoToAction is valid if the D entry is present.
+ * ActionManager for the GoTo action. GoToAction is valid if the D entry is present.
  */
 public class GoToAction extends AbstractActionManager
 {
@@ -53,28 +52,21 @@ public class GoToAction extends AbstractActionManager
     /*
      * (non-Javadoc)
      * 
-     * @see net.awl.edoc.pdfa.validation.actions.AbstractActionManager#valid(java.util .List)
+     * @see AbstractActionManager#valid(java.util.List)
      */
     @Override
-    protected boolean innerValid()
+    protected boolean innerValid() throws ValidationException
     {
-        COSBase d = this.actionDictionnary.getItem(COSName.D);
+        COSBase dest = this.actionDictionnary.getItem(COSName.D);
 
         // ---- D entry is mandatory
-        if (d == null)
+        if (dest == null)
         {
             context.addValidationError(new ValidationError(ERROR_ACTION_MISING_KEY,
                     "D entry is mandatory for the GoToActions"));
             return false;
         }
-
-        COSDocument cosDocument = this.context.getDocument().getDocument();
-        if (!(d instanceof COSName || COSUtils.isString(d, cosDocument) || COSUtils.isArray(d, cosDocument)))
-        {
-            context.addValidationError(new ValidationError(ERROR_ACTION_INVALID_TYPE, "Type of D entry is invalid"));
-            return false;
-        }
-
+        ContextHelper.validateElement(context, dest, DESTINATION_PROCESS);
         return true;
     }
 

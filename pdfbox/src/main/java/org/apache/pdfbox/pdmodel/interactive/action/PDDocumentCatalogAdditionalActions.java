@@ -16,22 +16,19 @@
  */
 package org.apache.pdfbox.pdmodel.interactive.action;
 
-import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
-
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 
 /**
  * This class represents a document catalog's dictionary of actions
  * that occur due to events.
  *
- * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
- * @author Panagiotis Toumasis (ptoumasis@mail.gr)
- * @version $Revision: 1.2 $
+ * @author Ben Litchfield
+ * @author Panagiotis Toumasis
  */
 public class PDDocumentCatalogAdditionalActions implements COSObjectable
 {
-    private COSDictionary actions;
+    private final COSDictionary actions;
 
     /**
      * Default constructor.
@@ -56,17 +53,8 @@ public class PDDocumentCatalogAdditionalActions implements COSObjectable
      *
      * @return The cos object that matches this Java object.
      */
-    public COSBase getCOSObject()
-    {
-        return actions;
-    }
-
-    /**
-     * Convert this standard java object to a COS object.
-     *
-     * @return The cos object that matches this Java object.
-     */
-    public COSDictionary getCOSDictionary()
+    @Override
+    public COSDictionary getCOSObject()
     {
         return actions;
     }

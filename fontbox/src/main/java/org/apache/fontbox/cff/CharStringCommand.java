@@ -25,7 +25,6 @@ import java.util.Map;
  * This class represents a CharStringCommand.
  * 
  * @author Villu Ruusmann
- * @version $Revision$
  */
 public class CharStringCommand
 {
@@ -80,6 +79,7 @@ public class CharStringCommand
     /**
      * {@inheritDoc}
      */
+    @Override
     public String toString()
     {
         String str = TYPE2_VOCABULARY.get(getKey());
@@ -91,15 +91,13 @@ public class CharStringCommand
         {
             return getKey().toString() + '|';
         }
-        else
-        {
-            return str + '|';
-        }
+        return str + '|';
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public int hashCode()
     {
         return getKey().hashCode();
@@ -108,6 +106,7 @@ public class CharStringCommand
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean equals(Object object)
     {
         if (object instanceof CharStringCommand)
@@ -175,6 +174,7 @@ public class CharStringCommand
         /**
          * {@inheritDoc}
          */
+        @Override
         public String toString()
         {
             return Arrays.toString(getValue());
@@ -183,14 +183,12 @@ public class CharStringCommand
         /**
          * {@inheritDoc}
          */
+        @Override
         public int hashCode()
         {
-            if (keyValues[0] == 12)
+            if (keyValues[0] == 12 && keyValues.length > 1)
             {
-                if (keyValues.length > 1)
-                {
-                    return keyValues[0] ^ keyValues[1];
-                }
+                return keyValues[0] ^ keyValues[1];
             }
             return keyValues[0];
         }
@@ -198,6 +196,7 @@ public class CharStringCommand
         /**
          * {@inheritDoc}
          */
+        @Override
         public boolean equals(Object object)
         {
             if (object instanceof Key)
@@ -209,7 +208,6 @@ public class CharStringCommand
                     {
                         return keyValues[1] == that.keyValues[1];
                     }
-
                     return keyValues.length == that.keyValues.length;
                 }
                 return keyValues[0] == that.keyValues[0];

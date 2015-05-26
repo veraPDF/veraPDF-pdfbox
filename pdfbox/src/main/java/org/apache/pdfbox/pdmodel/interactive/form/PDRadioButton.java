@@ -18,11 +18,12 @@ package org.apache.pdfbox.pdmodel.interactive.form;
 
 import java.io.IOException;
 import java.util.List;
-
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceEntry;
 
 /**
  * Radio button fields contain a set of related buttons that can each be on or off.
@@ -31,17 +32,32 @@ import org.apache.pdfbox.pdmodel.common.COSObjectable;
  */
 public final class PDRadioButton extends PDButton
 {
-
+    /**
+     * A Ff flag.
+     */
+    private static final int FLAG_NO_TOGGLE_TO_OFF = 1 << 14;
+    
+    /**
+     * @see PDField#PDField(PDAcroForm)
+     *
+     * @param acroForm The acroform.
+     */
+    public PDRadioButton(PDAcroForm acroForm)
+    {
+        super(acroForm);
+        setRadioButton(true);
+    }
+    
     /**
      * Constructor.
      * 
-     * @param theAcroForm The form that this field is part of.
+     * @param acroForm The form that this field is part of.
      * @param field the PDF object to represent as a field.
-     * @param parentNode the parent node of the node to be created
+     * @param parent the parent node of the node
      */
-    public PDRadioButton(PDAcroForm theAcroForm, COSDictionary field, PDFieldTreeNode parentNode)
+    PDRadioButton(PDAcroForm acroForm, COSDictionary field, PDNonTerminalField parent)
     {
-        super(theAcroForm, field, parentNode);
+        super(acroForm, field, parent);
     }
 
     /**
@@ -54,7 +70,7 @@ public final class PDRadioButton extends PDButton
      */
     public void setRadiosInUnison(boolean radiosInUnison)
     {
-        getDictionary().setFlag(COSName.FF, FLAG_RADIOS_IN_UNISON, radiosInUnison);
+        dictionary.setFlag(COSName.FF, FLAG_RADIOS_IN_UNISON, radiosInUnison);
     }
 
     /**
@@ -63,99 +79,133 @@ public final class PDRadioButton extends PDButton
      */
     public boolean isRadiosInUnison()
     {
-        return getDictionary().getFlag(COSName.FF, FLAG_RADIOS_IN_UNISON);
-    }
-
-    
-    @Override
-    public COSName getDefaultValue() throws IOException
-    {
-        COSBase attribute = getInheritableAttribute(getDictionary(), COSName.DV);
-
-        if (attribute instanceof COSName)
-        {
-            return (COSName) attribute;
-        }
-        else
-        {
-            throw new IOException("Expected a COSName entry but got " + attribute.getClass().getName());
-        }
-    }
-    
-    /**
-     * Set the fields default value.
-     * 
-     * The field value holds a name object which is corresponding to the 
-     * appearance state representing the corresponding appearance 
-     * from the appearance directory.
-     *
-     * The default value is used to represent the initial state of the
-     * checkbox or to revert when resetting the form.
-     * 
-     * @param defaultValue the COSName object to set the field value.
-     */
-    public void setDefaultValue(COSName defaultValue)
-    {
-        if (defaultValue == null)
-        {
-            removeInheritableAttribute(getDictionary(),COSName.DV);
-        }
-        else
-        {
-            setInheritableAttribute(getDictionary(), COSName.DV, defaultValue);
-        }
-    }
-    
-    @Override
-    public COSName getValue() throws IOException
-    {
-        COSBase attribute = getInheritableAttribute(getDictionary(), COSName.V);
-
-        if (attribute instanceof COSName)
-        {
-            return (COSName) attribute;
-        }
-        else
-        {
-            throw new IOException("Expected a COSName entry but got " + attribute.getClass().getName());
-        }
+        return dictionary.getFlag(COSName.FF, FLAG_RADIOS_IN_UNISON);
     }
 
     /**
-     * Set the field value.
+     * This will get the export value.
+     * <p>
+     * A RadioButton might have an export value to allow field values
+     * which can not be encoded as PDFDocEncoding or for the same export value 
+     * being assigned to multiple RadioButtons in a group.<br/>
+     * To define an export value the RadioButton must define options {@link #setOptions(List)}
+     * which correspond to the individual items within the RadioButton.</p>
+     * <p>
+     * The method will either return the value from the options entry or in case there
+     * is no such entry the fields value</p>
      * 
-     * The field value holds a name object which is corresponding to the 
-     * appearance state of the child field being in the on state.
-     * 
-     * The default value is Off.
-     * 
-     * @param value the COSName object to set the field value.
+     * @return the export value of the field.
+     * @throws IOException in case the fields value can not be retrieved
      */
-    public void setValue(COSName value)
+    public String getExportValue() throws IOException
     {
-        if (value == null)
+        List<String> options = getOptions();
+        if (options.isEmpty())
         {
-            removeInheritableAttribute(getDictionary(),COSName.V);
+            return getValue();
         }
         else
         {
-            setInheritableAttribute(getDictionary(),COSName.V, value);
-            List<COSObjectable> kids = getKids();
+            String fieldValue = getValue();
+            List<PDAnnotationWidget> kids = getWidgets();
+            int idx = 0;
             for (COSObjectable kid : kids)
             {
-                if (kid instanceof PDCheckbox)
+                // fixme: this is always false, because it's kids are always widgets, not fields.
+                /*if (kid instanceof PDCheckbox)
                 {
                     PDCheckbox btn = (PDCheckbox) kid;
-                    if (btn.getOnValue().equals(value))
+                    if (btn.getOnValue().equals(fieldValue))
                     {
-                        btn.check();
+                        break;
                     }
-                    else
-                    {
-                        btn.unCheck();
-                    }
-                }
+                    idx++;
+                }*/
+            }
+            if (idx <= options.size())
+            {
+                return options.get(idx);
             }
         }
+        return "";
+    }
+
+    /**
+     * Returns the selected value. May be empty if NoToggleToOff is set but there is no value
+     * selected.
+     * 
+     * @return A non-null string.
+     */
+    public String getValue()
+    {
+        COSBase value = getInheritableAttribute(COSName.V);
+        if (value instanceof COSName)
+        {
+            return ((COSName)value).getName();
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    /**
+     * Returns the default value, if any.
+     *
+     * @return A non-null string.
+     */
+    public String getDefaultValue()
+    {
+        COSBase value = getInheritableAttribute(COSName.DV);
+        if (value instanceof COSName)
+        {
+            return ((COSName)value).getName();
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    @Override
+    public String getValueAsString()
+    {
+        return getValue();
+    }
+
+    /**
+     * Sets the selected radio button, given its name.
+     * 
+     * @param value Name of radio button to select
+     * @throws IOException if the value could not be set
+     */
+    public void setValue(String value) throws IOException
+    {
+        dictionary.setName(COSName.V, value);
+        // update the appearance state (AS)
+        for (PDAnnotationWidget widget : getWidgets())
+        {
+            PDAppearanceEntry appearanceEntry = widget.getAppearance().getNormalAppearance();
+            if (((COSDictionary)appearanceEntry.getCOSObject()).containsKey(value))
+            {
+                widget.getCOSObject().setName(COSName.AS, value);
+            }
+            else
+            {
+                widget.getCOSObject().setItem(COSName.AS, COSName.OFF);
+            }
+        }
+        applyChange();
+    }
+
+    /**
+     * Sets the default value.
+     *
+     * @param value Name of radio button to select
+     * @throws IOException if the value could not be set
+     */
+    public void setDefaultValue(String value) throws IOException
+    {
+        dictionary.setName(COSName.DV, value);
     }
 }
