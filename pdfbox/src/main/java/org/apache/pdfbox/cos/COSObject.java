@@ -31,6 +31,10 @@ public class COSObject extends COSBase implements COSUpdateInfo
     private int generationNumber;
     private boolean needToBeUpdated;
 
+    private Boolean isHeaderOfObjectComplyPDFA = true;
+    private Boolean isEndOfObjectComplyPDFA = true;
+    private Boolean isHeaderFormatComplyPDFA = true;
+
     /**
      * Constructor.
      *
@@ -178,6 +182,30 @@ public class COSObject extends COSBase implements COSUpdateInfo
     public void setNeedToBeUpdated(boolean flag) 
     {
         needToBeUpdated = flag;
+    }
+
+    public Boolean isHeaderOfObjectComplyPDFA() {
+        return isHeaderOfObjectComplyPDFA;
+    }
+
+    public void setHeaderOfObjectComplyPDFA(Boolean isHeaderOfObjectComplyPDFA) {
+        this.isHeaderOfObjectComplyPDFA = isHeaderOfObjectComplyPDFA;
+    }
+
+    public Boolean isEndOfObjectComplyPDFA() {
+        return isEndOfObjectComplyPDFA;
+    }
+
+    public void setEndOfObjectComplyPDFA(Boolean isEndofObjectComplyPDFA) {
+        this.isEndOfObjectComplyPDFA = isEndofObjectComplyPDFA;
+    }
+
+    public Boolean isHeaderFormatComplyPDFA() {
+        return isHeaderFormatComplyPDFA;
+    }
+
+    public void setHeaderFormatComplyPDFA(Boolean isHeaderFormatComplyPDFA) {
+        this.isHeaderFormatComplyPDFA = isHeaderFormatComplyPDFA;
     }
 
 }
