@@ -374,6 +374,7 @@ public class COSParser extends BaseParser
         int bufOff = lastIndexOf(EOF_MARKER, buf, buf.length);
         if (bufOff < 0)
         {
+            document.setEofComplyPDFA(false);
             if (isLenient) 
             {
                 // in lenient mode the '%%EOF' isn't needed
@@ -384,6 +385,9 @@ public class COSParser extends BaseParser
             {
                 throw new IOException("Missing end of file marker '" + new String(EOF_MARKER) + "'");
             }
+        } else if (buf.length - bufOff > 6 || (buf.length - bufOff == 6 && buf[buf.length - 1] != '\r'
+                                                                        && buf[buf.length - 1] != '\n')) {
+            document.setEofComplyPDFA(false);
         }
         // find last startxref preceding EOF marker
         bufOff = lastIndexOf(STARTXREF, buf, bufOff);
