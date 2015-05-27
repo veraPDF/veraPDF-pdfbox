@@ -571,6 +571,14 @@ public final class COSName extends COSBase implements Comparable<COSName>
         return name;
     }
 
+    /**
+     * This will get a COSName object with that name. Also take into account length
+     * of current name.
+     *
+     * @param aName The name of the object.
+     *
+     * @return A COSName with the specified name.
+     */
     public static COSName getPDFName(String aName, int originalLength) {
         COSName name = null;
         if (aName != null)
