@@ -79,6 +79,62 @@ public class COSDocument extends COSBase implements Closeable
     
     private final boolean useScratchFile;
 
+    private Boolean eofComplyPDFA = true;
+    /** Header start not from first byte, or not from '%', or something else*/
+    private Boolean nonValidHeader = false;
+    /** second line start not from '%' */
+    private Boolean nonValidCommentStart = false;
+    /** in second line after '%' less than 4 symbols */
+    private Boolean nonValidCommentLength = false;
+    /** in second line after '%' first four symbols has byte value less than 128 */
+    private Boolean nonValidCommentContent = false;
+
+    public Boolean getEofComplyPDFA() {
+        return eofComplyPDFA;
+    }
+
+    public void setEofComplyPDFA(Boolean eofComplyPDFA) {
+        this.eofComplyPDFA = eofComplyPDFA;
+    }
+
+    public Boolean getNonValidHeader() {
+        return nonValidHeader;
+    }
+
+    public void setNonValidHeader(Boolean nonValidHeader) {
+        this.nonValidHeader = nonValidHeader;
+    }
+
+    public Boolean getNonValidCommentStart() {
+        return nonValidCommentStart;
+    }
+
+    public void setNonValidCommentStart(Boolean nonValidCommentStart) {
+        this.nonValidCommentStart = nonValidCommentStart;
+    }
+
+    public Boolean getNonValidCommentLength() {
+        return nonValidCommentLength;
+    }
+
+    public void setNonValidCommentLength(Boolean nonValidCommentLength) {
+        this.nonValidCommentLength = nonValidCommentLength;
+    }
+
+    public Boolean getNonValidCommentContent() {
+        return nonValidCommentContent;
+    }
+
+    public void setNonValidCommentContent(Boolean nonValidCommentContent) {
+        this.nonValidCommentContent = nonValidCommentContent;
+    }
+
+    // TODO : discard it
+    public Boolean getHeaderStatus() {
+        return !(this.nonValidCommentContent || this.nonValidCommentLength
+                || this.nonValidCommentStart || this.nonValidHeader);
+    }
+
     /**
      * Constructor.
      *
