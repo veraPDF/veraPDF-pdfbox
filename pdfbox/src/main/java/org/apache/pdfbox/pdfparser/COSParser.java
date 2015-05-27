@@ -712,11 +712,20 @@ public class COSParser extends BaseParser
     private void parseFileObject(Long offsetOrObjstmObNr, final COSObjectKey objKey, long objNr, int objGenNr, final COSObject pdfObject) throws IOException
     {
         // ---- go to object start
-        pdfSource.seek(offsetOrObjstmObNr);
+        pdfSource.seek(offsetOrObjstmObNr - 1);
+        if (!isEOL(pdfSource.read())) {
+            pdfObject.setHeaderOfObjectComplyPDFA(false);
+        }
 
         // ---- we must have an indirect object
         final long readObjNr = readObjectNumber();
+        if ((pdfSource.read() != 32) || skipSpaces() > 0) {
+            pdfObject.setHeaderFormatComplyPDFA(false);
+        }
         final int readObjGen = readGenerationNumber();
+        if ((pdfSource.read() != 32) || skipSpaces() > 0) {
+            pdfObject.setHeaderFormatComplyPDFA(false);
+        }
         readExpectedString(OBJ_MARKER, true);
 
         // ---- consistency check
@@ -727,8 +736,13 @@ public class COSParser extends BaseParser
                     + ":" + readObjGen);
         }
 
-        skipSpaces();
+        if (!isEOL()) {
+            pdfObject.setHeaderOfObjectComplyPDFA(false);
+        }
         COSBase pb = parseDirObject();
+        skipSpaces();
+        pdfSource.seek(pdfSource.getOffset() - 1);
+        int whiteSpace = pdfSource.read();
         String endObjectKey = readString();
 
         if (endObjectKey.equals(STREAM_STRING))
@@ -753,8 +767,11 @@ public class COSParser extends BaseParser
                 throw new IOException("Stream not preceded by dictionary (offset: "
                         + offsetOrObjstmObNr + ").");
             }
+
             skipSpaces();
-            endObjectKey = readLine();
+            pdfSource.seek(pdfSource.getOffset() - 1);
+            whiteSpace = pdfSource.read();
+            endObjectKey = readLineWithoutSkip();
 
             // we have case with a second 'endstream' before endobj
             if (!endObjectKey.startsWith(ENDOBJ_STRING) && endObjectKey.startsWith(ENDSTREAM_STRING))
@@ -764,7 +781,9 @@ public class COSParser extends BaseParser
                 {
                     // no other characters in extra endstream line
                     // read next line
-                    endObjectKey = readLine();
+                    whiteSpace = pdfSource.read();
+                    skipSpaces();
+                    endObjectKey = readLineWithoutSkip();
                 }
             }
         }
@@ -773,6 +792,9 @@ public class COSParser extends BaseParser
             securityHandler.decrypt(pb, objNr, objGenNr);
         }
 
+        if (!isEOL(whiteSpace)) {
+            pdfObject.setEndOfObjectComplyPDFA(false);
+        }
         pdfObject.setObject(pb);
 
         if (!endObjectKey.startsWith(ENDOBJ_STRING))
@@ -789,6 +811,12 @@ public class COSParser extends BaseParser
                         + ") at offset " + offsetOrObjstmObNr
                         + " does not end with 'endobj' but with '" + endObjectKey + "'");
             }
+        }
+
+        whiteSpace = pdfSource.read();
+        if (!isEOL(whiteSpace)) {
+            pdfObject.setEndOfObjectComplyPDFA(false);
+            pdfSource.unread(whiteSpace);
         }
     }
 
@@ -905,8 +933,11 @@ public class COSParser extends BaseParser
         try
         {
             // read 'stream'; this was already tested in parseObjectsDynamically()
-            readString(); 
-            
+            readString();
+
+            checkStreamSpacings(stream);
+
+            stream.setOriginLength(pdfSource.getOffset());
             skipWhiteSpaces();
 
             /*
@@ -937,11 +968,15 @@ public class COSParser extends BaseParser
                 out = stream.createFilteredStream();
                 readUntilEndStream(new EndstreamOutputStream(out));
             }
+
+            checkEndStreamSpacings(stream);
+
             String endStream = readString();
             if (endStream.equals("endobj") && isLenient)
             {
                 LOG.warn("stream ends with 'endobj' instead of 'endstream' at offset "
                         + pdfSource.getOffset());
+                stream.setEndStreamSpacingsComplyPDFA(false);
                 // avoid follow-up warning about missing endobj
                 pdfSource.unread(ENDOBJ);
             }
@@ -949,6 +984,7 @@ public class COSParser extends BaseParser
             {
                 LOG.warn("stream ends with '" + endStream + "' instead of 'endstream' at offset "
                         + pdfSource.getOffset());
+                stream.setEndStreamSpacingsComplyPDFA(false);
                 // unread the "extra" bytes
                 pdfSource.unread(endStream.substring(9).getBytes(ISO_8859_1));
             }
@@ -967,6 +1003,42 @@ public class COSParser extends BaseParser
             }
         }
         return stream;
+    }
+
+    private void checkStreamSpacings(COSStream stream) throws IOException {
+        int whiteSpace = pdfSource.read();
+        if (whiteSpace == 13) {
+            whiteSpace = pdfSource.read();
+            if (whiteSpace != 10) {
+                stream.setStreamSpacingsComplyPDFA(false);
+                pdfSource.unread(whiteSpace);
+            }
+        } else if (whiteSpace != 10) {
+            LOG.warn("Stream at " + pdfSource.getOffset() + " offset has no EOL marker.");
+            stream.setStreamSpacingsComplyPDFA(false);
+            pdfSource.unread(whiteSpace);
+        }
+    }
+
+    private void checkEndStreamSpacings(COSStream stream) throws IOException {
+        byte eolCount = 0;
+        skipSpaces();
+        pdfSource.seek(pdfSource.getOffset() - 2);
+        int firstSymbol = pdfSource.read();
+        int secondSymbol = pdfSource.read();
+        if (secondSymbol == 10) {
+            if (firstSymbol == 13) {
+                eolCount = 2;
+            } else {
+                eolCount = 1;
+            }
+        } else if (secondSymbol == 13) {
+            eolCount = 1;
+        } else {
+            LOG.warn("End of stream at " + pdfSource.getOffset() + " offset has no contain EOL marker.");
+            stream.setEndStreamSpacingsComplyPDFA(false);
+        }
+        stream.setOriginLength(pdfSource.getOffset() - stream.getOriginLength() - eolCount);
     }
 
     private void readValidStream(OutputStream out, COSNumber streamLengthObj) throws IOException
@@ -1686,8 +1758,11 @@ public class COSParser extends BaseParser
         // some pdf-documents are broken and the pdf-version is in one of the following lines
         if (!header.contains(headerMarker))
         {
+            if (header.contains(headerMarker.substring(1))) {
+                document.setNonValidHeader(true);
+            }
             header = readLine();
-            while (!header.contains(headerMarker))
+            while (!header.contains(headerMarker) && !header.contains(headerMarker.substring(1)))
             {
                 // if a line starts with a digit, it has to be the first one with data in it
                 if ((header.length() > 0) && (Character.isDigit(header.charAt(0))))
@@ -1696,26 +1771,28 @@ public class COSParser extends BaseParser
                 }
                 header = readLine();
             }
+        } else if (header.charAt(0) != '%') {
+            document.setNonValidHeader(true);
         }
-    
+
         // nothing found
         if (!header.contains(headerMarker))
         {
             pdfSource.seek(0);
             return false;
         }
-    
+
         //sometimes there is some garbage in the header before the header
         //actually starts, so lets try to find the header first.
         int headerStart = header.indexOf( headerMarker );
-    
+
         // greater than zero because if it is zero then there is no point of trimming
         if ( headerStart > 0 )
         {
             //trim off any leading characters
             header = header.substring( headerStart, header.length() );
         }
-    
+
         // This is used if there is garbage after the header on the same line
         if (header.startsWith(headerMarker) && !header.matches(headerMarker + "\\d.\\d"))
         {
@@ -1750,9 +1827,33 @@ public class COSParser extends BaseParser
             throw new IOException( "Error getting header version: " + header);
         }
         document.setVersion(headerVersion);
+        checkComment();
         // rewind
         pdfSource.seek(0);
         return true;
+    }
+
+    /** check second line of pdf header
+     */
+    private void checkComment() throws IOException {
+        String comment = readLine();
+
+        if (comment.charAt(0) != '%') {
+            document.setNonValidCommentStart(true);
+        }
+
+        Integer pos = comment.indexOf('%') > -1 ? comment.indexOf('%') + 1 : 0;
+        if (comment.substring(pos).trim().length() < 4) {
+            document.setNonValidCommentLength(true);
+        }
+
+        Integer repetition = Math.min(4, comment.substring(pos).length());
+        for (int i = 0; i < repetition; i++, pos++) {
+            if ((int)comment.charAt(pos) < 128) {
+                document.setNonValidCommentContent(true);
+                break;
+            }
+        }
     }
 
     /**

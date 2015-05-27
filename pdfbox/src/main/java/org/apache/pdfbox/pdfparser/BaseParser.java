@@ -877,10 +877,12 @@ public abstract class BaseParser implements Closeable
     {
         readExpectedChar('/');
         // costruisce il nome
+        int nameLength = 0;
         StringBuilder buffer = new StringBuilder();
         int c = pdfSource.read();
         while( c != -1 )
         {
+            nameLength++;
             char ch = (char)c;
             if(ch == '#')
             {
@@ -928,7 +930,7 @@ public abstract class BaseParser implements Closeable
         {
             pdfSource.unread(c);
         }
-        return COSName.getPDFName( buffer.toString() );
+        return COSName.getPDFName(buffer.toString(), nameLength - 1);
     }
 
     /**
@@ -1281,6 +1283,36 @@ public abstract class BaseParser implements Closeable
     }
 
     /**
+     * This will read bytes until the first end of line marker occurs, but EOL markers
+     * will not skipped.
+     *
+     * @return The characters between the current position and the end of the line.
+     *
+     * @throws IOException If there is an error reading from the stream.
+     */
+    protected String readLineWithoutSkip() throws IOException {
+        if (pdfSource.isEOF())
+        {
+            throw new IOException( "Error: End-of-File, expected line");
+        }
+
+        StringBuilder buffer = new StringBuilder( 11 );
+
+        int c;
+        while ((c = pdfSource.read()) != -1)
+        {
+            // CR and LF are valid EOLs
+            if (isEOL(c) || c == 32)
+            {
+                pdfSource.unread(c);
+                break;
+            }
+            buffer.append( (char)c );
+        }
+        return buffer.toString();
+    }
+
+    /**
      * This will tell if the next byte to be read is an end of line byte.
      *
      * @return true if the next byte is 0x0A or 0x0D.
@@ -1388,9 +1420,10 @@ public abstract class BaseParser implements Closeable
      *
      * @throws IOException If there is an error reading from the stream.
      */
-    protected void skipSpaces() throws IOException
+    protected int skipSpaces() throws IOException
     {
         int c = pdfSource.read();
+        int count = 1;
         // 37 is the % character, a comment
         while( isWhitespace(c) || c == 37)
         {
@@ -1401,17 +1434,21 @@ public abstract class BaseParser implements Closeable
                 while(!isEOL(c) && c != -1)
                 {
                     c = pdfSource.read();
+                    count++;
                 }
             }
             else
             {
                 c = pdfSource.read();
             }
+            count++;
         }
         if (c != -1)
         {
             pdfSource.unread(c);
+            count--;
         }
+        return count;
     }
 
     /**

@@ -76,6 +76,17 @@ public class COSStream extends COSDictionary implements Closeable
     private final boolean scratchFiles;
     private final File scratchFileDirectory;
 
+    /** calculated length of stream. correct only if spacings comply PDF/A standard
+     */
+    private Long originLength = 0L;
+
+    /** true if spacings around of 'stream' keyword comply PDF/A standard
+     */
+    private Boolean isStreamSpacingsComplyPDFA = true;
+    /** true if spacings around of 'endstream' keyword comply PDF/A standard
+     */
+    private Boolean isEndStreamSpacingsComplyPDFA = true;
+
     /**
      * Constructor.  Creates a new stream with an empty dictionary.
      *
@@ -626,6 +637,29 @@ public class COSStream extends COSDictionary implements Closeable
         return unfilteredBuffer;
     }
 
+    public Long getOriginLength() {
+        return originLength;
+    }
+
+    public void setOriginLength(Long originLength) {
+        this.originLength = originLength;
+    }
+
+    public Boolean getStreamSpacingsComplyPDFA() {
+        return isStreamSpacingsComplyPDFA;
+    }
+
+    public void setStreamSpacingsComplyPDFA(Boolean streamSpacingsComplyPDFA) {
+        this.isStreamSpacingsComplyPDFA = streamSpacingsComplyPDFA;
+    }
+
+    public Boolean getEndStreamSpacingsComplyPDFA() {
+        return isEndStreamSpacingsComplyPDFA;
+    }
+
+    public void setEndStreamSpacingsComplyPDFA(Boolean endStreamSpacingsComplyPDFA) {
+        this.isEndStreamSpacingsComplyPDFA = endStreamSpacingsComplyPDFA;
+    }
 
     @Override
     public void close() throws IOException
