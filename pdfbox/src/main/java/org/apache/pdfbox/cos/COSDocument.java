@@ -457,6 +457,10 @@ public class COSDocument extends COSBase implements Closeable
         return lastTrailer;
     }
 
+    /** This will set the document trailer.
+     *
+     * @param lastTrailer the document trailer dictionary
+     */
     public void setLastTrailer(COSDictionary lastTrailer) {
         this.lastTrailer = lastTrailer;
     }
