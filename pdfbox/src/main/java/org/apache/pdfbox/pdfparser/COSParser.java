@@ -1968,7 +1968,7 @@ public class COSParser extends BaseParser
         if ( isStandalone )
         {
             xrefTrailerResolver.nextXrefObj( objByteOffset, XRefType.STREAM );
-            xrefTrailerResolver.setTrailer( stream );
+            xrefTrailerResolver.setTrailer(stream);
         }        
         PDFXrefStreamParser parser = new PDFXrefStreamParser( stream, document, xrefTrailerResolver );
         parser.parse();
@@ -2047,4 +2047,10 @@ public class COSParser extends BaseParser
         return parseObjectDynamically(root, false);
     }
 
+    /**
+     * @return last trailer in current document
+     */
+    public COSDictionary getLastTrailer() {
+        return xrefTrailerResolver.getLastTrailer();
+    }
 }

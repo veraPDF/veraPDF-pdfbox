@@ -61,6 +61,10 @@ public class COSDocument extends COSBase implements Closeable
      * Document trailer dictionary.
      */
     private COSDictionary trailer;
+
+    /** Last document trailer. It differs from the simple trailer only if pdf file is linearized
+     */
+    private COSDictionary lastTrailer;
     
     private boolean warnMissingClose = true;
     
@@ -444,6 +448,18 @@ public class COSDocument extends COSBase implements Closeable
         trailer = newTrailer;
     }
 
+    /**
+     * This will get the last document trailer.
+     *
+     * @return the document last trailer dict
+     */
+    public COSDictionary getLastTrailer() {
+        return lastTrailer;
+    }
+
+    public void setLastTrailer(COSDictionary lastTrailer) {
+        this.lastTrailer = lastTrailer;
+    }
     /**
      * visitor pattern double dispatch method.
      *
