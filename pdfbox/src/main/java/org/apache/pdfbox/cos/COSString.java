@@ -52,6 +52,10 @@ public final class COSString extends COSBase
             Boolean.getBoolean("org.apache.pdfbox.forceParsing");
 
     private Boolean isHex = null;
+
+    public Boolean isHex() {
+        return isHex;
+    }
     /**
      * This will create a COS string from a string of hex characters.
      *
