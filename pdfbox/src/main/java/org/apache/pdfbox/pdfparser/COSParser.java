@@ -385,8 +385,8 @@ public class COSParser extends BaseParser
             {
                 throw new IOException("Missing end of file marker '" + new String(EOF_MARKER) + "'");
             }
-        } else if (buf.length - bufOff > 6 || (buf.length - bufOff == 6 && buf[buf.length - 1] != '\r'
-                                                                        && buf[buf.length - 1] != '\n')) {
+        } else if (buf.length - bufOff > 6 || (buf.length - bufOff == 6 && buf[buf.length - 1] != 0x0A
+                                                                        && buf[buf.length - 1] != 0x0D)) {
             document.setEofComplyPDFA(false);
         }
         // find last startxref preceding EOF marker
