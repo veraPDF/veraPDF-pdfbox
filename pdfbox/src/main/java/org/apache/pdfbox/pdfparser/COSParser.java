@@ -374,6 +374,7 @@ public class COSParser extends BaseParser
         int bufOff = lastIndexOf(EOF_MARKER, buf, buf.length);
         if (bufOff < 0)
         {
+            document.setEofComplyPDFA(false);
             if (isLenient) 
             {
                 // in lenient mode the '%%EOF' isn't needed
@@ -384,6 +385,9 @@ public class COSParser extends BaseParser
             {
                 throw new IOException("Missing end of file marker '" + new String(EOF_MARKER) + "'");
             }
+        } else if (buf.length - bufOff > 6 || (buf.length - bufOff == 6 && buf[buf.length - 1] != 0x0A
+                                                                        && buf[buf.length - 1] != 0x0D)) {
+            document.setEofComplyPDFA(false);
         }
         // find last startxref preceding EOF marker
         bufOff = lastIndexOf(STARTXREF, buf, bufOff);
@@ -1964,7 +1968,7 @@ public class COSParser extends BaseParser
         if ( isStandalone )
         {
             xrefTrailerResolver.nextXrefObj( objByteOffset, XRefType.STREAM );
-            xrefTrailerResolver.setTrailer( stream );
+            xrefTrailerResolver.setTrailer(stream);
         }        
         PDFXrefStreamParser parser = new PDFXrefStreamParser( stream, document, xrefTrailerResolver );
         parser.parse();
@@ -2043,4 +2047,10 @@ public class COSParser extends BaseParser
         return parseObjectDynamically(root, false);
     }
 
+    /**
+     * @return last trailer in current document
+     */
+    public COSDictionary getLastTrailer() {
+        return xrefTrailerResolver.getLastTrailer();
+    }
 }
