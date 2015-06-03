@@ -1781,7 +1781,7 @@ public class COSParser extends BaseParser
         if (!header.contains(headerMarker))
         {
             pdfSource.seek(0);
-            return false;
+            //return false;
         }
 
         //sometimes there is some garbage in the header before the header
