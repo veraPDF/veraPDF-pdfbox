@@ -1762,9 +1762,7 @@ public class COSParser extends BaseParser
         // some pdf-documents are broken and the pdf-version is in one of the following lines
         if (!header.contains(headerMarker))
         {
-            if (header.contains(headerMarker.substring(1))) {
-                document.setNonValidHeader(true);
-            }
+            document.setNonValidHeader(true);
             header = readLine();
             while (!header.contains(headerMarker) && !header.contains(headerMarker.substring(1)))
             {
