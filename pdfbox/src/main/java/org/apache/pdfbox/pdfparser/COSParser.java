@@ -730,7 +730,7 @@ public class COSParser extends BaseParser
         if ((pdfSource.read() != 32) || skipSpaces() > 0) {
             pdfObject.setHeaderFormatComplyPDFA(false);
         }
-        readExpectedString(OBJ_MARKER, true);
+        readExpectedString(OBJ_MARKER, false);
 
         // ---- consistency check
         if ((readObjNr != objKey.getNumber()) || (readObjGen != objKey.getGeneration()))

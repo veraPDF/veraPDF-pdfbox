@@ -1160,7 +1160,9 @@ public abstract class BaseParser implements Closeable
      */
     protected final void readExpectedString(final char[] expectedString, boolean skipSpaces) throws IOException
     {
-        skipSpaces();
+        if (skipSpaces) {
+            skipSpaces();
+        }
         for (char c : expectedString)
         {
             if (pdfSource.read() != c)
@@ -1170,7 +1172,9 @@ public abstract class BaseParser implements Closeable
                         + pdfSource.getOffset());
             }
         }
-        skipSpaces();
+        if (skipSpaces) {
+            skipSpaces();
+        }
     }
 
     /**
