@@ -27,4 +27,4 @@ before_install:
   - sudo apt-get install -qq fonts-liberation
   
 install:
-  - mvn clean install -DskipTests
+  - mvn clean install --fail-never
