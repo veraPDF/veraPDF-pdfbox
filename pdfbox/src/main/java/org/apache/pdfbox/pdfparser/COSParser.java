@@ -1823,6 +1823,11 @@ public class COSParser extends BaseParser
         catch (NumberFormatException exception)
         {
             LOG.debug("Can't parse the header version.", exception);
+        } finally {
+            if (headerVersion == -1f) {
+                document.setNonValidHeader(Boolean.TRUE);
+                headerVersion = 1.1f;
+            }
         }
         if (headerVersion < 0)
         {
