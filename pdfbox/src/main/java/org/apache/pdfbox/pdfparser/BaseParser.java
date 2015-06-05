@@ -557,7 +557,39 @@ public abstract class BaseParser implements Closeable
      */
     protected COSString parseCOSString() throws IOException
     {
-        char nextChar = (char)pdfSource.read();
+        Boolean isHexSymbols = true;
+        Long hexCount;
+        // offset reminder
+        long offset = pdfSource.getOffset();
+        char nextChar = (char) pdfSource.read();
+        int count = 0;
+        if (nextChar == '<') {
+            do {
+                nextChar = (char) pdfSource.read();
+                if (nextChar != '>') {
+                    if (isWhitespace(nextChar)) {
+                        // ignore space characters
+                        continue;
+                    }
+                    if (Character.digit(nextChar, 16) >= 0) {
+                        count++;
+                    }
+                    else {
+                        isHexSymbols = false;
+                        break;
+                    }
+                }
+            }
+            while (nextChar != '>');
+        }
+
+        hexCount = Long.valueOf(count);
+
+        // reset the offset to parse the COSString
+        pdfSource.seek(offset);
+
+
+        nextChar = (char)pdfSource.read();
         char openBrace;
         char closeBrace;
         if( nextChar == '(' )
@@ -717,7 +749,12 @@ public abstract class BaseParser implements Closeable
         {
             pdfSource.unread(c);
         }
-        return new COSString(out.toByteArray());
+        COSString result = new COSString(out.toByteArray());
+        if (result.isHex()) {
+            result.setHexCount(hexCount);
+            result.setIsHexSymbols(isHexSymbols);
+        }
+        return result;
     }
 
     /**
