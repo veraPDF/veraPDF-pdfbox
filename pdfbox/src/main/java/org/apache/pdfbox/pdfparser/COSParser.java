@@ -1828,9 +1828,10 @@ public class COSParser extends BaseParser
         }
         if (headerVersion < 0)
         {
-            throw new IOException( "Error getting header version: " + header);
+            document.setNonValidHeader(true);
+        } else {
+            document.setVersion(headerVersion);
         }
-        document.setVersion(headerVersion);
         checkComment();
         // rewind
         pdfSource.seek(0);
@@ -1842,21 +1843,25 @@ public class COSParser extends BaseParser
     private void checkComment() throws IOException {
         String comment = readLine();
 
-        if (comment.charAt(0) != '%') {
-            document.setNonValidCommentStart(true);
-        }
-
-        Integer pos = comment.indexOf('%') > -1 ? comment.indexOf('%') + 1 : 0;
-        if (comment.substring(pos).trim().length() < 4) {
-            document.setNonValidCommentLength(true);
-        }
-
-        Integer repetition = Math.min(4, comment.substring(pos).length());
-        for (int i = 0; i < repetition; i++, pos++) {
-            if ((int)comment.charAt(pos) < 128) {
-                document.setNonValidCommentContent(true);
-                break;
+        if (comment != null && !comment.isEmpty()) {
+            if (comment.charAt(0) != '%') {
+                document.setNonValidCommentStart(true);
             }
+
+            Integer pos = comment.indexOf('%') > -1 ? comment.indexOf('%') + 1 : 0;
+            if (comment.substring(pos).trim().length() < 4) {
+                document.setNonValidCommentLength(true);
+            }
+
+            Integer repetition = Math.min(4, comment.substring(pos).length());
+            for (int i = 0; i < repetition; i++, pos++) {
+                if ((int) comment.charAt(pos) < 128) {
+                    document.setNonValidCommentContent(true);
+                    break;
+                }
+            }
+        } else {
+            document.setNonValidCommentContent(true);
         }
     }
 
