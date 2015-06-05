@@ -557,39 +557,7 @@ public abstract class BaseParser implements Closeable
      */
     protected COSString parseCOSString() throws IOException
     {
-        Boolean isHexSymbols = true;
-        Long hexCount;
-        // offset reminder
-        long offset = pdfSource.getOffset();
-        char nextChar = (char) pdfSource.read();
-        int count = 0;
-        if (nextChar == '<') {
-            do {
-                nextChar = (char) pdfSource.read();
-                if (nextChar != '>') {
-                    if (isWhitespace(nextChar)) {
-                        // ignore space characters
-                        continue;
-                    }
-                    if (Character.digit(nextChar, 16) >= 0) {
-                        count++;
-                    }
-                    else {
-                        isHexSymbols = false;
-                        break;
-                    }
-                }
-            }
-            while (nextChar != '>');
-        }
-
-        hexCount = Long.valueOf(count);
-
-        // reset the offset to parse the COSString
-        pdfSource.seek(offset);
-
-
-        nextChar = (char)pdfSource.read();
+        char nextChar = (char)pdfSource.read();
         char openBrace;
         char closeBrace;
         if( nextChar == '(' )
@@ -749,12 +717,8 @@ public abstract class BaseParser implements Closeable
         {
             pdfSource.unread(c);
         }
-        COSString result = new COSString(out.toByteArray());
-        if (result.isHex()) {
-            result.setHexCount(hexCount);
-            result.setIsHexSymbols(isHexSymbols);
-        }
-        return result;
+
+        return new COSString(out.toByteArray());
     }
 
     /**
@@ -771,6 +735,35 @@ public abstract class BaseParser implements Closeable
      */
     private COSString parseCOSHexString() throws IOException
     {
+        Boolean isHexSymbols = true;
+        Long hexCount;
+        // offset reminder
+        long offset = pdfSource.getOffset();
+        char nextChar;
+        int count = 0;
+        do {
+            nextChar = (char) pdfSource.read();
+            if (nextChar != '>') {
+                if (isWhitespace(nextChar)) {
+                    // ignore space characters
+                    continue;
+                }
+                if (Character.digit(nextChar, 16) >= 0) {
+                    count++;
+                } else {
+                    isHexSymbols = false;
+                    break;
+                }
+            }
+        }
+        while (nextChar != '>');
+
+        hexCount = Long.valueOf(count);
+
+        // reset the offset to parse the COSString
+        pdfSource.seek(offset);
+
+
         final StringBuilder sBuf = new StringBuilder();
         while( true )
         {
@@ -821,7 +814,11 @@ public abstract class BaseParser implements Closeable
                 break;
             }
         }
-        return COSString.parseHex(sBuf.toString());
+        COSString result = COSString.parseHex(sBuf.toString());
+        result.setHexCount(hexCount);
+        result.setIsHexSymbols(isHexSymbols);
+
+        return result;
     }
    
     /**
