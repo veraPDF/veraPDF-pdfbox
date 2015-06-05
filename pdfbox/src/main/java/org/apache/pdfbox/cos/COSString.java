@@ -57,7 +57,7 @@ public final class COSString extends COSBase
         return isHex;
     }
 
-    private Boolean isHexSymbols;
+    private Boolean isHexSymbols = false;
 
     public Boolean getIsHexSymbols() {
         return isHexSymbols;
