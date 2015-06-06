@@ -56,6 +56,27 @@ public final class COSString extends COSBase
     public Boolean isHex() {
         return isHex;
     }
+
+    private Boolean isHexSymbols = true;
+
+    public Boolean getIsHexSymbols() {
+        return isHexSymbols;
+    }
+
+    public void setIsHexSymbols(Boolean isHexSymbols) {
+        this.isHexSymbols = isHexSymbols;
+    }
+
+    private Long hexCount = 0L;
+
+    public Long getHexCount() {
+        return hexCount;
+    }
+
+    public void setHexCount(Long hexCount) {
+        this.hexCount = hexCount;
+    }
+
     /**
      * This will create a COS string from a string of hex characters.
      *
