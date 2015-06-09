@@ -718,19 +718,19 @@ public class COSParser extends BaseParser
         // ---- go to object start
         pdfSource.seek(offsetOrObjstmObNr - 1);
         if (!isEOL(pdfSource.read())) {
-            pdfObject.setHeaderOfObjectComplyPDFA(false);
+            pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
         }
 
         // ---- we must have an indirect object
         final long readObjNr = readObjectNumber();
         if ((pdfSource.read() != 32) || skipSpaces() > 0) {
-            pdfObject.setHeaderFormatComplyPDFA(false);
+            pdfObject.setHeaderFormatComplyPDFA(Boolean.FALSE);
         }
         final int readObjGen = readGenerationNumber();
         if ((pdfSource.read() != 32) || skipSpaces() > 0) {
-            pdfObject.setHeaderFormatComplyPDFA(false);
+            pdfObject.setHeaderFormatComplyPDFA(Boolean.FALSE);
         }
-        readExpectedString(OBJ_MARKER, true);
+        readExpectedString(OBJ_MARKER, false);
 
         // ---- consistency check
         if ((readObjNr != objKey.getNumber()) || (readObjGen != objKey.getGeneration()))
@@ -741,7 +741,7 @@ public class COSParser extends BaseParser
         }
 
         if (!isEOL()) {
-            pdfObject.setHeaderOfObjectComplyPDFA(false);
+            pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
         }
         COSBase pb = parseDirObject();
         skipSpaces();
@@ -797,7 +797,7 @@ public class COSParser extends BaseParser
         }
 
         if (!isEOL(whiteSpace)) {
-            pdfObject.setEndOfObjectComplyPDFA(false);
+            pdfObject.setEndOfObjectComplyPDFA(Boolean.FALSE);
         }
         pdfObject.setObject(pb);
 
@@ -819,7 +819,7 @@ public class COSParser extends BaseParser
 
         whiteSpace = pdfSource.read();
         if (!isEOL(whiteSpace)) {
-            pdfObject.setEndOfObjectComplyPDFA(false);
+            pdfObject.setEndOfObjectComplyPDFA(Boolean.FALSE);
             pdfSource.unread(whiteSpace);
         }
     }
