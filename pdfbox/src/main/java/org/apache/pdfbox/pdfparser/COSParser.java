@@ -374,7 +374,7 @@ public class COSParser extends BaseParser
         int bufOff = lastIndexOf(EOF_MARKER, buf, buf.length);
         if (bufOff < 0)
         {
-            document.setEofComplyPDFA(false);
+            document.setEofComplyPDFA(Boolean.FALSE);
             if (isLenient) 
             {
                 // in lenient mode the '%%EOF' isn't needed
@@ -387,7 +387,7 @@ public class COSParser extends BaseParser
             }
         } else if (buf.length - bufOff > 6 || (buf.length - bufOff == 6 && buf[buf.length - 1] != 0x0A
                                                                         && buf[buf.length - 1] != 0x0D)) {
-            document.setEofComplyPDFA(false);
+            document.setEofComplyPDFA(Boolean.FALSE);
         }
         // find last startxref preceding EOF marker
         bufOff = lastIndexOf(STARTXREF, buf, bufOff);
@@ -730,7 +730,7 @@ public class COSParser extends BaseParser
         if ((pdfSource.read() != 32) || skipSpaces() > 0) {
             pdfObject.setHeaderFormatComplyPDFA(false);
         }
-        readExpectedString(OBJ_MARKER, true);
+        readExpectedString(OBJ_MARKER, false);
 
         // ---- consistency check
         if ((readObjNr != objKey.getNumber()) || (readObjGen != objKey.getGeneration()))
@@ -1762,7 +1762,7 @@ public class COSParser extends BaseParser
         // some pdf-documents are broken and the pdf-version is in one of the following lines
         if (!header.contains(headerMarker))
         {
-            document.setNonValidHeader(true);
+            document.setNonValidHeader(Boolean.TRUE);
             header = readLine();
             while (!header.contains(headerMarker) && !header.contains(headerMarker.substring(1)))
             {
@@ -1774,14 +1774,14 @@ public class COSParser extends BaseParser
                 header = readLine();
             }
         } else if (header.charAt(0) != '%') {
-            document.setNonValidHeader(true);
+            document.setNonValidHeader(Boolean.TRUE);
         }
 
         // nothing found
         if (!header.contains(headerMarker))
         {
             pdfSource.seek(0);
-            return false;
+            //return false;
         }
 
         //sometimes there is some garbage in the header before the header
@@ -1823,10 +1823,15 @@ public class COSParser extends BaseParser
         catch (NumberFormatException exception)
         {
             LOG.debug("Can't parse the header version.", exception);
+        } finally {
+            if (headerVersion == -1f) {
+                document.setNonValidHeader(Boolean.TRUE);
+                headerVersion = 1.1f;
+            }
         }
         if (headerVersion < 0)
         {
-            document.setNonValidHeader(true);
+            document.setNonValidHeader(Boolean.TRUE);
         } else {
             document.setVersion(headerVersion);
         }
@@ -1839,27 +1844,26 @@ public class COSParser extends BaseParser
     /** check second line of pdf header
      */
     private void checkComment() throws IOException {
-        String comment = readLine();
+        String comment;
+        do {
+            comment = readLine();
+        } while (comment.isEmpty());
 
-        if (comment != null && !comment.isEmpty()) {
-            if (comment.charAt(0) != '%') {
-                document.setNonValidCommentStart(true);
-            }
+        if (comment.charAt(0) != '%') {
+            document.setNonValidCommentStart(Boolean.TRUE);
+        }
 
-            Integer pos = comment.indexOf('%') > -1 ? comment.indexOf('%') + 1 : 0;
-            if (comment.substring(pos).trim().length() < 4) {
-                document.setNonValidCommentLength(true);
-            }
+        Integer pos = comment.indexOf('%') > -1 ? comment.indexOf('%') + 1 : 0;
+        if (comment.substring(pos).trim().length() < 4) {
+            document.setNonValidCommentLength(Boolean.TRUE);
+        }
 
-            Integer repetition = Math.min(4, comment.substring(pos).length());
-            for (int i = 0; i < repetition; i++, pos++) {
-                if ((int) comment.charAt(pos) < 128) {
-                    document.setNonValidCommentContent(true);
-                    break;
-                }
+        Integer repetition = Math.min(4, comment.substring(pos).length());
+        for (int i = 0; i < repetition; i++, pos++) {
+            if ((int) comment.charAt(pos) < 128) {
+                document.setNonValidCommentContent(Boolean.TRUE);
+                break;
             }
-        } else {
-            document.setNonValidCommentContent(true);
         }
     }
 
