@@ -735,7 +735,7 @@ public abstract class BaseParser implements Closeable
      */
     private COSString parseCOSHexString() throws IOException
     {
-        Boolean isHexSymbols = Boolean.FALSE;
+        Boolean isHexSymbols = Boolean.TRUE;
         Long hexCount;
         // offset reminder
         long offset = pdfSource.getOffset();
