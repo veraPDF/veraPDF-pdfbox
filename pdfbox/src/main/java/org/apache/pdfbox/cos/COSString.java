@@ -16,14 +16,14 @@
  */
 package org.apache.pdfbox.cos;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
-import java.util.Arrays;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.util.Charsets;
 import org.apache.pdfbox.util.Hex;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * A string object, which may be a text string, a PDFDocEncoded string, ASCII string, or byte string.
@@ -51,7 +51,7 @@ public final class COSString extends COSBase
     public static final boolean FORCE_PARSING =
             Boolean.getBoolean("org.apache.pdfbox.forceParsing");
 
-    private Boolean isHex = null;
+    private Boolean isHex = Boolean.FALSE;
 
     public Boolean isHex() {
         return isHex;
