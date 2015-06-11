@@ -2066,4 +2066,36 @@ public class COSParser extends BaseParser
     public COSDictionary getLastTrailer() {
         return xrefTrailerResolver.getLastTrailer();
     }
+
+    protected void isLinearized(Long fileLen) throws IOException {
+        Long offset = fileLen;
+        Map.Entry<COSObjectKey, Long> object = null;
+        for (Map.Entry<COSObjectKey, Long> entry : document.getXrefTable().entrySet()) {
+            if (offset.compareTo(entry.getValue()) > 0) {
+                object = entry;
+                offset = entry.getValue();
+            }
+        }
+
+        final COSObject pdfObject = new COSObject(null);
+        if (object != null) {
+            parseFileObject(object.getValue(),
+                    object.getKey(),
+                    object.getKey().getNumber(),
+                    object.getKey().getGeneration(),
+                    pdfObject);
+        } else throw new IllegalStateException("Document has no any object.");
+
+        if (pdfObject.getObject() != null && pdfObject.getObject() instanceof COSDictionary) {
+            final COSDictionary linearized = (COSDictionary) pdfObject.getObject();
+            if (linearized.getItem(COSName.getPDFName("Linearized")) != null) {
+                COSNumber writtenLen = (COSNumber) linearized.getItem(COSName.L);
+                if (writtenLen != null) {
+                    Boolean isLinearized = Boolean.valueOf(writtenLen.longValue() == fileLen.longValue()
+                                            && pdfSource.getOffset() < 1025);
+                    document.setIsLinearized(isLinearized);
+                }
+            }
+        }
+    }
 }

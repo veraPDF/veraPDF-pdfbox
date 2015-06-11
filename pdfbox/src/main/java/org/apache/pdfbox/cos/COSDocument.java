@@ -83,15 +83,17 @@ public class COSDocument extends COSBase implements Closeable
     
     private final boolean useScratchFile;
 
-    private Boolean eofComplyPDFA = true;
+    private Boolean eofComplyPDFA = Boolean.TRUE;
     /** Header start not from first byte, or not from '%', or something else*/
-    private Boolean nonValidHeader = false;
+    private Boolean nonValidHeader = Boolean.FALSE;
     /** second line start not from '%' */
-    private Boolean nonValidCommentStart = false;
+    private Boolean nonValidCommentStart = Boolean.FALSE;
     /** in second line after '%' less than 4 symbols */
-    private Boolean nonValidCommentLength = false;
+    private Boolean nonValidCommentLength = Boolean.FALSE;
     /** in second line after '%' first four symbols has byte value less than 128 */
-    private Boolean nonValidCommentContent = false;
+    private Boolean nonValidCommentContent = Boolean.FALSE;
+    /** true if the current document is linearized */
+    private Boolean isLinearized = Boolean.FALSE;
 
     public Boolean getEofComplyPDFA() {
         return eofComplyPDFA;
@@ -133,10 +135,12 @@ public class COSDocument extends COSBase implements Closeable
         this.nonValidCommentContent = nonValidCommentContent;
     }
 
-    // TODO : discard it
-    public Boolean getHeaderStatus() {
-        return !(this.nonValidCommentContent || this.nonValidCommentLength
-                || this.nonValidCommentStart || this.nonValidHeader);
+    public Boolean isLinearized() {
+        return isLinearized;
+    }
+
+    public void setIsLinearized(Boolean isLinearized) {
+        this.isLinearized = isLinearized;
     }
 
     /**

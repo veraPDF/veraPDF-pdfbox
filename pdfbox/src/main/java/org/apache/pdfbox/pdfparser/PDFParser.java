@@ -324,6 +324,9 @@ public class PDFParser extends COSParser
             parseDictObjects((COSDictionary) catalogObj.getObject(), (COSName[]) null);
             document.setDecrypted();
         }
+
+        isLinearized(Long.valueOf(fileLen));
+
         initialParseDone = true;
     }
 
@@ -345,7 +348,7 @@ public class PDFParser extends COSParser
             {
                 throw new IOException( "Error: Header doesn't contain versioninfo" );
             }
-    
+
             if (!initialParseDone)
             {
                 initialParse();
