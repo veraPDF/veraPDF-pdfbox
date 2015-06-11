@@ -16,28 +16,13 @@
  */
 package org.apache.pdfbox.pdfparser;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSBoolean;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSDocument;
-import org.apache.pdfbox.cos.COSInteger;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNull;
-import org.apache.pdfbox.cos.COSNumber;
-import org.apache.pdfbox.cos.COSObject;
-import org.apache.pdfbox.cos.COSString;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.io.PushBackInputStream;
-import org.apache.pdfbox.cos.COSObjectKey;
+
+import java.io.*;
+
 import static org.apache.pdfbox.util.Charsets.ISO_8859_1;
 
 /**
@@ -736,82 +721,25 @@ public abstract class BaseParser implements Closeable
     private COSString parseCOSHexString() throws IOException
     {
         Boolean isHexSymbols = Boolean.TRUE;
-        Long hexCount;
-        // offset reminder
-        long offset = pdfSource.getOffset();
-        char nextChar;
-        int count = 0;
-        do {
-            nextChar = (char) pdfSource.read();
-            if (nextChar != '>') {
-                if (isWhitespace(nextChar)) {
-                    // ignore space characters
-                    continue;
-                }
-                if (Character.digit(nextChar, 16) >= 0) {
-                    count++;
-                } else {
-                    isHexSymbols = false;
-                    break;
-                }
-            }
-        }
-        while (nextChar != '>');
-
-        hexCount = Long.valueOf(count);
-
-        // reset the offset to parse the COSString
-        pdfSource.seek(offset);
-
+        Long hexCount = Long.valueOf(0);
 
         final StringBuilder sBuf = new StringBuilder();
-        while( true )
-        {
+        while (true) {
             int c = pdfSource.read();
-            if ( isHexDigit((char)c) )
-            {
+            if (isHexDigit((char) c)) {
                 sBuf.append((char) c);
-            }
-            else if ( c == '>' )
-            {
+                hexCount++;
+            } else if (c == '>') {
                 break;
-            }
-            else if ( c < 0 ) 
-            {
-                throw new IOException( "Missing closing bracket for hex string. Reached EOS." );
-            }
-            else if ( ( c == ' ' ) || ( c == '\n' ) ||
-                    ( c == '\t' ) || ( c == '\r' ) ||
-                    ( c == '\b' ) || ( c == '\f' ) )
-            {
+            } else if (c < 0) {
+                throw new IOException("Missing closing bracket for hex string. Reached EOS.");
+            } else if ((c == ' ') || (c == '\n') ||
+                    (c == '\t') || (c == '\r') ||
+                    (c == '\b') || (c == '\f')) {
                 continue;
-            }
-            else
-            {
-                // if invalid chars was found: discard last
-                // hex character if it is not part of a pair
-                if (sBuf.length()%2!=0)
-                {
-                    sBuf.deleteCharAt(sBuf.length()-1);
-                }
-                
-                // read till the closing bracket was found
-                do 
-                {
-                    c = pdfSource.read();
-                } 
-                while ( c != '>' && c >= 0 );
-                
-                // might have reached EOF while looking for the closing bracket
-                // this can happen for malformed PDFs only. Make sure that there is
-                // no endless loop.
-                if ( c < 0 ) 
-                {
-                    throw new IOException( "Missing closing bracket for hex string. Reached EOS." );
-                }
-                
-                // exit loop
-                break;
+            } else {
+                isHexSymbols = Boolean.FALSE;
+                hexCount++;
             }
         }
         COSString result = COSString.parseHex(sBuf.toString());
