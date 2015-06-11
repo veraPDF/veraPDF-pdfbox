@@ -718,19 +718,19 @@ public class COSParser extends BaseParser
         // ---- go to object start
         pdfSource.seek(offsetOrObjstmObNr - 1);
         if (!isEOL(pdfSource.read())) {
-            pdfObject.setHeaderOfObjectComplyPDFA(false);
+            pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
         }
 
         // ---- we must have an indirect object
         final long readObjNr = readObjectNumber();
         if ((pdfSource.read() != 32) || skipSpaces() > 0) {
-            pdfObject.setHeaderFormatComplyPDFA(false);
+            pdfObject.setHeaderFormatComplyPDFA(Boolean.FALSE);
         }
         final int readObjGen = readGenerationNumber();
         if ((pdfSource.read() != 32) || skipSpaces() > 0) {
-            pdfObject.setHeaderFormatComplyPDFA(false);
+            pdfObject.setHeaderFormatComplyPDFA(Boolean.FALSE);
         }
-        readExpectedString(OBJ_MARKER, true);
+        readExpectedString(OBJ_MARKER, false);
 
         // ---- consistency check
         if ((readObjNr != objKey.getNumber()) || (readObjGen != objKey.getGeneration()))
@@ -741,7 +741,7 @@ public class COSParser extends BaseParser
         }
 
         if (!isEOL()) {
-            pdfObject.setHeaderOfObjectComplyPDFA(false);
+            pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
         }
         COSBase pb = parseDirObject();
         skipSpaces();
@@ -797,7 +797,7 @@ public class COSParser extends BaseParser
         }
 
         if (!isEOL(whiteSpace)) {
-            pdfObject.setEndOfObjectComplyPDFA(false);
+            pdfObject.setEndOfObjectComplyPDFA(Boolean.FALSE);
         }
         pdfObject.setObject(pb);
 
@@ -819,7 +819,7 @@ public class COSParser extends BaseParser
 
         whiteSpace = pdfSource.read();
         if (!isEOL(whiteSpace)) {
-            pdfObject.setEndOfObjectComplyPDFA(false);
+            pdfObject.setEndOfObjectComplyPDFA(Boolean.FALSE);
             pdfSource.unread(whiteSpace);
         }
     }
@@ -1563,7 +1563,7 @@ public class COSParser extends BaseParser
         bfSearchForObjects();
         if (bfSearchCOSObjectKeyOffsets != null)
         {
-            xrefTrailerResolver.nextXrefObj( 0, XRefType.TABLE );
+            xrefTrailerResolver.nextXrefObj(0, XRefType.TABLE);
             for (COSObjectKey objectKey : bfSearchCOSObjectKeyOffsets.keySet())
             {
                 xrefTrailerResolver.setXRef(objectKey, bfSearchCOSObjectKeyOffsets.get(objectKey));
@@ -1762,7 +1762,7 @@ public class COSParser extends BaseParser
         // some pdf-documents are broken and the pdf-version is in one of the following lines
         if (!header.contains(headerMarker))
         {
-            document.setNonValidHeader(true);
+            document.setNonValidHeader(Boolean.TRUE);
             header = readLine();
             while (!header.contains(headerMarker) && !header.contains(headerMarker.substring(1)))
             {
@@ -1774,14 +1774,15 @@ public class COSParser extends BaseParser
                 header = readLine();
             }
         } else if (header.charAt(0) != '%') {
-            document.setNonValidHeader(true);
+            document.setNonValidHeader(Boolean.TRUE);
         }
 
         // nothing found
         if (!header.contains(headerMarker))
         {
             pdfSource.seek(0);
-            return false;
+            //false mean that case PDF-1.4 (without percentage) generate IOException
+            //return false;
         }
 
         //sometimes there is some garbage in the header before the header
@@ -1798,6 +1799,7 @@ public class COSParser extends BaseParser
         // This is used if there is garbage after the header on the same line
         if (header.startsWith(headerMarker) && !header.matches(headerMarker + "\\d.\\d"))
         {
+            document.setNonValidHeader(Boolean.TRUE);
             if (header.length() < headerMarker.length() + 3)
             {
                 // No version number at all, set to 1.4 as default
@@ -1806,9 +1808,17 @@ public class COSParser extends BaseParser
             }
             else
             {
-                String headerGarbage = header.substring(headerMarker.length() + 3, header.length()) + "\n";
-                header = header.substring(0, headerMarker.length() + 3);
-                pdfSource.unread(headerGarbage.getBytes(ISO_8859_1));
+                // are we need this case at whole?
+                Integer pos = null;
+                if (header.indexOf(37) > -1) {
+                    pos = Integer.valueOf(header.indexOf(37));
+                } else if (header.contains("PDF-")) {
+                    pos = Integer.valueOf(header.indexOf("PDF-"));
+                }
+                if (pos != null) {
+                    Integer length = Math.min(8, header.substring(pos).length());
+                    header = header.substring(pos, pos + length);
+                }
             }
         }
         float headerVersion = -1;
@@ -1826,7 +1836,7 @@ public class COSParser extends BaseParser
         }
         if (headerVersion < 0)
         {
-            document.setNonValidHeader(true);
+            document.setNonValidHeader(Boolean.TRUE);
         } else {
             document.setVersion(headerVersion);
         }
@@ -1843,23 +1853,23 @@ public class COSParser extends BaseParser
 
         if (comment != null && !comment.isEmpty()) {
             if (comment.charAt(0) != '%') {
-                document.setNonValidCommentStart(true);
+                document.setNonValidCommentStart(Boolean.TRUE);
             }
 
             Integer pos = comment.indexOf('%') > -1 ? comment.indexOf('%') + 1 : 0;
             if (comment.substring(pos).trim().length() < 4) {
-                document.setNonValidCommentLength(true);
+                document.setNonValidCommentLength(Boolean.TRUE);
             }
 
             Integer repetition = Math.min(4, comment.substring(pos).length());
             for (int i = 0; i < repetition; i++, pos++) {
                 if ((int) comment.charAt(pos) < 128) {
-                    document.setNonValidCommentContent(true);
+                    document.setNonValidCommentContent(Boolean.TRUE);
                     break;
                 }
             }
         } else {
-            document.setNonValidCommentContent(true);
+            document.setNonValidCommentContent(Boolean.TRUE);
         }
     }
 

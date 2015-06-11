@@ -735,7 +735,7 @@ public abstract class BaseParser implements Closeable
      */
     private COSString parseCOSHexString() throws IOException
     {
-        Boolean isHexSymbols = true;
+        Boolean isHexSymbols = Boolean.TRUE;
         Long hexCount;
         // offset reminder
         long offset = pdfSource.getOffset();
@@ -770,7 +770,7 @@ public abstract class BaseParser implements Closeable
             int c = pdfSource.read();
             if ( isHexDigit((char)c) )
             {
-                sBuf.append( (char) c );
+                sBuf.append((char) c);
             }
             else if ( c == '>' )
             {
@@ -1194,7 +1194,9 @@ public abstract class BaseParser implements Closeable
      */
     protected final void readExpectedString(final char[] expectedString, boolean skipSpaces) throws IOException
     {
-        skipSpaces();
+        if (skipSpaces) {
+            skipSpaces();
+        }
         for (char c : expectedString)
         {
             if (pdfSource.read() != c)
@@ -1204,7 +1206,9 @@ public abstract class BaseParser implements Closeable
                         + pdfSource.getOffset());
             }
         }
-        skipSpaces();
+        if (skipSpaces) {
+            skipSpaces();
+        }
     }
 
     /**
