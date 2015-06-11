@@ -1810,16 +1810,14 @@ public class COSParser extends BaseParser
             {
                 // are we need this case at whole?
                 Integer pos = null;
-                Boolean aBreak = Boolean.FALSE;
                 if (header.indexOf(37) > -1) {
                     pos = Integer.valueOf(header.indexOf(37));
                 } else if (header.contains("PDF-")) {
                     pos = Integer.valueOf(header.indexOf("PDF-"));
-                } else {
-                    aBreak = Boolean.TRUE;
                 }
-                if (!aBreak) {
-                    header = header.substring(pos, pos + 8);
+                if (pos != null) {
+                    Integer length = Math.min(8, header.substring(pos).length());
+                    header = header.substring(pos, pos + length);
                 }
             }
         }
