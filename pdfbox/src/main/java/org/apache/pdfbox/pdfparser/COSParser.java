@@ -1891,7 +1891,11 @@ public class COSParser extends BaseParser
         {
             return false;
         }
-        
+
+        int space = pdfSource.read();
+        if (space != 0x0A && space != 0x0D || !isDigit()) {
+            document.setIsXRefEOLCompliesPDFA(Boolean.FALSE);
+        }
         // check for trailer after xref
         String str = readString();
         byte[] b = str.getBytes(ISO_8859_1);
@@ -1910,7 +1914,12 @@ public class COSParser extends BaseParser
         while(true)
         {
             // first obj id
-            long currObjID = readObjectNumber(); 
+            long currObjID = readObjectNumber();
+
+            space = pdfSource.read();
+            if (space != 0x20 && !isDigit()) {
+                document.setIsXRefSpacingsCompliesPDFA(Boolean.FALSE);
+            }
             
             // the number of objects in the xref table
             long count = readLong();

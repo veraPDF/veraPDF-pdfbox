@@ -94,6 +94,10 @@ public class COSDocument extends COSBase implements Closeable
     private Boolean nonValidCommentContent = Boolean.FALSE;
     /** true if the current document is linearized */
     private Boolean isLinearized = Boolean.FALSE;
+    /** false if xref keyword and subsection has no corresponding eol marker */
+    private Boolean isXRefEOLCompliesPDFA = Boolean.TRUE;
+    /** false if xref subsection has no corresponding spacings */
+    private Boolean isXRefSpacingsCompliesPDFA = Boolean.TRUE;
 
     public Boolean getEofComplyPDFA() {
         return eofComplyPDFA;
@@ -141,6 +145,22 @@ public class COSDocument extends COSBase implements Closeable
 
     public void setIsLinearized(Boolean isLinearized) {
         this.isLinearized = isLinearized;
+    }
+
+    public Boolean isXRefEOLCompliesPDFA() {
+        return isXRefEOLCompliesPDFA;
+    }
+
+    public void setIsXRefEOLCompliesPDFA(Boolean isXRefEOLCompliesPDFA) {
+        this.isXRefEOLCompliesPDFA = isXRefEOLCompliesPDFA;
+    }
+
+    public Boolean isXRefSpacingsCompliesPDFA() {
+        return isXRefSpacingsCompliesPDFA;
+    }
+
+    public void setIsXRefSpacingsCompliesPDFA(Boolean isXRefSpacingsCompliesPDFA) {
+        this.isXRefSpacingsCompliesPDFA = isXRefSpacingsCompliesPDFA;
     }
 
     /**
