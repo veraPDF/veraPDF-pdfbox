@@ -1893,7 +1893,7 @@ public class COSParser extends BaseParser
         }
 
         int space = pdfSource.read();
-        if (space != 0x0A && space != 0x0D || !isDigit()) {
+        if ((space != 0x0A && space != 0x0D) || !isDigit()) {
             document.setIsXRefEOLCompliesPDFA(Boolean.FALSE);
         }
         // check for trailer after xref
@@ -1917,7 +1917,7 @@ public class COSParser extends BaseParser
             long currObjID = readObjectNumber();
 
             space = pdfSource.read();
-            if (space != 0x20 && !isDigit()) {
+            if (space != 0x20 || !isDigit()) {
                 document.setIsXRefSpacingsCompliesPDFA(Boolean.FALSE);
             }
             
@@ -2093,14 +2093,14 @@ public class COSParser extends BaseParser
                     object.getKey().getNumber(),
                     object.getKey().getGeneration(),
                     pdfObject);
-        } else throw new IllegalStateException("Document has no any object.");
+        } else throw new IllegalStateException("Linearization dictionary is missed in document");
 
         if (pdfObject.getObject() != null && pdfObject.getObject() instanceof COSDictionary) {
             final COSDictionary linearized = (COSDictionary) pdfObject.getObject();
             if (linearized.getItem(COSName.getPDFName("Linearized")) != null) {
-                COSNumber writtenLen = (COSNumber) linearized.getItem(COSName.L);
-                if (writtenLen != null) {
-                    Boolean isLinearized = Boolean.valueOf(writtenLen.longValue() == fileLen.longValue()
+                COSNumber length = (COSNumber) linearized.getItem(COSName.L);
+                if (length != null) {
+                    Boolean isLinearized = Boolean.valueOf(length.longValue() == fileLen.longValue()
                                             && pdfSource.getOffset() < 1025);
                     document.setIsLinearized(isLinearized);
                 }
