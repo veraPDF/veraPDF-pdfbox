@@ -1891,7 +1891,11 @@ public class COSParser extends BaseParser
         {
             return false;
         }
-        
+
+        int space = pdfSource.read();
+        if ((space != 0x0A && space != 0x0D) || !isDigit()) {
+            document.setIsXRefEOLCompliesPDFA(Boolean.FALSE);
+        }
         // check for trailer after xref
         String str = readString();
         byte[] b = str.getBytes(ISO_8859_1);
@@ -1910,7 +1914,12 @@ public class COSParser extends BaseParser
         while(true)
         {
             // first obj id
-            long currObjID = readObjectNumber(); 
+            long currObjID = readObjectNumber();
+
+            space = pdfSource.read();
+            if (space != 0x20 || !isDigit()) {
+                document.setIsXRefSpacingsCompliesPDFA(Boolean.FALSE);
+            }
             
             // the number of objects in the xref table
             long count = readLong();
@@ -2065,5 +2074,37 @@ public class COSParser extends BaseParser
      */
     public COSDictionary getLastTrailer() {
         return xrefTrailerResolver.getLastTrailer();
+    }
+
+    protected void isLinearized(Long fileLen) throws IOException {
+        Long offset = fileLen;
+        Map.Entry<COSObjectKey, Long> object = null;
+        for (Map.Entry<COSObjectKey, Long> entry : document.getXrefTable().entrySet()) {
+            if (offset.compareTo(entry.getValue()) > 0) {
+                object = entry;
+                offset = entry.getValue();
+            }
+        }
+
+        final COSObject pdfObject = new COSObject(null);
+        if (object != null) {
+            parseFileObject(object.getValue(),
+                    object.getKey(),
+                    object.getKey().getNumber(),
+                    object.getKey().getGeneration(),
+                    pdfObject);
+        } else throw new IllegalStateException("Linearization dictionary is missed in document");
+
+        if (pdfObject.getObject() != null && pdfObject.getObject() instanceof COSDictionary) {
+            final COSDictionary linearized = (COSDictionary) pdfObject.getObject();
+            if (linearized.getItem(COSName.getPDFName("Linearized")) != null) {
+                COSNumber length = (COSNumber) linearized.getItem(COSName.L);
+                if (length != null) {
+                    Boolean isLinearized = Boolean.valueOf(length.longValue() == fileLen.longValue()
+                                            && pdfSource.getOffset() < 1025);
+                    document.setIsLinearized(isLinearized);
+                }
+            }
+        }
     }
 }
