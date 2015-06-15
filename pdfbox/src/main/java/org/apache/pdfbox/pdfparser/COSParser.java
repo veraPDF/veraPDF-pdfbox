@@ -1190,43 +1190,45 @@ public class COSParser extends BaseParser
 
     /**
      * Check the XRef table by dereferencing all objects and fixing the offset if necessary.
-     * 
+     *
      * @throws IOException if something went wrong.
      */
-    private void checkXrefOffsets() throws IOException
-    {
+    private void checkXrefOffsets() throws IOException {
         // repair mode isn't available in non-lenient mode
-        if (!isLenient)
-        {
+        if (!isLenient) {
             return;
         }
         Map<COSObjectKey, Long> xrefOffset = xrefTrailerResolver.getXrefTable();
-        if (xrefOffset != null)
-        {
-            boolean bruteForceSearch = false;
-            for (Entry<COSObjectKey, Long> objectEntry : xrefOffset.entrySet())
-            {
+        if (xrefOffset != null) {
+            List<COSObjectKey> objectsToRemove = new ArrayList<COSObjectKey>();
+            //boolean bruteForceSearch = false;
+            for (Entry<COSObjectKey, Long> objectEntry : xrefOffset.entrySet()) {
                 COSObjectKey objectKey = objectEntry.getKey();
                 Long objectOffset = objectEntry.getValue();
                 // a negative offset number represents a object number itself
                 // see type 2 entry in xref stream
                 if (objectOffset != null && objectOffset >= 0
-                        && !checkObjectKeys(objectKey, objectOffset))
-                {
-                    LOG.debug("Stop checking xref offsets as at least one couldn't be dereferenced");
-                    bruteForceSearch = true;
-                    break;
+                        && !checkObjectKeys(objectKey, objectOffset)) {
+                    objectsToRemove.add(objectKey);
+                    LOG.warn("Object " + objectKey + " has invalid offset");
+                    //LOG.debug("Stop checking xref offsets as at least one couldn't be dereferenced");
+                    //bruteForceSearch = true;
+                    //break;
                 }
             }
-            if (bruteForceSearch)
-            {
-                bfSearchForObjects();
-                if (bfSearchCOSObjectKeyOffsets != null && !bfSearchCOSObjectKeyOffsets.isEmpty())
-                {
-                    LOG.debug("Replaced read xref table with the results of a brute force search");
-                    xrefOffset.putAll(bfSearchCOSObjectKeyOffsets);
-                }
+            for (COSObjectKey key : objectsToRemove) {
+                xrefOffset.remove(key);
             }
+            //is redundant for pdf/a validation
+//            if (bruteForceSearch)
+//            {
+//                bfSearchForObjects();
+//                if (bfSearchCOSObjectKeyOffsets != null && !bfSearchCOSObjectKeyOffsets.isEmpty())
+//                {
+//                    LOG.debug("Replaced read xref table with the results of a brute force search");
+//                    xrefOffset.putAll(bfSearchCOSObjectKeyOffsets);
+//                }
+//            }
         }
     }
 
@@ -1252,7 +1254,7 @@ public class COSParser extends BaseParser
         String objectString = createObjectString(objectNr, objectGen);
         try 
         {
-            if (isString(objectString.getBytes(ISO_8859_1)))
+            if (isObjHeader(objectString))
             {
                 // everything is ok, return origin object key
                 pdfSource.seek(originOffset);
@@ -1663,6 +1665,15 @@ public class COSParser extends BaseParser
             pdfSource.unread(bytesRead, 0, numberOfBytes);
         }
         return bytesMatching;
+    }
+
+    private boolean isObjHeader(String expectedObjHeader) throws IOException {
+        long objN = readObjectNumber();
+        int genN = readGenerationNumber();
+        //to ensure that we have "obj" keyword
+        readExpectedString(OBJ_MARKER, true);
+        String actualObjHeader = createObjectString(objN, genN);
+        return actualObjHeader.equals(expectedObjHeader);
     }
 
     /**
