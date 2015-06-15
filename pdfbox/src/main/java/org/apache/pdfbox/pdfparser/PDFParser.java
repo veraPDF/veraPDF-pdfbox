@@ -318,8 +318,8 @@ public class PDFParser extends COSParser
     
         parseTrailerValuesDynamically(trailer);
     
-        COSObject catalogObj = document.getCatalog();
-        if (catalogObj != null && catalogObj.getObject() instanceof COSDictionary)
+        //COSObject catalogObj = document.getCatalog();
+        if (trailer != null && trailer instanceof COSDictionary)
         {
             //VERAPDF_PT-129: current way of document parsing exclude Info dictionary 'deep' parsing
             //parseDictObjects((COSDictionary) catalogObj.getObject(), (COSName[]) null);
