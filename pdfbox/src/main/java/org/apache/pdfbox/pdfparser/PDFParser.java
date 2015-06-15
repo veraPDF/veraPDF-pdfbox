@@ -309,9 +309,10 @@ public class PDFParser extends COSParser
         {
             trailer = parseXref(startXRefOffset);
         }
-        else if (isLenient())
+        else /*if (isLenient())*/
         {
-            trailer = rebuildTrailer();
+            throw new IOException("Document doesn't contain startxref keyword");
+            //trailer = rebuildTrailer();
         }
         // prepare decryption if necessary
         prepareDecryption();
