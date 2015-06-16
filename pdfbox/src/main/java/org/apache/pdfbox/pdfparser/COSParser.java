@@ -654,7 +654,7 @@ public class COSParser extends BaseParser
     protected final COSBase parseObjectDynamically(COSObject obj,
             boolean requireExistingNotCompressedObj) throws IOException
     {
-        return parseObjectDynamically(obj.getObjectNumber(), 
+        return parseObjectDynamically(obj.getObjectNumber(),
                 obj.getGenerationNumber(), requireExistingNotCompressedObj);
     }
 
@@ -716,9 +716,14 @@ public class COSParser extends BaseParser
     private void parseFileObject(Long offsetOrObjstmObNr, final COSObjectKey objKey, long objNr, int objGenNr, final COSObject pdfObject) throws IOException
     {
         // ---- go to object start
-        pdfSource.seek(offsetOrObjstmObNr - 1);
-        if (!isEOL(pdfSource.read())) {
+        pdfSource.seek(offsetOrObjstmObNr);
+        if (skipSpaces() > 2) {
             pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
+        } else {
+            pdfSource.seek(pdfSource.getOffset() - 1);
+            if (!isEOL()) {
+                pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
+            }
         }
 
         // ---- we must have an indirect object
