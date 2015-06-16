@@ -2085,6 +2085,10 @@ public class COSParser extends BaseParser
         return parseObjectDynamically(root, false);
     }
 
+    public COSDictionary getFirstTrailer() {
+        return xrefTrailerResolver.getFirstTrailer();
+    }
+
     /**
      * @return last trailer in current document
      */
