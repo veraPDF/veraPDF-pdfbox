@@ -65,6 +65,9 @@ public class COSDocument extends COSBase implements Closeable
     /** Last document trailer. It differs from the simple trailer only if pdf file is linearized
      */
     private COSDictionary lastTrailer;
+
+    //PT-153: need to get clear first trailer of document
+    private COSDictionary firstTrailer;
     
     private boolean warnMissingClose = true;
     
@@ -470,6 +473,19 @@ public class COSDocument extends COSBase implements Closeable
     public void setTrailer(COSDictionary newTrailer)
     {
         trailer = newTrailer;
+    }
+
+    /**
+     * This will get the first document trailer. There was a need makes it possible for PT-153
+     *
+     * @return the document first trailer dict
+     */
+    public COSDictionary getFirstTrailer() {
+        return firstTrailer;
+    }
+
+    public void setFirstTrailer(COSDictionary firstTrailer) {
+        this.firstTrailer = firstTrailer;
     }
 
     /**

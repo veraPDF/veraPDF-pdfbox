@@ -290,6 +290,7 @@ public class PDFParser extends COSParser
     public PDDocument getPDDocument() throws IOException
     {
         getDocument().setLastTrailer(getLastTrailer());
+        getDocument().setFirstTrailer(getFirstTrailer());
         return new PDDocument( getDocument(), this, accessPermission );
     }
 
@@ -319,10 +320,12 @@ public class PDFParser extends COSParser
     
         parseTrailerValuesDynamically(trailer);
     
-        COSObject catalogObj = document.getCatalog();
-        if (catalogObj != null && catalogObj.getObject() instanceof COSDictionary)
+        //COSObject catalogObj = document.getCatalog();
+        if (trailer != null && trailer instanceof COSDictionary)
         {
-            parseDictObjects((COSDictionary) catalogObj.getObject(), (COSName[]) null);
+            //VERAPDF_PT-129: current way of document parsing exclude Info dictionary 'deep' parsing
+            //parseDictObjects((COSDictionary) catalogObj.getObject(), (COSName[]) null);
+            parseDictObjects(trailer, (COSName[]) null);
             document.setDecrypted();
         }
 

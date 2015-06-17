@@ -21,21 +21,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Queue;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.Vector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -654,7 +641,7 @@ public class COSParser extends BaseParser
     protected final COSBase parseObjectDynamically(COSObject obj,
             boolean requireExistingNotCompressedObj) throws IOException
     {
-        return parseObjectDynamically(obj.getObjectNumber(), 
+        return parseObjectDynamically(obj.getObjectNumber(),
                 obj.getGenerationNumber(), requireExistingNotCompressedObj);
     }
 
@@ -716,9 +703,14 @@ public class COSParser extends BaseParser
     private void parseFileObject(Long offsetOrObjstmObNr, final COSObjectKey objKey, long objNr, int objGenNr, final COSObject pdfObject) throws IOException
     {
         // ---- go to object start
-        pdfSource.seek(offsetOrObjstmObNr - 1);
-        if (!isEOL(pdfSource.read())) {
+        pdfSource.seek(offsetOrObjstmObNr);
+        if (skipSpaces() > 2) {
             pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
+        } else {
+            pdfSource.seek(pdfSource.getOffset() - 1);
+            if (!isEOL()) {
+                pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
+            }
         }
 
         // ---- we must have an indirect object
@@ -2080,6 +2072,10 @@ public class COSParser extends BaseParser
         return parseObjectDynamically(root, false);
     }
 
+    public COSDictionary getFirstTrailer() {
+        return xrefTrailerResolver.getFirstTrailer();
+    }
+
     /**
      * @return last trailer in current document
      */
@@ -2088,14 +2084,7 @@ public class COSParser extends BaseParser
     }
 
     protected void isLinearized(Long fileLen) throws IOException {
-        Long offset = fileLen;
-        Map.Entry<COSObjectKey, Long> object = null;
-        for (Map.Entry<COSObjectKey, Long> entry : document.getXrefTable().entrySet()) {
-            if (offset.compareTo(entry.getValue()) > 0) {
-                object = entry;
-                offset = entry.getValue();
-            }
-        }
+        Map.Entry<COSObjectKey, Long> object = getFirstDictionary();
 
         final COSObject pdfObject = new COSObject(null);
         if (object != null) {
@@ -2104,7 +2093,10 @@ public class COSParser extends BaseParser
                     object.getKey().getNumber(),
                     object.getKey().getGeneration(),
                     pdfObject);
-        } else throw new IllegalStateException("Linearization dictionary is missed in document");
+        } else {
+            LOG.warn("Linearization dictionary is missed in document");
+            return ;
+        }
 
         if (pdfObject.getObject() != null && pdfObject.getObject() instanceof COSDictionary) {
             final COSDictionary linearized = (COSDictionary) pdfObject.getObject();
@@ -2117,5 +2109,24 @@ public class COSParser extends BaseParser
                 }
             }
         }
+    }
+
+    private Entry<COSObjectKey, Long> getFirstDictionary() throws IOException {
+        Long offset = 0L;
+        pdfSource.seek(offset);
+        skipSpaces();
+        offset = Long.valueOf(pdfSource.getOffset());
+        final int bound = Math.min(pdfSource.available(), 1025);
+
+        for (; offset < bound; offset++) {
+            try {
+                pdfSource.seek(offset);
+                Long objNr = readObjectNumber();
+                Integer genNr = readGenerationNumber();
+                readExpectedString(OBJ_MARKER, Boolean.TRUE);
+                return new AbstractMap.SimpleEntry<COSObjectKey, Long>(new COSObjectKey(objNr, genNr), offset);
+            } catch (IOException ignore) {/*  */}
+        }
+        return null;
     }
 }
