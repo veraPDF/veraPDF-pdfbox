@@ -476,7 +476,7 @@ public class COSDocument extends COSBase implements Closeable
     }
 
     /**
-     * This will get the first document trailer. There was a need makes it possible for PT-153
+     * This will get the first document trailer. It's required for PT-153
      *
      * @return the document first trailer dict
      */

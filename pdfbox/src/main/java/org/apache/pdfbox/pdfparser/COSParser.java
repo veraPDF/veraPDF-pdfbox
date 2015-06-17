@@ -2112,20 +2112,18 @@ public class COSParser extends BaseParser
     }
 
     private Entry<COSObjectKey, Long> getFirstDictionary() throws IOException {
-        Long offset = 0L;
-        pdfSource.seek(offset);
+        pdfSource.seek(0L);
         skipSpaces();
-        offset = Long.valueOf(pdfSource.getOffset());
         final int bound = Math.min(pdfSource.available(), 1025);
 
-        for (; offset < bound; offset++) {
+        for (Long offset = Long.valueOf(pdfSource.getOffset()); offset < bound; offset++) {
             try {
                 pdfSource.seek(offset);
                 Long objNr = readObjectNumber();
                 Integer genNr = readGenerationNumber();
                 readExpectedString(OBJ_MARKER, Boolean.TRUE);
                 return new AbstractMap.SimpleEntry<COSObjectKey, Long>(new COSObjectKey(objNr, genNr), offset);
-            } catch (IOException ignore) {/*  */}
+            } catch (IOException ignore) {}
         }
         return null;
     }
