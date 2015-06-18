@@ -19,10 +19,7 @@ package org.apache.pdfbox.pdmodel.graphics.color;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSStream;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.common.PDStream;
@@ -61,7 +58,18 @@ public final class PDOutputIntent implements COSObjectable
 
     public COSStream getDestOutputIntent()
     {
-        return (COSStream) dictionary.getItem(COSName.DEST_OUTPUT_PROFILE);
+        final COSBase item = dictionary.getItem(COSName.DEST_OUTPUT_PROFILE);
+        return getDestOutputIntent(item);
+    }
+
+    private COSStream getDestOutputIntent(COSBase object) {
+        if (object instanceof COSStream) {
+            return (COSStream) object;
+        } else if (object instanceof COSObject) {
+            return getDestOutputIntent(((COSObject) object).getObject());
+        } else {
+            return null;
+        }
     }
 
     public String getInfo()
