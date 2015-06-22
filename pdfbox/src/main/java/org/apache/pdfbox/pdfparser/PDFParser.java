@@ -290,7 +290,7 @@ public class PDFParser extends COSParser
     public PDDocument getPDDocument() throws IOException
     {
         getDocument().setLastTrailer(getLastTrailer());
-        getDocument().setFirstTrailer(getFirstTrailer());
+        getDocument().setFirstPageTrailer(getFirstTrailer());
         return new PDDocument( getDocument(), this, accessPermission );
     }
 
