@@ -475,6 +475,10 @@ public final class PDImageXObject extends PDXObject implements PDImage
         getCOSStream().setItem(COSName.COLORSPACE, cs != null ? cs.getCOSObject() : null);
     }
 
+    public PDResources getResources() {
+        return resources;
+    }
+
     @Override
     public int getHeight()
     {
