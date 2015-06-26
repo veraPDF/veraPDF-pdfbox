@@ -24,7 +24,9 @@ jdk:
 
 before_install:
   - sudo apt-get update -qq
+
+install:
   - sudo apt-get install -qq fonts-liberation
   
-install:
+script:
   - mvn clean install --fail-never
