@@ -67,7 +67,7 @@ public class COSDocument extends COSBase implements Closeable
     private COSDictionary lastTrailer;
 
     //PT-153: need to get clear first trailer of document
-    private COSDictionary firstTrailer;
+    private COSDictionary firstPageTrailer;
     
     private boolean warnMissingClose = true;
     
@@ -480,12 +480,12 @@ public class COSDocument extends COSBase implements Closeable
      *
      * @return the document first trailer dict
      */
-    public COSDictionary getFirstTrailer() {
-        return firstTrailer;
+    public COSDictionary getFirstPageTrailer() {
+        return firstPageTrailer;
     }
 
-    public void setFirstTrailer(COSDictionary firstTrailer) {
-        this.firstTrailer = firstTrailer;
+    public void setFirstPageTrailer(COSDictionary firstPageTrailer) {
+        this.firstPageTrailer = firstPageTrailer;
     }
 
     /**

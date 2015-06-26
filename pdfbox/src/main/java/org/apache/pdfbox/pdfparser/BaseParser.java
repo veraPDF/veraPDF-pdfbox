@@ -733,9 +733,9 @@ public abstract class BaseParser implements Closeable
                 break;
             } else if (c < 0) {
                 throw new IOException("Missing closing bracket for hex string. Reached EOS.");
-            } else if ((c == ' ') || (c == '\n') ||
-                    (c == '\t') || (c == '\r') ||
-                    (c == '\b') || (c == '\f')) {
+            } else if ((c == 0x20) || (c == 0x0A) ||
+                    (c == 0x09) || (c == 0x0D) ||
+                    (c == 0x0C) || (c == 0x00)) {// white-space characters described in ISO 19005-1, paragraph 3.17
                 continue;
             } else {
                 isHexSymbols = Boolean.FALSE;

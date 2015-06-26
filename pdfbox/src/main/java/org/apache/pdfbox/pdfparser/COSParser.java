@@ -372,9 +372,14 @@ public class COSParser extends BaseParser
             {
                 throw new IOException("Missing end of file marker '" + new String(EOF_MARKER) + "'");
             }
-        } else if (buf.length - bufOff > 6 || (buf.length - bufOff == 6 && buf[buf.length - 1] != 0x0A
-                                                                        && buf[buf.length - 1] != 0x0D)) {
-            document.setEofComplyPDFA(false);
+        } else {
+            final Boolean isUnsingle = buf.length - bufOff == 6 && buf[buf.length - 1] != 0x0A
+                    && buf[buf.length - 1] != 0x0D;
+            final Boolean isUntwin = buf.length - bufOff == 7 && buf[buf.length - 2] != 0x0D
+                    && buf[buf.length - 1] != 0x0A;
+            if (buf.length - bufOff > 7 || isUnsingle || isUntwin) {
+                document.setEofComplyPDFA(Boolean.FALSE);
+            }
         }
         // find last startxref preceding EOF marker
         bufOff = lastIndexOf(STARTXREF, buf, bufOff);
