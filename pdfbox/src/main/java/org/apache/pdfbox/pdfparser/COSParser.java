@@ -43,10 +43,10 @@ import static org.apache.pdfbox.util.Charsets.ISO_8859_1;
 
 /**
  * PDF-Parser which first reads startxref and xref tables in order to know valid objects and parse only these objects.
- * 
+ *
  * First {@link PDFParser#parse()} or  {@link FDFParser#parse()} must be called before page objects
  * can be retrieved, e.g. {@link PDFParser#getPDDocument()}.
- * 
+ *
  * This class is a much enhanced version of <code>QuickParser</code> presented in <a
  * href="https://issues.apache.org/jira/browse/PDFBOX-1104">PDFBOX-1104</a> by Jeremy Villalobos.
  */
@@ -54,7 +54,7 @@ public class COSParser extends BaseParser
 {
     private static final String PDF_HEADER = "%PDF-";
     private static final String FDF_HEADER = "%FDF-";
-    
+
     private static final String PDF_DEFAULT_VERSION = "1.4";
     private static final String FDF_DEFAULT_VERSION = "1.0";
 
@@ -63,18 +63,18 @@ public class COSParser extends BaseParser
     private static final char[] STARTXREF = new char[] { 's','t','a','r','t','x','r','e','f' };
 
     private static final long MINIMUM_SEARCH_OFFSET = 6;
-    
+
     private static final int X = 'x';
 
-    /**
+     /**
      * Only parse the PDF file minimally allowing access to basic information.
      */
-    public static final String SYSPROP_PARSEMINIMAL = 
+    public static final String SYSPROP_PARSEMINIMAL =
             "org.apache.pdfbox.pdfparser.nonSequentialPDFParser.parseMinimal";
-    
+
     /**
      * The range within the %%EOF marker will be searched.
-     * Useful if there are additional characters after %%EOF within the PDF. 
+     * Useful if there are additional characters after %%EOF within the PDF.
      */
     public static final String SYSPROP_EOFLOOKUPRANGE =
             "org.apache.pdfbox.pdfparser.nonSequentialPDFParser.eofLookupRange";
@@ -93,7 +93,7 @@ public class COSParser extends BaseParser
     protected static final char[] OBJ_MARKER = new char[] { 'o', 'b', 'j' };
 
     private long trailerOffset;
-    
+
     /**
      * file length.
      */
@@ -120,22 +120,22 @@ public class COSParser extends BaseParser
     /**
      *  how many trailing bytes to read for EOF marker.
      */
-    private int readTrailBytes = DEFAULT_TRAIL_BYTECOUNT; 
+    private int readTrailBytes = DEFAULT_TRAIL_BYTECOUNT;
 
     private static final Log LOG = LogFactory.getLog(COSParser.class);
 
-    /** 
+    /**
      * Collects all Xref/trailer objects and resolves them into single
-     * object using startxref reference. 
+     * object using startxref reference.
      */
     protected XrefTrailerResolver xrefTrailerResolver = new XrefTrailerResolver();
 
 
     /**
-     * The prefix for the temp file being used. 
+     * The prefix for the temp file being used.
      */
     public static final String TMP_FILE_PREFIX = "tmpPDF";
-    
+
     /**
      * Default constructor.
      */
@@ -145,7 +145,7 @@ public class COSParser extends BaseParser
 
     /**
      * Constructor.
-     * 
+     *
      * @param input inputStream of the pdf to be read
      * @throws IOException if something went wrong
      */
@@ -157,16 +157,16 @@ public class COSParser extends BaseParser
     /**
      * Sets how many trailing bytes of PDF file are searched for EOF marker and 'startxref' marker. If not set we use
      * default value {@link #DEFAULT_TRAIL_BYTECOUNT}.
-     * 
+     *
      * <p>We check that new value is at least 16. However for practical use cases this value should not be lower than
      * 1000; even 2000 was found to not be enough in some cases where some trailing garbage like HTML snippets followed
      * the EOF marker.</p>
-     * 
+     *
      * <p>
      * In case system property {@link #SYSPROP_EOFLOOKUPRANGE} is defined this value will be set on initialization but
      * can be overwritten later.
      * </p>
-     * 
+     *
      * @param byteCount number of trailing bytes
      */
     public void setEOFLookupRange(int byteCount)
@@ -179,7 +179,7 @@ public class COSParser extends BaseParser
 
     /**
      * Parses cross reference tables.
-     * 
+     *
      * @param startXRefOffset start offset of the first table
      * @return the trailer dictionary
      * @throws IOException if something went wrong
@@ -293,7 +293,11 @@ public class COSParser extends BaseParser
         document.setTrailer(trailer);
         document.setIsXRefStream(XRefType.STREAM == xrefTrailerResolver.getXrefType());
         // check the offsets of all referenced objects
-        checkXrefOffsets();
+        if (validationParsing) {
+            checkXrefOffsets();
+        } else {
+            strictCheckXrefOffsets();
+        }
         // copy xref table
         document.addXRefTable(xrefTrailerResolver.getXrefTable());
         return trailer;
@@ -301,7 +305,7 @@ public class COSParser extends BaseParser
 
     /**
      * Parses an xref object stream starting with indirect object id.
-     * 
+     *
      * @return value of PREV item in dictionary or <code>-1</code> if no such item exists
      */
     private long parseXrefObjStream(long objByteOffset, boolean isStandalone) throws IOException
@@ -318,12 +322,12 @@ public class COSParser extends BaseParser
 
         return dict.getLong(COSName.PREV);
     }
-    
+
     /**
      * Looks for and parses startxref. We first look for last '%%EOF' marker (within last
      * {@link #DEFAULT_TRAIL_BYTECOUNT} bytes (or range set via {@link #setEOFLookupRange(int)}) and go back to find
      * <code>startxref</code>.
-     * 
+     *
      * @return the offset of StartXref
      * @throws IOException If something went wrong.
      */
@@ -361,23 +365,27 @@ public class COSParser extends BaseParser
         int bufOff = lastIndexOf(EOF_MARKER, buf, buf.length);
         if (bufOff < 0)
         {
-            document.setEofComplyPDFA(false);
-            if (isLenient) 
+            if (validationParsing) {
+                // pdf/a-1b specification, clause 6.1.3
+                document.setEofComplyPDFA(false);
+            }
+            if (isLenient)
             {
                 // in lenient mode the '%%EOF' isn't needed
                 bufOff = buf.length;
                 LOG.debug("Missing end of file marker '" + new String(EOF_MARKER) + "'");
-            } 
-            else 
+            }
+            else
             {
                 throw new IOException("Missing end of file marker '" + new String(EOF_MARKER) + "'");
             }
         } else {
-            final Boolean isUnsingle = buf.length - bufOff == 6 && buf[buf.length - 1] != 0x0A
-                    && buf[buf.length - 1] != 0x0D;
-            final Boolean isUntwin = buf.length - bufOff == 7 && buf[buf.length - 2] != 0x0D
-                    && buf[buf.length - 1] != 0x0A;
-            if (buf.length - bufOff > 7 || isUnsingle || isUntwin) {
+            // If there's more than six bytes after the start offset of the last eof marker
+            // or 5th and 6th bytes are not EOL markers we consider the document as an invalid PDF/A document
+            // 0x0A - LF (10), 0x0D - CR (13)
+            final Boolean isNotSingleEOL = buf.length - bufOff == 6 && buf[buf.length - 1] != 0x0A && buf[buf.length - 1] != 0x0D;
+            final Boolean isNotCRLFEOL = buf.length - bufOff == 7 && buf[buf.length - 2] != 0x0D && buf[buf.length - 1] != 0x0A;
+            if (buf.length - bufOff > 7 || isNotSingleEOL || isNotCRLFEOL) {
                 document.setEofComplyPDFA(Boolean.FALSE);
             }
         }
@@ -387,7 +395,7 @@ public class COSParser extends BaseParser
 
         if (bufOff < 0)
         {
-            if (isLenient) 
+            if (isLenient)
             {
                 LOG.debug("Can't find offset for startxref");
                 return -1;
@@ -399,14 +407,14 @@ public class COSParser extends BaseParser
         }
         return startXRefOffset;
     }
-    
+
     /**
      * Searches last appearance of pattern within buffer. Lookup before _lastOff and goes back until 0.
-     * 
+     *
      * @param pattern pattern to search for
      * @param buf buffer to search pattern in
      * @param endOff offset (exclusive) where lookup starts at
-     * 
+     *
      * @return start offset of pattern within buffer or <code>-1</code> if pattern could not be found
      */
     protected int lastIndexOf(final char[] pattern, final byte[] buf, final int endOff)
@@ -438,7 +446,7 @@ public class COSParser extends BaseParser
         }
         return -1;
     }
-    
+
     /**
      * Return true if parser is lenient. Meaning auto healing capacity of the parser are used.
      *
@@ -634,13 +642,13 @@ public class COSParser extends BaseParser
     }
 
     /**
-     * This will parse the next object from the stream and add it to the local state. 
-     * 
+     * This will parse the next object from the stream and add it to the local state.
+     *
      * @param obj object to be parsed (we only take object number and generation number for lookup start offset)
      * @param requireExistingNotCompressedObj if <code>true</code> object to be parsed must not be contained within
      * compressed stream
      * @return the parsed object (which is also added to document object)
-     * 
+     *
      * @throws IOException If an IO error occurs.
      */
     protected final COSBase parseObjectDynamically(COSObject obj,
@@ -651,17 +659,17 @@ public class COSParser extends BaseParser
     }
 
     /**
-     * This will parse the next object from the stream and add it to the local state. 
+     * This will parse the next object from the stream and add it to the local state.
      * It's reduced to parsing an indirect object.
-     * 
+     *
      * @param objNr object number of object to be parsed
      * @param objGenNr object generation number of object to be parsed
      * @param requireExistingNotCompressedObj if <code>true</code> the object to be parsed must be defined in xref
      * (comment: null objects may be missing from xref) and it must not be a compressed object within object stream
      * (this is used to circumvent being stuck in a loop in a malicious PDF)
-     * 
+     *
      * @return the parsed object (which is also added to document object)
-     * 
+     *
      * @throws IOException If an IO error occurs.
      */
     protected COSBase parseObjectDynamically(long objNr, int objGenNr,
@@ -709,9 +717,10 @@ public class COSParser extends BaseParser
     {
         // ---- go to object start
         pdfSource.seek(offsetOrObjstmObNr);
-        if (skipSpaces() > 2) {
-            pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
-        } else {
+        if (validationParsing) {
+            //Check that if offset doesn't point to obj key there is eol character before obj key
+            //pdf/a-1b spec, clause 6.1.8
+            skipSpaces();
             pdfSource.seek(pdfSource.getOffset() - 1);
             if (!isEOL()) {
                 pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
@@ -720,14 +729,17 @@ public class COSParser extends BaseParser
 
         // ---- we must have an indirect object
         final long readObjNr = readObjectNumber();
-        if ((pdfSource.read() != 32) || skipSpaces() > 0) {
+        if (validationParsing && ((pdfSource.read() != 32) || skipSpaces() > 0)) {
+            //check correct spacing (6.1.8 clause)
             pdfObject.setHeaderFormatComplyPDFA(Boolean.FALSE);
         }
         final int readObjGen = readGenerationNumber();
-        if ((pdfSource.read() != 32) || skipSpaces() > 0) {
+        if (validationParsing && ((pdfSource.read() != 32) || skipSpaces() > 0)) {
+            //check correct spacing (6.1.8 clause)
             pdfObject.setHeaderFormatComplyPDFA(Boolean.FALSE);
         }
-        readExpectedString(OBJ_MARKER, false);
+        //while parsing pdf document for further validation we don't want to skip any spaces
+        readExpectedString(OBJ_MARKER, !validationParsing);
 
         // ---- consistency check
         if ((readObjNr != objKey.getNumber()) || (readObjGen != objKey.getGeneration()))
@@ -737,13 +749,18 @@ public class COSParser extends BaseParser
                     + ":" + readObjGen);
         }
 
-        if (!isEOL()) {
+        if (validationParsing && !isEOL()) {
+            // eol marker shall follow the "obj" keyword
             pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
         }
         COSBase pb = parseDirObject();
-        skipSpaces();
-        pdfSource.seek(pdfSource.getOffset() - 1);
-        int whiteSpace = pdfSource.read();
+        int eolMarker = 0;
+        if (validationParsing) {
+            // eolMarker stores symbol before endobj or stream keyword for pdf/a validation
+            skipSpaces();
+            pdfSource.seek(pdfSource.getOffset() - 1);
+            eolMarker = pdfSource.read();
+        }
         String endObjectKey = readString();
 
         if (endObjectKey.equals(STREAM_STRING))
@@ -770,21 +787,28 @@ public class COSParser extends BaseParser
             }
 
             skipSpaces();
-            pdfSource.seek(pdfSource.getOffset() - 1);
-            whiteSpace = pdfSource.read();
-            endObjectKey = readLineWithoutSkip();
-
+            if (validationParsing) {
+                pdfSource.seek(pdfSource.getOffset() - 1);
+                eolMarker = pdfSource.read();
+                endObjectKey = readLineWithoutWhitespacesSkip();
+            } else {
+                endObjectKey = readLine();
+            }
             // we have case with a second 'endstream' before endobj
             if (!endObjectKey.startsWith(ENDOBJ_STRING) && endObjectKey.startsWith(ENDSTREAM_STRING))
             {
                 endObjectKey = endObjectKey.substring(9).trim();
                 if (endObjectKey.length() == 0)
                 {
-                    // no other characters in extra endstream line
-                    // read next line
-                    whiteSpace = pdfSource.read();
-                    skipSpaces();
-                    endObjectKey = readLineWithoutSkip();
+                    if (validationParsing) {
+                        skipSpaces();
+                        endObjectKey = readLineWithoutWhitespacesSkip();
+                        eolMarker = pdfSource.read();
+                    } else {
+                        // no other characters in extra endstream line
+                        // read next line
+                        endObjectKey = readLine();
+                    }
                 }
             }
         }
@@ -793,7 +817,8 @@ public class COSParser extends BaseParser
             securityHandler.decrypt(pb, objNr, objGenNr);
         }
 
-        if (!isEOL(whiteSpace)) {
+        //pdf/a-1b clause 6.1.8
+        if (validationParsing && !isEOL(eolMarker)) {
             pdfObject.setEndOfObjectComplyPDFA(Boolean.FALSE);
         }
         pdfObject.setObject(pb);
@@ -814,10 +839,10 @@ public class COSParser extends BaseParser
             }
         }
 
-        whiteSpace = pdfSource.read();
-        if (!isEOL(whiteSpace)) {
+        eolMarker = pdfSource.read();
+        if (!isEOL(eolMarker)) {
             pdfObject.setEndOfObjectComplyPDFA(Boolean.FALSE);
-            pdfSource.unread(whiteSpace);
+            pdfSource.unread(eolMarker);
         }
     }
 
@@ -846,11 +871,11 @@ public class COSParser extends BaseParser
             }
         }
     }
-    
+
     private boolean inGetLength = false;
 
-    /** 
-     * Returns length value referred to or defined in given object. 
+    /**
+     * Returns length value referred to or defined in given object.
      */
     private COSNumber getLength(final COSBase lengthBaseObj) throws IOException
     {
@@ -909,7 +934,7 @@ public class COSParser extends BaseParser
         }
         return retVal;
     }
-    
+
     private static final int STREAMCOPYBUFLEN = 8192;
     private final byte[] streamCopyBuf = new byte[STREAMCOPYBUFLEN];
 
@@ -936,9 +961,12 @@ public class COSParser extends BaseParser
             // read 'stream'; this was already tested in parseObjectsDynamically()
             readString();
 
-            checkStreamSpacings(stream);
+            // pdf/a-1b specification, clause 6.1.7
+            if (validationParsing) {
+                checkStreamSpacings(stream);
+                stream.setOriginLength(pdfSource.getOffset());
+            }
 
-            stream.setOriginLength(pdfSource.getOffset());
             skipWhiteSpaces();
 
             /*
@@ -970,14 +998,19 @@ public class COSParser extends BaseParser
                 readUntilEndStream(new EndstreamOutputStream(out));
             }
 
-            checkEndStreamSpacings(stream);
+            // pdf/a-1b specification, clause 6.1.7
+            if (validationParsing) {
+                checkEndStreamSpacings(stream);
+            }
 
             String endStream = readString();
             if (endStream.equals("endobj") && isLenient)
             {
                 LOG.warn("stream ends with 'endobj' instead of 'endstream' at offset "
                         + pdfSource.getOffset());
-                stream.setEndStreamSpacingsComplyPDFA(false);
+                if (validationParsing) {
+                    stream.setEndStreamSpacingsComplyPDFA(Boolean.FALSE);
+                }
                 // avoid follow-up warning about missing endobj
                 pdfSource.unread(ENDOBJ);
             }
@@ -985,7 +1018,9 @@ public class COSParser extends BaseParser
             {
                 LOG.warn("stream ends with '" + endStream + "' instead of 'endstream' at offset "
                         + pdfSource.getOffset());
-                stream.setEndStreamSpacingsComplyPDFA(false);
+                if (validationParsing) {
+                    stream.setEndStreamSpacingsComplyPDFA(Boolean.FALSE);
+                }
                 // unread the "extra" bytes
                 pdfSource.unread(endStream.substring(9).getBytes(ISO_8859_1));
             }
@@ -1011,12 +1046,12 @@ public class COSParser extends BaseParser
         if (whiteSpace == 13) {
             whiteSpace = pdfSource.read();
             if (whiteSpace != 10) {
-                stream.setStreamSpacingsComplyPDFA(false);
+                stream.setStreamSpacingsComplyPDFA(Boolean.FALSE);
                 pdfSource.unread(whiteSpace);
             }
         } else if (whiteSpace != 10) {
             LOG.warn("Stream at " + pdfSource.getOffset() + " offset has no EOL marker.");
-            stream.setStreamSpacingsComplyPDFA(false);
+            stream.setStreamSpacingsComplyPDFA(Boolean.FALSE);
             pdfSource.unread(whiteSpace);
         }
     }
@@ -1037,7 +1072,7 @@ public class COSParser extends BaseParser
             eolCount = 1;
         } else {
             LOG.warn("End of stream at " + pdfSource.getOffset() + " offset has no contain EOL marker.");
-            stream.setEndStreamSpacingsComplyPDFA(false);
+            stream.setEndStreamSpacingsComplyPDFA(Boolean.FALSE);
         }
         stream.setOriginLength(pdfSource.getOffset() - stream.getOriginLength() - eolCount);
     }
@@ -1088,7 +1123,7 @@ public class COSParser extends BaseParser
 
     /**
      * Check if the cross reference table/stream can be found at the current offset.
-     * 
+     *
      * @param startXRefOffset
      * @return the revised offset
      * @throws IOException
@@ -1119,7 +1154,7 @@ public class COSParser extends BaseParser
 
     /**
      * Check if the cross reference stream can be found at the current offset.
-     * 
+     *
      * @param startXRefOffset the expected start offset of the XRef stream
      * @param checkOnly check only but don't repair the offset if set to true
      * @return the revised offset
@@ -1157,14 +1192,14 @@ public class COSParser extends BaseParser
         // try to find a fixed offset
         return checkOnly ? -1 : calculateXRefFixedOffset(startXRefOffset, true);
     }
-    
+
     /**
      * Try to find a fixed offset for the given xref table/stream.
-     * 
+     *
      * @param objectOffset the given offset where to look at
      * @param streamsOnly search for xref streams only
      * @return the fixed offset
-     * 
+     *
      * @throws IOException if something went wrong
      */
     private long calculateXRefFixedOffset(long objectOffset, boolean streamsOnly) throws IOException
@@ -1190,15 +1225,53 @@ public class COSParser extends BaseParser
      *
      * @throws IOException if something went wrong.
      */
-    private void checkXrefOffsets() throws IOException {
+    private void checkXrefOffsets() throws IOException
+    {
         // repair mode isn't available in non-lenient mode
-        if (!isLenient) {
+        if (!isLenient)
+        {
             return;
         }
         Map<COSObjectKey, Long> xrefOffset = xrefTrailerResolver.getXrefTable();
+        if (xrefOffset != null)
+        {
+            boolean bruteForceSearch = false;
+            for (Entry<COSObjectKey, Long> objectEntry : xrefOffset.entrySet())
+            {
+                COSObjectKey objectKey = objectEntry.getKey();
+                Long objectOffset = objectEntry.getValue();
+                // a negative offset number represents a object number itself
+                // see type 2 entry in xref stream
+                if (objectOffset != null && objectOffset >= 0
+                        && !checkObjectKeys(objectKey, objectOffset))
+                {
+                    LOG.debug("Stop checking xref offsets as at least one couldn't be dereferenced");
+                    bruteForceSearch = true;
+                    break;
+                }
+            }
+            if (bruteForceSearch)
+            {
+                bfSearchForObjects();
+                if (bfSearchCOSObjectKeyOffsets != null && !bfSearchCOSObjectKeyOffsets.isEmpty())
+                {
+                    LOG.debug("Replaced read xref table with the results of a brute force search");
+                    xrefOffset.putAll(bfSearchCOSObjectKeyOffsets);
+                }
+            }
+        }
+    }
+
+    /**
+     * Check the XRef table by dereferencing all objects and fixing the offset if necessary.
+     * Doesn't store objects with corrupted offset
+     *
+     * @throws IOException if something went wrong.
+     */
+    private void strictCheckXrefOffsets() throws IOException {
+        Map<COSObjectKey, Long> xrefOffset = xrefTrailerResolver.getXrefTable();
         if (xrefOffset != null) {
             List<COSObjectKey> objectsToRemove = new ArrayList<COSObjectKey>();
-            //boolean bruteForceSearch = false;
             for (Entry<COSObjectKey, Long> objectEntry : xrefOffset.entrySet()) {
                 COSObjectKey objectKey = objectEntry.getKey();
                 Long objectOffset = objectEntry.getValue();
@@ -1208,30 +1281,17 @@ public class COSParser extends BaseParser
                         && !checkObjectKeys(objectKey, objectOffset)) {
                     objectsToRemove.add(objectKey);
                     LOG.warn("Object " + objectKey + " has invalid offset");
-                    //LOG.debug("Stop checking xref offsets as at least one couldn't be dereferenced");
-                    //bruteForceSearch = true;
-                    //break;
                 }
             }
             for (COSObjectKey key : objectsToRemove) {
                 xrefOffset.remove(key);
             }
-            //is redundant for pdf/a validation
-//            if (bruteForceSearch)
-//            {
-//                bfSearchForObjects();
-//                if (bfSearchCOSObjectKeyOffsets != null && !bfSearchCOSObjectKeyOffsets.isEmpty())
-//                {
-//                    LOG.debug("Replaced read xref table with the results of a brute force search");
-//                    xrefOffset.putAll(bfSearchCOSObjectKeyOffsets);
-//                }
-//            }
         }
     }
 
     /**
      * Check if the given object can be found at the given offset.
-     * 
+     *
      * @param objectKey the object we are looking for
      * @param offset the offset where to look
      * @return returns true if the given object can be dereferenced at the given offset
@@ -1249,9 +1309,10 @@ public class COSParser extends BaseParser
         long originOffset = pdfSource.getOffset();
         pdfSource.seek(offset);
         String objectString = createObjectString(objectNr, objectGen);
-        try 
+        try
         {
-            if (isObjHeader(objectString))
+            //isObjHeader deals with objects with extra whitespaces between header elements
+            if (validationParsing ? isObjHeader(objectString) : isString(objectString.getBytes(ISO_8859_1)))
             {
                 // everything is ok, return origin object key
                 pdfSource.seek(originOffset);
@@ -1262,7 +1323,7 @@ public class COSParser extends BaseParser
         {
             // Swallow the exception, obviously there isn't any valid object number
         }
-        finally 
+        finally
         {
             pdfSource.seek(originOffset);
         }
@@ -1271,7 +1332,7 @@ public class COSParser extends BaseParser
     }
     /**
      * Create a string for the given object id.
-     * 
+     *
      * @param objectID the object id
      * @param genID the generation id
      * @return the generated string
@@ -1283,7 +1344,7 @@ public class COSParser extends BaseParser
 
     /**
      * Brute force search for every object in the pdf.
-     *   
+     *
      * @throws IOException if something went wrong
      */
     private void bfSearchForObjects() throws IOException
@@ -1354,7 +1415,7 @@ public class COSParser extends BaseParser
 
     /**
      * Search for the offset of the given xref table/stream among those found by a brute force search.
-     * 
+     *
      * @param streamsOnly search for xref streams only
      * @return the offset of the xref entry
      * @throws IOException if something went wrong
@@ -1434,7 +1495,7 @@ public class COSParser extends BaseParser
     }
     /**
      * Brute force search for all xref entries (tables).
-     * 
+     *
      * @throws IOException if something went wrong
      */
     private void bfSearchForXRefTables() throws IOException
@@ -1467,7 +1528,7 @@ public class COSParser extends BaseParser
 
     /**
      * Brute force search for all /XRef entries (streams).
-     * 
+     *
      * @throws IOException if something went wrong
      */
     private void bfSearchForXRefStreams() throws IOException
@@ -1548,12 +1609,12 @@ public class COSParser extends BaseParser
             pdfSource.seek(originOffset);
         }
     }
-    
+
     /**
      * Rebuild the trailer dictionary if startxref can't be found.
-     *  
+     *
      * @return the rebuild trailer dictionary
-     * 
+     *
      * @throws IOException if something went wrong
      */
     protected final COSDictionary rebuildTrailer() throws IOException
@@ -1562,7 +1623,7 @@ public class COSParser extends BaseParser
         bfSearchForObjects();
         if (bfSearchCOSObjectKeyOffsets != null)
         {
-            xrefTrailerResolver.nextXrefObj(0, XRefType.TABLE);
+            xrefTrailerResolver.nextXrefObj( 0, XRefType.TABLE );
             for (COSObjectKey objectKey : bfSearchCOSObjectKeyOffsets.keySet())
             {
                 xrefTrailerResolver.setXRef(objectKey, bfSearchCOSObjectKeyOffsets.get(objectKey));
@@ -1610,7 +1671,7 @@ public class COSParser extends BaseParser
         }
         return trailer;
     }
-    
+
     /**
      * This will parse the startxref section from the stream.
      * The startxref value is ignored.
@@ -1630,10 +1691,10 @@ public class COSParser extends BaseParser
         }
         return startXref;
     }
-    
+
     /**
      * Checks if the given string can be found at the current offset.
-     * 
+     *
      * @param string the bytes of the string to look for
      * @return true if the bytes are in place, false if not
      * @throws IOException if something went wrong
@@ -1675,7 +1736,7 @@ public class COSParser extends BaseParser
 
     /**
      * Checks if the given string can be found at the current offset.
-     * 
+     *
      * @param string the bytes of the string to look for
      * @return true if the bytes are in place, false if not
      * @throws IOException if something went wrong
@@ -1728,22 +1789,22 @@ public class COSParser extends BaseParser
                 return false;
             }
         }
-    
+
         // in some cases the EOL is missing and the trailer continues with " <<"
         // even if this does not comply with PDF reference we want to support as many PDFs as possible
         // Acrobat reader can also deal with this.
         skipSpaces();
-    
+
         COSDictionary parsedTrailer = parseCOSDictionary();
         xrefTrailerResolver.setTrailer( parsedTrailer );
-    
+
         skipSpaces();
         return true;
     }
 
     /**
      * Parse the header of a pdf.
-     * 
+     *
      * @return true if a PDF header was found
      * @throws IOException if something went wrong
      */
@@ -1754,7 +1815,7 @@ public class COSParser extends BaseParser
 
     /**
      * Parse the header of a fdf.
-     * 
+     *
      * @return true if a FDF header was found
      * @throws IOException if something went wrong
      */
@@ -1765,6 +1826,12 @@ public class COSParser extends BaseParser
 
     private boolean parseHeader(String headerMarker, String defaultVersion) throws IOException
     {
+        /*
+            6.1.2 File header
+            The % character of the file header shall occur at byte offset 0 of the file.
+            The file header line shall be immediately followed by a comment consisting of a % character followed by at least four characters,
+            each of whose encoded byte values shall have a decimal value greater than 127.
+        */
         // read first line
         String header = readLine();
         // some pdf-documents are broken and the pdf-version is in one of the following lines
@@ -1816,16 +1883,22 @@ public class COSParser extends BaseParser
             }
             else
             {
-                // are we need this case at whole?
-                Integer pos = null;
-                if (header.indexOf(37) > -1) {
-                    pos = Integer.valueOf(header.indexOf(37));
-                } else if (header.contains("PDF-")) {
-                    pos = Integer.valueOf(header.indexOf("PDF-"));
-                }
-                if (pos != null) {
-                    Integer length = Math.min(8, header.substring(pos).length());
-                    header = header.substring(pos, pos + length);
+                if (validationParsing) {
+                    // trying to parse header version if it has some garbage
+                    Integer pos = null;
+                    if (header.indexOf(37) > -1) {
+                        pos = Integer.valueOf(header.indexOf(37));
+                    } else if (header.contains("PDF-")) {
+                        pos = Integer.valueOf(header.indexOf("PDF-"));
+                    }
+                    if (pos != null) {
+                        Integer length = Math.min(8, header.substring(pos).length());
+                        header = header.substring(pos, pos + length);
+                    }
+                } else {
+                    String headerGarbage = header.substring(headerMarker.length() + 3, header.length()) + "\n";
+                    header = header.substring(0, headerMarker.length() + 3);
+                    pdfSource.unread(headerGarbage.getBytes(ISO_8859_1));
                 }
             }
         }
@@ -1848,7 +1921,9 @@ public class COSParser extends BaseParser
         } else {
             document.setVersion(headerVersion);
         }
-        checkComment();
+        if (validationParsing) {
+            checkComment();
+        }
         // rewind
         pdfSource.seek(0);
         return true;
@@ -1900,38 +1975,47 @@ public class COSParser extends BaseParser
             return false;
         }
 
-        int space = pdfSource.read();
-        if ((space != 0x0A && space != 0x0D) || !isDigit()) {
-            document.setIsXRefEOLCompliesPDFA(Boolean.FALSE);
+        //check spacings after "xref" keyword
+        //pdf/a-1b specification, clause 6.1.4
+        int space;
+        if (validationParsing) {
+            space = pdfSource.read();
+            if ((space != 0x0A && space != 0x0D) || !isDigit()) {
+                document.setIsXRefEOLCompliesPDFA(Boolean.FALSE);
+            }
         }
         // check for trailer after xref
         String str = readString();
         byte[] b = str.getBytes(ISO_8859_1);
         pdfSource.unread(b, 0, b.length);
-        
+
         // signal start of new XRef
         xrefTrailerResolver.nextXrefObj( startByteOffset, XRefType.TABLE );
-    
+
         if (str.startsWith("trailer"))
         {
             LOG.warn("skipping empty xref table");
             return false;
         }
-        
+
         // Xref tables can have multiple sections. Each starts with a starting object id and a count.
         while(true)
         {
             // first obj id
             long currObjID = readObjectNumber();
 
-            space = pdfSource.read();
-            if (space != 0x20 || !isDigit()) {
-                document.setIsXRefSpacingsCompliesPDFA(Boolean.FALSE);
+            //check spacings between header elements
+            //pdf/a-1b specification, clause 6.1.4
+            if (validationParsing) {
+                space = pdfSource.read();
+                if (space != 0x20 || !isDigit()) {
+                    document.setIsXRefSpacingsCompliesPDFA(Boolean.FALSE);
+                }
             }
-            
+
             // the number of objects in the xref table
             long count = readLong();
-            
+
             skipSpaces();
             for(int i = 0; i < count; i++)
             {
@@ -1998,8 +2082,8 @@ public class COSParser extends BaseParser
         if ( isStandalone )
         {
             xrefTrailerResolver.nextXrefObj( objByteOffset, XRefType.STREAM );
-            xrefTrailerResolver.setTrailer(stream);
-        }        
+            xrefTrailerResolver.setTrailer( stream );
+        }
         PDFXrefStreamParser parser = new PDFXrefStreamParser( stream, document, xrefTrailerResolver );
         parser.parse();
         parser.close();

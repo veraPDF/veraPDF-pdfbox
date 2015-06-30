@@ -118,6 +118,10 @@ public abstract class BaseParser implements Closeable
     private static final byte ASCII_NINE = 57;
     private static final byte ASCII_SPACE = 32;
 
+    /**
+     * When true pdfbox parses the document without all auto-healing methods
+     */
+    protected static boolean validationParsing = false;
 
     /**
      * This is the stream that will be read from.
@@ -702,7 +706,6 @@ public abstract class BaseParser implements Closeable
         {
             pdfSource.unread(c);
         }
-
         return new COSString(out.toByteArray());
     }
 
@@ -720,6 +723,66 @@ public abstract class BaseParser implements Closeable
      */
     private COSString parseCOSHexString() throws IOException
     {
+        if (validationParsing) {
+            return validationParseCOSHexString();
+        } else {
+            final StringBuilder sBuf = new StringBuilder();
+            while( true )
+            {
+                int c = pdfSource.read();
+                if ( isHexDigit((char)c) )
+                {
+                    sBuf.append( (char) c );
+                }
+                else if ( c == '>' )
+                {
+                    break;
+                }
+                else if ( c < 0 )
+                {
+                    throw new IOException( "Missing closing bracket for hex string. Reached EOS." );
+                }
+                else if ( ( c == ' ' ) || ( c == '\n' ) ||
+                        ( c == '\t' ) || ( c == '\r' ) ||
+                        ( c == '\b' ) || ( c == '\f' ) )
+                {
+                    continue;
+                }
+                else
+                {
+                    // if invalid chars was found: discard last
+                    // hex character if it is not part of a pair
+                    if (sBuf.length()%2!=0)
+                    {
+                        sBuf.deleteCharAt(sBuf.length()-1);
+                    }
+
+                    // read till the closing bracket was found
+                    do
+                    {
+                        c = pdfSource.read();
+                    }
+                    while ( c != '>' && c >= 0 );
+
+                    // might have reached EOF while looking for the closing bracket
+                    // this can happen for malformed PDFs only. Make sure that there is
+                    // no endless loop.
+                    if ( c < 0 )
+                    {
+                        throw new IOException( "Missing closing bracket for hex string. Reached EOS." );
+                    }
+
+                    // exit loop
+                    break;
+                }
+            }
+            return COSString.parseHex(sBuf.toString());
+        }
+    }
+
+    // during this parsing we count hex characters and check for invalid ones
+    // pdf/a-1b specification, clause 6.1.6
+    private COSString validationParseCOSHexString() throws IOException {
         Boolean isHexSymbols = Boolean.TRUE;
         Long hexCount = Long.valueOf(0);
 
@@ -733,9 +796,9 @@ public abstract class BaseParser implements Closeable
                 break;
             } else if (c < 0) {
                 throw new IOException("Missing closing bracket for hex string. Reached EOS.");
-            } else if ((c == 0x20) || (c == 0x0A) ||
-                    (c == 0x09) || (c == 0x0D) ||
-                    (c == 0x0C) || (c == 0x00)) {// white-space characters described in ISO 19005-1, paragraph 3.17
+            } else if ((c == ' ') || (c == '\n') ||
+                    (c == '\t') || (c == '\r') ||
+                    (c == '\b') || (c == '\f')) {
                 continue;
             } else {
                 isHexSymbols = Boolean.FALSE;
@@ -748,7 +811,7 @@ public abstract class BaseParser implements Closeable
 
         return result;
     }
-   
+
     /**
      * This will parse a PDF array object.
      *
@@ -838,8 +901,10 @@ public abstract class BaseParser implements Closeable
     protected COSName parseCOSName() throws IOException
     {
         readExpectedChar('/');
-        // costruisce il nome
+        // we are counting name length to support implementation limits
+        // pdf reference 1.4, appendix c
         int nameLength = 0;
+        // costruisce il nome
         StringBuilder buffer = new StringBuilder();
         int c = pdfSource.read();
         while( c != -1 )
@@ -892,7 +957,7 @@ public abstract class BaseParser implements Closeable
         {
             pdfSource.unread(c);
         }
-        return COSName.getPDFName(buffer.toString(), nameLength - 1);
+        return validationParsing ? COSName.getPDFName(buffer.toString(), nameLength - 1) : COSName.getPDFName( buffer.toString() );
     }
 
     /**
@@ -1256,7 +1321,7 @@ public abstract class BaseParser implements Closeable
      *
      * @throws IOException If there is an error reading from the stream.
      */
-    protected String readLineWithoutSkip() throws IOException {
+    protected String readLineWithoutWhitespacesSkip() throws IOException {
         if (pdfSource.isEOF())
         {
             throw new IOException( "Error: End-of-File, expected line");
@@ -1384,6 +1449,7 @@ public abstract class BaseParser implements Closeable
     /**
      * This will skip all spaces and comments that are present.
      *
+     * @return number of spaces skipped
      * @throws IOException If there is an error reading from the stream.
      */
     protected int skipSpaces() throws IOException
