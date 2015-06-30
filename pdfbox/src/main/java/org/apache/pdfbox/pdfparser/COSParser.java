@@ -16,27 +16,18 @@
  */
 package org.apache.pdfbox.pdfparser;
 
-import static org.apache.pdfbox.util.Charsets.ISO_8859_1;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.cos.*;
+import org.apache.pdfbox.pdfparser.XrefTrailerResolver.XRefType;
+import org.apache.pdfbox.pdmodel.encryption.SecurityHandler;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.Map.Entry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSDocument;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNull;
-import org.apache.pdfbox.cos.COSNumber;
-import org.apache.pdfbox.cos.COSObject;
-import org.apache.pdfbox.cos.COSObjectKey;
-import org.apache.pdfbox.cos.COSStream;
-import org.apache.pdfbox.pdfparser.XrefTrailerResolver.XRefType;
-import org.apache.pdfbox.pdmodel.encryption.SecurityHandler;
+import static org.apache.pdfbox.util.Charsets.ISO_8859_1;
 
 /**
  * PDF-Parser which first reads startxref and xref tables in order to know valid objects and parse only these objects.
@@ -714,7 +705,7 @@ public class COSParser extends BaseParser
             //Check that if offset doesn't point to obj key there is eol character before obj key
             //pdf/a-1b spec, clause 6.1.8
             skipSpaces();
-            pdfSource.seek(pdfSource.getOffset() - 1);
+            pdfSource.seek(pdfSource.getPosition() - 1);
             if (!isEOL()) {
                 pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
             }
@@ -751,7 +742,7 @@ public class COSParser extends BaseParser
         if (validationParsing) {
             // eolMarker stores symbol before endobj or stream keyword for pdf/a validation
             skipSpaces();
-            pdfSource.seek(pdfSource.getOffset() - 1);
+            pdfSource.seek(pdfSource.getPosition() - 1);
             eolMarker = pdfSource.read();
         }
         String endObjectKey = readString();
@@ -780,7 +771,7 @@ public class COSParser extends BaseParser
 
             skipSpaces();
             if (validationParsing) {
-                pdfSource.seek(pdfSource.getOffset() - 1);
+                pdfSource.seek(pdfSource.getPosition() - 1);
                 eolMarker = pdfSource.read();
                 endObjectKey = readLineWithoutWhitespacesSkip();
             } else {
@@ -834,7 +825,7 @@ public class COSParser extends BaseParser
         eolMarker = pdfSource.read();
         if (!isEOL(eolMarker)) {
             pdfObject.setEndOfObjectComplyPDFA(Boolean.FALSE);
-            pdfSource.unread(eolMarker);
+            pdfSource.rewind(eolMarker);
         }
     }
 
@@ -955,7 +946,7 @@ public class COSParser extends BaseParser
             // pdf/a-1b specification, clause 6.1.7
             if (validationParsing) {
                 checkStreamSpacings(stream);
-                stream.setOriginLength(pdfSource.getOffset());
+                stream.setOriginLength(pdfSource.getPosition());
             }
 
             skipWhiteSpaces();
@@ -1038,19 +1029,19 @@ public class COSParser extends BaseParser
             whiteSpace = pdfSource.read();
             if (whiteSpace != 10) {
                 stream.setStreamSpacingsComplyPDFA(Boolean.FALSE);
-                pdfSource.unread(whiteSpace);
+                pdfSource.rewind(whiteSpace);
             }
         } else if (whiteSpace != 10) {
-            LOG.warn("Stream at " + pdfSource.getOffset() + " offset has no EOL marker.");
+            LOG.warn("Stream at " + pdfSource.getPosition() + " offset has no EOL marker.");
             stream.setStreamSpacingsComplyPDFA(Boolean.FALSE);
-            pdfSource.unread(whiteSpace);
+            pdfSource.rewind(whiteSpace);
         }
     }
 
     private void checkEndStreamSpacings(COSStream stream) throws IOException {
         byte eolCount = 0;
         skipSpaces();
-        pdfSource.seek(pdfSource.getOffset() - 2);
+        pdfSource.seek(pdfSource.getPosition() - 2);
         int firstSymbol = pdfSource.read();
         int secondSymbol = pdfSource.read();
         if (secondSymbol == 10) {
@@ -1062,10 +1053,10 @@ public class COSParser extends BaseParser
         } else if (secondSymbol == 13) {
             eolCount = 1;
         } else {
-            LOG.warn("End of stream at " + pdfSource.getOffset() + " offset has no contain EOL marker.");
+            LOG.warn("End of stream at " + pdfSource.getPosition() + " offset has no contain EOL marker.");
             stream.setEndStreamSpacingsComplyPDFA(Boolean.FALSE);
         }
-        stream.setOriginLength(pdfSource.getOffset() - stream.getOriginLength() - eolCount);
+        stream.setOriginLength(pdfSource.getPosition() - stream.getOriginLength() - eolCount);
     }
 
     /**
@@ -2268,7 +2259,7 @@ public class COSParser extends BaseParser
                 COSNumber length = (COSNumber) linearized.getItem(COSName.L);
                 if (length != null) {
                     Boolean isLinearized = Boolean.valueOf(length.longValue() == fileLen.longValue()
-                                            && pdfSource.getOffset() < 1025);
+                                            && pdfSource.getPosition() < 1025);
                     document.setIsLinearized(isLinearized);
                 }
             }
@@ -2280,7 +2271,7 @@ public class COSParser extends BaseParser
         skipSpaces();
         final int bound = Math.min(pdfSource.available(), 1025);
 
-        for (Long offset = Long.valueOf(pdfSource.getOffset()); offset < bound; offset++) {
+        for (Long offset = Long.valueOf(pdfSource.getPosition()); offset < bound; offset++) {
             try {
                 pdfSource.seek(offset);
                 Long objNr = readObjectNumber();
