@@ -67,11 +67,11 @@ public class PDFText2HTML extends PDFTextStripper
      */
     protected void writeHeader() throws IOException
     {
-        StringBuffer buf = new StringBuffer(INITIAL_PDF_TO_HTML_BYTES);
+        StringBuilder buf = new StringBuilder(INITIAL_PDF_TO_HTML_BYTES);
         buf.append("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"" + "\n"
                 + "\"http://www.w3.org/TR/html4/loose.dtd\">\n");
         buf.append("<html><head>");
-        buf.append("<title>" + escape(getTitle()) + "</title>\n");
+        buf.append("<title>").append(escape(getTitle())).append("</title>\n");
         buf.append("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=\"UTF-16\">\n");
         buf.append("</head>\n");
         buf.append("<body>\n");
@@ -119,7 +119,7 @@ public class PDFText2HTML extends PDFTextStripper
             Iterator<List<TextPosition>> textIter = getCharactersByArticle().iterator();
             float lastFontSize = -1.0f;
 
-            StringBuffer titleText = new StringBuffer();
+            StringBuilder titleText = new StringBuilder();
             while (textIter.hasNext())
             {
                 Iterator<TextPosition> textByArticle = textIter.next().iterator();
@@ -211,14 +211,16 @@ public class PDFText2HTML extends PDFTextStripper
     }
 
     /**
-     * Writes the paragraph end "</p>" to the output. Furthermore, it will also clear the font state.
+     * Writes the paragraph end "&lt;/p&gt;" to the output. Furthermore, it will also clear the font state.
      * 
      * {@inheritDoc}
      */
     @Override
     protected void writeParagraphEnd() throws IOException
     {
-        super.writeString(fontState.clear()); // do not escape HTML
+        // do not escape HTML
+        super.writeString(fontState.clear());
+        
         super.writeParagraphEnd();
     }
 
@@ -276,8 +278,8 @@ public class PDFText2HTML extends PDFTextStripper
      */
     private static class FontState
     {
-        protected List<String> stateList = new ArrayList<String>();
-        protected Set<String> stateSet = new HashSet<String>();
+        private final List<String> stateList = new ArrayList<String>();
+        private final Set<String> stateSet = new HashSet<String>();
 
         /**
          * Pushes new {@link TextPosition TextPositions} into the font state. The state is only

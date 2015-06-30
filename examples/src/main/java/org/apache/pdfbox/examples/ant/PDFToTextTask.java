@@ -29,14 +29,14 @@ import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
 
 /**
- * This is an ant task that will allow pdf documents to be converted using an
- * and task.
+ * This is an Ant task that will allow pdf documents to be converted using an
+ * Ant task.
  *
  * @author Ben Litchfield
  */
 public class PDFToTextTask extends Task
 {
-    private List fileSets = new ArrayList();
+    private final List fileSets = new ArrayList();
 
     /**
      * Adds a set of files (nested fileset attribute).
@@ -51,6 +51,7 @@ public class PDFToTextTask extends Task
     /**
      * This will perform the execution.
      */
+    @Override
     public void execute()
     {
         log( "PDFToTextTask executing" );

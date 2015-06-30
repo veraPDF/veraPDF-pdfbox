@@ -17,18 +17,22 @@
 package org.apache.pdfbox.tools.gui;
 
 import java.awt.Component;
-
+import java.awt.Graphics;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.ImageIcon;
 import javax.swing.JTree;
-
 import javax.swing.tree.DefaultTreeCellRenderer;
-
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSBoolean;
 import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNull;
 import org.apache.pdfbox.cos.COSFloat;
 import org.apache.pdfbox.cos.COSInteger;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSNull;
+import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.cos.COSString;
 
@@ -39,9 +43,26 @@ import org.apache.pdfbox.cos.COSString;
  */
 public class PDFTreeCellRenderer extends DefaultTreeCellRenderer
 {
-    /**
-     * {@inheritDoc}
-     */
+    private static final ImageIcon ICON_ARRAY = new ImageIcon(getImageUrl("array"));
+    private static final ImageIcon ICON_BOOLEAN = new ImageIcon(getImageUrl("boolean"));
+    private static final ImageIcon ICON_DICT = new ImageIcon(getImageUrl("dict"));
+    private static final ImageIcon ICON_HEX = new ImageIcon(getImageUrl("hex"));
+    private static final ImageIcon ICON_INDIRECT = new ImageIcon(getImageUrl("indirect"));
+    private static final ImageIcon ICON_INTEGER = new ImageIcon(getImageUrl("integer"));
+    private static final ImageIcon ICON_NAME = new ImageIcon(getImageUrl("name"));
+    private static final ImageIcon ICON_NULL = new ImageIcon(getImageUrl("null"));
+    private static final ImageIcon ICON_REAL = new ImageIcon(getImageUrl("real"));
+    private static final ImageIcon ICON_STREAM_DICT = new ImageIcon(getImageUrl("stream-dict"));
+    private static final ImageIcon ICON_STRING = new ImageIcon(getImageUrl("string"));
+    private static final ImageIcon ICON_PDF = new ImageIcon(getImageUrl("pdf"));
+    private static final ImageIcon ICON_PAGE = new ImageIcon(getImageUrl("page"));
+
+    private static URL getImageUrl(String name)
+    {
+        String fullName = "/org/apache/pdfbox/tools/pdfdebugger/" + name + ".png";
+        return PDFTreeCellRenderer.class.getResource(fullName);
+    }
+    
     @Override
     public Component getTreeCellRendererComponent(
             JTree tree,
@@ -52,20 +73,55 @@ public class PDFTreeCellRenderer extends DefaultTreeCellRenderer
             int row,
             boolean componentHasFocus)
     {
-        return super.getTreeCellRendererComponent(tree,
-                convertToTreeObject(nodeValue),
+        Component component = super.getTreeCellRendererComponent(tree,
+                toTreeObject(nodeValue),
                 isSelected, expanded, leaf, row, componentHasFocus);
+        
+        setIcon(lookupIconWithOverlay(nodeValue));
+
+        return component;
     }
 
-    private Object convertToTreeObject(Object nodeValue)
+    private Object toTreeObject(Object nodeValue)
     {
         Object result = nodeValue;
-        if (nodeValue instanceof MapEntry)
+        if (nodeValue instanceof MapEntry || nodeValue instanceof ArrayEntry)
         {
-            MapEntry entry = (MapEntry) nodeValue;
-            COSName key = (COSName) entry.getKey();
-            COSBase value = (COSBase) entry.getValue();
-            result = key.getName() + ":" + convertToTreeObject(value);
+            String key;
+            Object value;
+            COSBase item;
+            if (nodeValue instanceof MapEntry)
+            {
+                MapEntry entry = (MapEntry) nodeValue;
+                key = entry.getKey().getName();
+                value = toTreeObject(entry.getValue());
+                item = entry.getItem();
+            }
+            else
+            {
+                ArrayEntry entry = (ArrayEntry) nodeValue;
+                key = "" + entry.getIndex();
+                value = toTreeObject(entry.getValue());
+                item = entry.getItem();
+            }
+            
+            String stringResult = key;
+            if (value instanceof String && ((String)value).length() > 0)
+            {
+                stringResult += ":  " + value;
+                if (item instanceof COSObject)
+                {
+                    COSObject indirect = (COSObject)item;
+                    stringResult += " [" + indirect.getObjectNumber() + " " +
+                                           indirect.getGenerationNumber() + " R]";
+                }
+                
+            }
+            result = stringResult;
+        }
+        else if (nodeValue instanceof COSBoolean)
+        {
+            result = "" + ((COSBoolean) nodeValue).getValue();
         }
         else if (nodeValue instanceof COSFloat)
         {
@@ -77,55 +133,183 @@ public class PDFTreeCellRenderer extends DefaultTreeCellRenderer
         }
         else if (nodeValue instanceof COSString)
         {
-            result = ((COSString) nodeValue).getString();
+            String text = ((COSString) nodeValue).getString();
+            // display unprintable strings as hex
+            for (char c : text.toCharArray())
+            {
+                if (Character.isISOControl(c))
+                {
+                    text = "<" + ((COSString) nodeValue).toHexString() + ">";
+                    break;
+                }
+            }
+            result = text;
         }
         else if (nodeValue instanceof COSName)
         {
             result = ((COSName) nodeValue).getName();
         }
-        else if (nodeValue instanceof ArrayEntry)
+        else if (nodeValue instanceof COSNull || nodeValue == null)
         {
-            ArrayEntry entry = (ArrayEntry) nodeValue;
-            result = "[" + entry.getIndex() + "]" + convertToTreeObject(entry.getValue());
-        }
-        else if (nodeValue instanceof COSNull)
-        {
-            result = "null";
+            result = "";
         }
         else if (nodeValue instanceof COSDictionary)
         {
             COSDictionary dict = (COSDictionary) nodeValue;
-            if (nodeValue instanceof COSStream)
+            if (COSName.XREF.equals(dict.getCOSName(COSName.TYPE)))
             {
-                result = "Stream";
+                result = "";
             }
             else
             {
-                result = "Dictionary";
-            }
-
-            COSName type = (COSName) dict.getDictionaryObject(COSName.TYPE);
-            if (type != null)
-            {
-                result = result + "(" + type.getName();
-                COSName subType = (COSName) dict.getDictionaryObject(COSName.SUBTYPE);
-                if (subType != null)
-                {
-                    result = result + ":" + subType.getName();
-                }
-
-                result = result + ")";
+                result = "(" + dict.size() + ")";
             }
         }
         else if (nodeValue instanceof COSArray)
         {
-            result = "Array";
+            COSArray array = (COSArray) nodeValue;
+            result = "(" + array.size() + ")";
+        }
+        else if (nodeValue instanceof DocumentEntry)
+        {
+            result = nodeValue.toString();
+        }
+        return result;
+    }
+
+    private ImageIcon lookupIconWithOverlay(Object nodeValue)
+    {
+        ImageIcon icon = lookupIcon(nodeValue);
+        boolean isIndirect = false;
+        boolean isStream = false;
+        
+        if (nodeValue instanceof MapEntry)
+        {
+            MapEntry entry = (MapEntry) nodeValue;
+            if (entry.getItem() instanceof COSObject)
+            {
+                isIndirect = true;
+                isStream = entry.getValue() instanceof COSStream;
+            }
+        }
+        else if (nodeValue instanceof ArrayEntry)
+        {
+            ArrayEntry entry = (ArrayEntry) nodeValue;
+            if (entry.getItem() instanceof COSObject)
+            {
+                isIndirect = true;
+                isStream = entry.getValue() instanceof COSStream;
+            }
+        }
+        
+        if (isIndirect && !isStream)
+        {
+            OverlayIcon overlay = new OverlayIcon(icon);
+            overlay.add(ICON_INDIRECT);
+            return overlay;
+        }
+        return icon;
+    }
+    
+    private ImageIcon lookupIcon(Object nodeValue)
+    {
+        if (nodeValue instanceof MapEntry)
+        {
+            MapEntry entry = (MapEntry) nodeValue;
+            return lookupIcon(entry.getValue());
+        }
+        else if (nodeValue instanceof ArrayEntry)
+        {
+            ArrayEntry entry = (ArrayEntry) nodeValue;
+            return lookupIcon(entry.getValue());
+        }
+        else if (nodeValue instanceof COSBoolean)
+        {
+            return ICON_BOOLEAN;
+        }
+        else if (nodeValue instanceof COSFloat)
+        {
+            return ICON_REAL;
+        }
+        else if (nodeValue instanceof COSInteger)
+        {
+            return ICON_INTEGER;
         }
         else if (nodeValue instanceof COSString)
         {
-            result = ((COSString) nodeValue).getString();
+            String text = ((COSString) nodeValue).getString();
+            // display unprintable strings as hex
+            for (char c : text.toCharArray())
+            {
+                if (Character.isISOControl(c))
+                {
+                    return ICON_HEX;
+                }
+            }
+            return ICON_STRING;
         }
-        return result;
+        else if (nodeValue instanceof COSName)
+        {
+            return ICON_NAME;
+        }
+        else if (nodeValue instanceof COSNull || nodeValue == null)
+        {
+            return ICON_NULL;
+        }
+        else if (nodeValue instanceof COSStream)
+        {
+            return ICON_STREAM_DICT;
+        }
+        else if (nodeValue instanceof COSDictionary)
+        {
+            return ICON_DICT;
+        }
+        else if (nodeValue instanceof COSArray)
+        {
+            return ICON_ARRAY;
+        }
+        else if (nodeValue instanceof DocumentEntry)
+        {
+            return ICON_PDF;
+        }
+        else if (nodeValue instanceof PageEntry)
+        {
+            return ICON_PAGE;
+        }
+        else
+        {
+            return null;
+        }
+    }
 
+    /**
+     * An ImageIcon which allows other ImageIcon overlays.
+     */
+    private class OverlayIcon extends ImageIcon
+    {
+        private final ImageIcon base;
+        private final List<ImageIcon> overlays;
+
+        OverlayIcon(ImageIcon base)
+        {
+            super(base.getImage());
+            this.base = base;
+            this.overlays = new ArrayList<ImageIcon>();
+        }
+
+        void add(ImageIcon overlay)
+        {
+            overlays.add(overlay);
+        }
+
+        @Override
+        public synchronized void paintIcon(Component c, Graphics g, int x, int y)
+        {
+            base.paintIcon(c, g, x, y);
+            for (ImageIcon icon: overlays)
+            {
+                icon.paintIcon(c, g, x, y);
+            }
+        }
     }
 }

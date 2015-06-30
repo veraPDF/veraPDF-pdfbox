@@ -14,27 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.fontbox.encoding;
+package org.apache.pdfbox.tools.pdfdebugger.colorpane;
 
-import java.util.Map;
+import java.awt.Color;
+import java.awt.Component;
+import javax.swing.JLabel;
+import javax.swing.JTable;
+import javax.swing.table.TableCellRenderer;
 
 /**
- * A font-specific encoding.
- *
- * @author John Hewson
+ * @author Khyrul Bashar.
  */
-public class CustomEncoding extends Encoding
+
+/**
+ * ColorBarCellRenderer class that says how to render color bar columns
+ */
+public class ColorBarCellRenderer implements TableCellRenderer
 {
-    /**
-     * Constructor.
-     * 
-     * @param codeToName the given code to name mapping
-     */
-    public CustomEncoding(Map<Integer, String> codeToName)
+    @Override
+    public Component getTableCellRendererComponent(
+            JTable jTable, Object o, boolean b, boolean b2, int i, int i2)
     {
-        for (Map.Entry<Integer, String> entry : codeToName.entrySet())
-        {
-            addCharacterEncoding(entry.getKey(), entry.getValue());
-        }
+        JLabel colorBar = new JLabel();
+        colorBar.setOpaque(true);
+        colorBar.setBackground((Color) o);
+        return colorBar;
     }
 }

@@ -49,9 +49,11 @@ public class TreeStatusPane implements TreeSelectionListener
         public void actionPerformed(ActionEvent actionEvent)
         {
             TreePath path = statusObj.getPathForString(statusField.getText());
-            if (statusObj.isValid)
+            if (path != null)
             {
                 tree.setSelectionPath(path);
+                tree.scrollPathToVisible(path);
+                tree.requestFocusInWindow();
             }
             else
             {
