@@ -278,9 +278,9 @@ public class COSParser extends BaseParser
         document.setIsXRefStream(XRefType.STREAM == xrefTrailerResolver.getXrefType());
         // check the offsets of all referenced objects
         if (validationParsing) {
-            checkXrefOffsets();
+			strictCheckXrefOffsets();
         } else {
-            strictCheckXrefOffsets();
+			checkXrefOffsets();
         }
         // copy xref table
         document.addXRefTable(xrefTrailerResolver.getXrefTable());
