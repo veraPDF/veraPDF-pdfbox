@@ -767,14 +767,15 @@ public class PDDocument implements Closeable
      * 
      * @param file file to be loaded
      * @param useScratchFiles enables the usage of a scratch file if set to true
+	 * @param validationParsing true if need to use validation parser
      * 
      * @return loaded document
      * 
      * @throws IOException in case of a file reading or parsing error
      */
-    public static PDDocument load(File file, boolean useScratchFiles) throws IOException
+    public static PDDocument load(File file, boolean useScratchFiles, boolean validationParsing) throws IOException
     {
-        return load(file, "", null, null, useScratchFiles);
+        return load(file, "", null, null, useScratchFiles, validationParsing);
     }
 
     /**
@@ -807,6 +808,24 @@ public class PDDocument implements Closeable
     {
         return load(file, password, null, null, useScratchFiles);
     }
+
+	/**
+	 * Parses a PDF.
+	 *
+	 * @param file file to be loaded
+	 * @param password password to be used for decryption
+	 * @param useScratchFiles enables the usage of a scratch file if set to true
+	 * @param validationParsing true if need to use validation parser
+	 *
+	 * @return loaded document
+	 *
+	 * @throws IOException in case of a file reading or parsing error
+	 */
+	public static PDDocument load(File file, String password, boolean useScratchFiles, boolean validationParsing)
+			throws IOException
+	{
+		return load(file, password, null, null, useScratchFiles, validationParsing);
+	}
 
     /**
      * Parses a PDF.
@@ -847,6 +866,29 @@ public class PDDocument implements Closeable
         parser.parse();
         return parser.getPDDocument();
     }
+
+	/**
+	 * Parses a PDF.
+	 *
+	 * @param file file to be loaded
+	 * @param password password to be used for decryption
+	 * @param keyStore key store to be used for decryption when using public key security
+	 * @param alias alias to be used for decryption when using public key security
+	 * @param useScratchFiles enables the usage of a scratch file if set to true
+	 * @param validationParsing true if need to use validation parser
+	 *
+	 * @return loaded document
+	 *
+	 * @throws IOException in case of a file reading or parsing error
+	 */
+	public static PDDocument load(File file, String password, InputStream keyStore, String alias,
+								  boolean useScratchFiles, Boolean validationParsing) throws IOException
+	{
+		RandomAccessBufferedFileInputStream raFile = new RandomAccessBufferedFileInputStream(file);
+		PDFParser parser = new PDFParser(raFile, password, keyStore, alias, useScratchFiles, validationParsing);
+		parser.parse();
+		return parser.getPDDocument();
+	}
 
     /**
      * Parses a PDF. The given input stream is copied to the memory to enable random access to the pdf.
