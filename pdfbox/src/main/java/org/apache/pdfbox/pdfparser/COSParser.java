@@ -87,7 +87,12 @@ public class COSParser extends BaseParser
      */
     protected static final char[] OBJ_MARKER = new char[] { 'o', 'b', 'j' };
 
-    private long trailerOffset;
+	/**
+	 * Linearization dictionary must be in first 1024 bytes of document
+	 */
+	private final int LINEARIZATION_SIZE = 1024;
+
+	private long trailerOffset;
 
     /**
      * file length.
@@ -131,7 +136,7 @@ public class COSParser extends BaseParser
      */
     public static final String TMP_FILE_PREFIX = "tmpPDF";
 
-    /**
+	/**
      * Default constructor.
      */
     public COSParser()
@@ -2261,7 +2266,7 @@ public class COSParser extends BaseParser
                 COSNumber length = (COSNumber) linearized.getItem(COSName.L);
                 if (length != null) {
                     Boolean isLinearized = Boolean.valueOf(length.longValue() == fileLen.longValue()
-                                            && pdfSource.getPosition() < 1024);
+                                            && pdfSource.getPosition() < LINEARIZATION_SIZE);
                     document.setIsLinearized(isLinearized);
                 }
             }
@@ -2271,7 +2276,7 @@ public class COSParser extends BaseParser
     private Entry<COSObjectKey, Long> getFirstDictionary() throws IOException {
         pdfSource.seek(0L);
         skipSpaces();
-        final int bound = Math.min(pdfSource.available(), 1024);
+        final int bound = Math.min(pdfSource.available(), LINEARIZATION_SIZE);
 
         for (Long offset = Long.valueOf(pdfSource.getPosition()); offset < bound; offset++) {
             try {

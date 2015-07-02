@@ -151,13 +151,8 @@ public class PDFParser extends COSParser
 	public PDFParser(RandomAccessRead source, String decryptionPassword, InputStream keyStore,
 					 String alias, boolean useScratchFiles, boolean validationParsing) throws IOException
 	{
-		pdfSource = source;
-		fileLen = source.length();
-		password = decryptionPassword;
-		keyStoreInputStream = keyStore;
-		keyAlias = alias;
+		this(source, decryptionPassword, keyStore, alias, useScratchFiles);
 		this.validationParsing = validationParsing;
-		init(useScratchFiles);
 	}
 
     private void init(boolean useScratchFiles) throws IOException

@@ -108,7 +108,7 @@ public abstract class BaseParser
     /**
      * When true pdfbox parses the document without all auto-healing methods
      */
-    protected static boolean validationParsing = false;
+    protected boolean validationParsing = false;
 
     /**
      * This is the stream that will be read from.
