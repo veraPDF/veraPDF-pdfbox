@@ -37,10 +37,10 @@ endstream
 /Resource <<>>
 >>
 endobj 
- 6 0 obj
+ 
+6 0 obj
 <<
-/Length 4
-/XXIncorrectXREFRecord 7 0 R
+/Length 4/XXIncorrectXREFRecord 7 0 R
 >>
 stream
 q
@@ -52,23 +52,24 @@ endobj
 /XXSomeText (Just some text)
 >>
 endobj
+
 xref
-0 7
+0 8
 0000000000 65535 f
 0000000021 00000 n
 0000000077 00000 n
 0000000151 00000 n
 0000000238 00000 n
 0000000296 00000 n
-0000000384 00000 n
-0000000489 00000 n
+0000000387 00000 n
+0000000476 00000 n
 
 trailer
 <<
-/Size 7
+/Size 8
 /Root 1 0 R
 /ID [<3168923AA036A08291A59B28D46E43FA><3168923AA036A08291A59B28D46E43FA>]
 >>
 startxref
-531
+533
 %%EOF
