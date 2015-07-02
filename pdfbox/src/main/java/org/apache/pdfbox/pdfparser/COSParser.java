@@ -87,7 +87,12 @@ public class COSParser extends BaseParser
      */
     protected static final char[] OBJ_MARKER = new char[] { 'o', 'b', 'j' };
 
-    private long trailerOffset;
+	/**
+	 * Linearization dictionary must be in first 1024 bytes of document
+	 */
+	private final int LINEARIZATION_SIZE = 1024;
+
+	private long trailerOffset;
 
     /**
      * file length.
@@ -131,7 +136,7 @@ public class COSParser extends BaseParser
      */
     public static final String TMP_FILE_PREFIX = "tmpPDF";
 
-    /**
+	/**
      * Default constructor.
      */
     public COSParser()
@@ -351,7 +356,7 @@ public class COSParser extends BaseParser
         {
             if (validationParsing) {
                 // pdf/a-1b specification, clause 6.1.3
-                document.setEofComplyPDFA(false);
+                document.setEofComplyPDFA(Boolean.FALSE);
             }
             if (isLenient)
             {
@@ -363,7 +368,7 @@ public class COSParser extends BaseParser
             {
                 throw new IOException("Missing end of file marker '" + new String(EOF_MARKER) + "'");
             }
-        } else {
+        } else if (validationParsing){
             // If there's more than six bytes after the start offset of the last eof marker
             // or 5th and 6th bytes are not EOL markers we consider the document as an invalid PDF/A document
             // 0x0A - LF (10), 0x0D - CR (13)
@@ -771,7 +776,7 @@ public class COSParser extends BaseParser
 
             skipSpaces();
             if (validationParsing) {
-                pdfSource.seek(pdfSource.getPosition() - 1);
+                pdfSource.rewind(1);
                 eolMarker = pdfSource.read();
                 endObjectKey = readLineWithoutWhitespacesSkip();
             } else {
@@ -825,7 +830,7 @@ public class COSParser extends BaseParser
         eolMarker = pdfSource.read();
         if (!isEOL(eolMarker)) {
             pdfObject.setEndOfObjectComplyPDFA(Boolean.FALSE);
-            pdfSource.rewind(eolMarker);
+            pdfSource.rewind(1);
         }
     }
 
@@ -1029,19 +1034,19 @@ public class COSParser extends BaseParser
             whiteSpace = pdfSource.read();
             if (whiteSpace != 10) {
                 stream.setStreamSpacingsComplyPDFA(Boolean.FALSE);
-                pdfSource.rewind(whiteSpace);
+                pdfSource.rewind(1);
             }
         } else if (whiteSpace != 10) {
             LOG.warn("Stream at " + pdfSource.getPosition() + " offset has no EOL marker.");
             stream.setStreamSpacingsComplyPDFA(Boolean.FALSE);
-            pdfSource.rewind(whiteSpace);
+            pdfSource.rewind(1);
         }
     }
 
     private void checkEndStreamSpacings(COSStream stream) throws IOException {
         byte eolCount = 0;
         skipSpaces();
-        pdfSource.seek(pdfSource.getPosition() - 2);
+        pdfSource.rewind(2);
         int firstSymbol = pdfSource.read();
         int secondSymbol = pdfSource.read();
         if (secondSymbol == 10) {
@@ -1715,7 +1720,7 @@ public class COSParser extends BaseParser
         bfSearchForObjects();
         if (bfSearchCOSObjectKeyOffsets != null)
         {
-            xrefTrailerResolver.nextXrefObj( 0, XRefType.TABLE );
+            xrefTrailerResolver.nextXrefObj(0, XRefType.TABLE);
             for (COSObjectKey objectKey : bfSearchCOSObjectKeyOffsets.keySet())
             {
                 xrefTrailerResolver.setXRef(objectKey, bfSearchCOSObjectKeyOffsets.get(objectKey));
@@ -1949,7 +1954,9 @@ public class COSParser extends BaseParser
         {
             pdfSource.seek(0);
             //false mean that case PDF-1.4 (without percentage) generate IOException
-            //return false;
+			if (!validationParsing) {
+				return false;
+			}
         }
 
         //sometimes there is some garbage in the header before the header
@@ -2259,7 +2266,7 @@ public class COSParser extends BaseParser
                 COSNumber length = (COSNumber) linearized.getItem(COSName.L);
                 if (length != null) {
                     Boolean isLinearized = Boolean.valueOf(length.longValue() == fileLen.longValue()
-                                            && pdfSource.getPosition() < 1025);
+                                            && pdfSource.getPosition() < LINEARIZATION_SIZE);
                     document.setIsLinearized(isLinearized);
                 }
             }
@@ -2269,7 +2276,7 @@ public class COSParser extends BaseParser
     private Entry<COSObjectKey, Long> getFirstDictionary() throws IOException {
         pdfSource.seek(0L);
         skipSpaces();
-        final int bound = Math.min(pdfSource.available(), 1025);
+        final int bound = Math.min(pdfSource.available(), LINEARIZATION_SIZE);
 
         for (Long offset = Long.valueOf(pdfSource.getPosition()); offset < bound; offset++) {
             try {
@@ -2278,7 +2285,10 @@ public class COSParser extends BaseParser
                 Integer genNr = readGenerationNumber();
                 readExpectedString(OBJ_MARKER, Boolean.TRUE);
                 return new AbstractMap.SimpleEntry<COSObjectKey, Long>(new COSObjectKey(objNr, genNr), offset);
-            } catch (IOException ignore) {}
+            } catch (IOException ignore) {
+				// if we`ve got trash instead of object or generation number, or 'obj' marker,
+				// than we try to get it on next position
+			}
         }
         return null;
     }
