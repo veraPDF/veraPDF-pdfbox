@@ -136,6 +136,30 @@ public class PDFParser extends COSParser
         init(useScratchFiles);
     }
 
+	/**
+	 * Constructor.
+	 *
+	 * @param source input representing the pdf.
+	 * @param decryptionPassword password to be used for decryption.
+	 * @param keyStore key store to be used for decryption when using public key security
+	 * @param alias alias to be used for decryption when using public key security
+	 * @param useScratchFiles use a buffer for temporary storage.
+	 * @param validationParsing true if need to use validation parser
+	 *
+	 * @throws IOException If something went wrong.
+	 */
+	public PDFParser(RandomAccessRead source, String decryptionPassword, InputStream keyStore,
+					 String alias, boolean useScratchFiles, boolean validationParsing) throws IOException
+	{
+		pdfSource = source;
+		fileLen = source.length();
+		password = decryptionPassword;
+		keyStoreInputStream = keyStore;
+		keyAlias = alias;
+		this.validationParsing = validationParsing;
+		init(useScratchFiles);
+	}
+
     private void init(boolean useScratchFiles) throws IOException
     {
         String eofLookupRangeStr = System.getProperty(SYSPROP_EOFLOOKUPRANGE);

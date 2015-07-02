@@ -670,9 +670,7 @@ public abstract class BaseParser
                 break;
             } else if (c < 0) {
                 throw new IOException("Missing closing bracket for hex string. Reached EOS.");
-            } else if ((c == ' ') || (c == '\n') ||
-                    (c == '\t') || (c == '\r') ||
-                    (c == '\b') || (c == '\f')) {
+            } else if (isWhitespace(c)) {
                 continue;
             } else {
                 isHexSymbols = Boolean.FALSE;
@@ -1208,7 +1206,7 @@ public abstract class BaseParser
             // CR and LF are valid EOLs
             if (isEOL(c) || c == 32)
             {
-                pdfSource.rewind(c);
+                pdfSource.rewind(1);
                 break;
             }
             buffer.append( (char)c );
