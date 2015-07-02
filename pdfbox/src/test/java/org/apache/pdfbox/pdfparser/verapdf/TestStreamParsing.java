@@ -5,6 +5,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 /**
  * @author Evgeniy Muravitskiy
@@ -12,7 +13,7 @@ import java.io.IOException;
 public class TestStreamParsing extends BaseTest {
 
 	@Test
-	public void testStreamSurroundings() throws IOException {
+	public void testStreamSurroundings() throws IOException, URISyntaxException {
 		COSDocument actual = getCosDocument("test_6_1_7_t01.pdf");
 		COSObjectKey key = new COSObjectKey(4, 0);
 		COSObject object = actual.getObjectFromPool(key);
@@ -22,7 +23,7 @@ public class TestStreamParsing extends BaseTest {
 	}
 
 	@Test
-	public void testEndStreamSurroundings() throws IOException {
+	public void testEndStreamSurroundings() throws IOException, URISyntaxException {
 		COSDocument actual = getCosDocument("test_6_1_7_t01.pdf");
 		COSObjectKey key = new COSObjectKey(6, 0);
 		COSObject object = actual.getObjectFromPool(key);
@@ -32,7 +33,7 @@ public class TestStreamParsing extends BaseTest {
 	}
 
 	@Test
-	public void testLength() throws IOException {
+	public void testLength() throws IOException, URISyntaxException {
 		COSDocument actual = getCosDocument("test_6_1_7_t02.pdf");
 		checkLength(actual, 6);
 		checkLength(actual, 4);

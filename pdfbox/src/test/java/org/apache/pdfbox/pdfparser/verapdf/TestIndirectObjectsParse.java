@@ -7,6 +7,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 /**
  * @author Evgeniy Muravitskiy
@@ -17,7 +18,7 @@ public class TestIndirectObjectsParse extends BaseTest {
 	private static COSDocument actual;
 
 	@BeforeClass
-	public static void setUp() throws IOException {
+	public static void setUp() throws IOException, URISyntaxException {
 		actual = getCosDocument(FILE);
 	}
 

@@ -5,6 +5,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 /**
  * @author Evgeniy Muravitskiy
@@ -12,7 +13,7 @@ import java.io.IOException;
 public class TestHeaderParse extends BaseTest{
 
 	@Test
-	public void testStartPositionOfHeader() throws IOException {
+	public void testStartPositionOfHeader() throws IOException, URISyntaxException {
 		COSDocument doc = getCosDocument("veraPDF test suite 6-1-2-t01-fail-a.pdf");
 		Assert.assertTrue(doc.getNonValidHeader());
 		Assert.assertFalse(doc.getNonValidCommentContent());
@@ -21,7 +22,7 @@ public class TestHeaderParse extends BaseTest{
 	}
 
 	@Test
-	public void testVersionOfHeader() throws IOException {
+	public void testVersionOfHeader() throws IOException, URISyntaxException {
 		COSDocument doc = getCosDocument("veraPDF test suite 6-1-2-t01-fail-b.pdf");
 		Assert.assertTrue(doc.getNonValidHeader());
 		Assert.assertFalse(doc.getNonValidCommentContent());
@@ -30,7 +31,7 @@ public class TestHeaderParse extends BaseTest{
 	}
 
 	@Test
-	public void testContentOfHeader() throws IOException {
+	public void testContentOfHeader() throws IOException, URISyntaxException {
 		COSDocument doc = getCosDocument("veraPDF test suite 6-1-2-t01-fail-c.pdf");
 		Assert.assertTrue(doc.getNonValidHeader());
 		Assert.assertTrue(doc.getNonValidCommentContent());
@@ -39,7 +40,7 @@ public class TestHeaderParse extends BaseTest{
 	}
 
 	@Test
-	public void testCommentLength() throws IOException {
+	public void testCommentLength() throws IOException, URISyntaxException {
 		COSDocument doc = getCosDocument("veraPDF test suite 6-1-2-t02-fail-a.pdf");
 		Assert.assertFalse(doc.getNonValidHeader());
 		Assert.assertFalse(doc.getNonValidCommentContent());
@@ -48,7 +49,7 @@ public class TestHeaderParse extends BaseTest{
 	}
 
 	@Test
-	public void testCommentContent() throws IOException {
+	public void testCommentContent() throws IOException, URISyntaxException {
 		COSDocument doc = getCosDocument("veraPDF test suite 6-1-2-t02-fail-b.pdf");
 		Assert.assertFalse(doc.getNonValidHeader());
 		Assert.assertTrue(doc.getNonValidCommentContent());
@@ -57,7 +58,7 @@ public class TestHeaderParse extends BaseTest{
 	}
 
 	@Test
-	public void testContentOfComment() throws IOException {
+	public void testContentOfComment() throws IOException, URISyntaxException {
 		COSDocument doc = getCosDocument("veraPDF test suite 6-1-2-t02-fail-c.pdf");
 		Assert.assertFalse(doc.getNonValidHeader());
 		Assert.assertTrue(doc.getNonValidCommentContent());
@@ -66,7 +67,7 @@ public class TestHeaderParse extends BaseTest{
 	}
 
 	@Test
-	public void testValidHeader() throws IOException {
+	public void testValidHeader() throws IOException, URISyntaxException {
 		COSDocument doc = getCosDocument("veraPDF test suite 6-1-2-t02-pass-a.pdf");
 		Assert.assertFalse(doc.getNonValidHeader());
 		Assert.assertFalse(doc.getNonValidCommentContent());

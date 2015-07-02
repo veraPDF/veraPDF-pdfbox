@@ -5,6 +5,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 /**
  * @author Evgeniy Muravitskiy
@@ -12,19 +13,19 @@ import java.io.IOException;
 public class TestLinearization extends BaseTest{
 
 	@Test
-	public void testIsLinearized() throws IOException {
+	public void testIsLinearized() throws IOException, URISyntaxException {
 		COSDocument doc = getCosDocument("veraPDF test suite 6-1-3-t02-fail-a.pdf");
 		Assert.assertTrue(doc.isLinearized());
 	}
 
 	@Test
-	public void testDifferentTrailersDictionaries() throws IOException {
+	public void testDifferentTrailersDictionaries() throws IOException, URISyntaxException {
 		COSDocument doc = getCosDocument("veraPDF test suite 6-1-3-t02-fail-a.pdf");
 		Assert.assertNotEquals(doc.getFirstPageTrailer(), doc.getLastTrailer());
 	}
 
 	@Test
-	public void testTrailerDictionary() throws IOException {
+	public void testTrailerDictionary() throws IOException, URISyntaxException {
 		COSDocument doc = getCosDocument("veraPDF test suite 6-1-2-t02-pass-a.pdf");
 		Assert.assertEquals(doc.getFirstPageTrailer(), doc.getLastTrailer());
 	}
