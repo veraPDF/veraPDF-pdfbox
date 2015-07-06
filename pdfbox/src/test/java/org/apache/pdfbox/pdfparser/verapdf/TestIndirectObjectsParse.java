@@ -35,7 +35,7 @@ public class TestIndirectObjectsParse extends BaseTest {
 	public void testHeaderObjectSurroundings() {
 		for (COSObject object : actual.getObjects()) {
 			long objectNumber = object.getObjectNumber();
-			boolean isNeededObject = objectNumber == 3 || objectNumber == 5 || objectNumber == 6;
+			boolean isNeededObject = objectNumber == 3 || objectNumber == 5;
 			Assert.assertTrue(object.isHeaderOfObjectComplyPDFA() ^ isNeededObject);
 		}
 	}
