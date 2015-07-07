@@ -29,11 +29,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.activation.DataSource;
 import javax.activation.FileDataSource;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -58,7 +59,8 @@ import org.w3c.dom.Element;
 public class Validator_A1b
 {
 
-    public static void main(String[] args) throws Exception
+    public static void main(String[] args) 
+            throws IOException, TransformerException, ParserConfigurationException
     {
         if (args.length == 0)
         {
@@ -87,7 +89,7 @@ public class Validator_A1b
                 // simple list of files
                 for (File file2 : ftp)
                 {
-                    status |= runSimple(new FileDataSource(file2));
+                    status |= runSimple(file2);
                 }
                 System.exit(status);
             }
@@ -124,24 +126,19 @@ public class Validator_A1b
                     }
                 }
             }
-
-
-
         } 
         else
         {
-            // only one file
-            FileDataSource fd = new FileDataSource(args[posFile]);
             if (!outputXml)
             {
                 // simple validation 
-                System.exit(runSimple(fd));
+                System.exit(runSimple(new File(args[posFile])));
             }
             else
             {
                 // generate xml output
                 XmlResultParser xrp = new XmlResultParser();
-                Element result = xrp.validate(fd);
+                Element result = xrp.validate(new FileDataSource(args[posFile]));
                 Document document = result.getOwnerDocument();
                 document.appendChild(result);
                 Transformer transformer = TransformerFactory.newInstance().newTransformer();
@@ -166,10 +163,10 @@ public class Validator_A1b
         System.out.println("Version : " + version);
     }
 
-    private static int runSimple(DataSource fd) throws Exception
+    private static int runSimple(File file) throws IOException
     {
         ValidationResult result;
-        PreflightParser parser = new PreflightParser(fd);
+        PreflightParser parser = new PreflightParser(file);
         try
         {
             parser.parse();
@@ -185,13 +182,13 @@ public class Validator_A1b
 
         if (result.isValid())
         {
-            System.out.println("The file " + fd.getName() + " is a valid PDF/A-1b file");
+            System.out.println("The file " + file.getName() + " is a valid PDF/A-1b file");
             System.out.println();
             return 0;
         }
         else
         {
-            System.out.println("The file " + fd.getName() + " is not valid, error(s) :");
+            System.out.println("The file " + file.getName() + " is not valid, error(s) :");
             for (ValidationError error : result.getErrorsList())
             {
                 System.out.print(error.getErrorCode() + " : " + error.getDetails());

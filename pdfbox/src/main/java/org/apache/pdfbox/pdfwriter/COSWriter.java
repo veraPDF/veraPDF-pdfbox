@@ -702,7 +702,7 @@ public class COSWriter implements ICOSVisitor, Closeable
         byte[] buffer = byteOut.toByteArray();
 
         // overwrite the ByteRange in the buffer
-        byte[] byteRangeBytes = byteRange.getBytes();
+        byte[] byteRangeBytes = byteRange.getBytes(Charsets.ISO_8859_1);
         for (int i = 0; i < byteRangeLength; i++)
         {
             if (i >= byteRangeBytes.length)
@@ -738,7 +738,7 @@ public class COSWriter implements ICOSVisitor, Closeable
         }
 
         // overwrite the signature Contents in the buffer
-        byte[] signatureBytes = signature.getBytes();
+        byte[] signatureBytes = signature.getBytes(Charsets.ISO_8859_1);
         System.arraycopy(signatureBytes, 0, buffer, bufSignatureOffset + 1, signatureBytes.length);
 
         // write the data to the incremental output stream
@@ -748,9 +748,9 @@ public class COSWriter implements ICOSVisitor, Closeable
     
     private void writeXrefRange(long x, long y) throws IOException
     {
-        getStandardOutput().write(String.valueOf(x).getBytes());
+        getStandardOutput().write(String.valueOf(x).getBytes(Charsets.ISO_8859_1));
         getStandardOutput().write(SPACE);
-        getStandardOutput().write(String.valueOf(y).getBytes());
+        getStandardOutput().write(String.valueOf(y).getBytes(Charsets.ISO_8859_1));
         getStandardOutput().writeEOL();
     }
 

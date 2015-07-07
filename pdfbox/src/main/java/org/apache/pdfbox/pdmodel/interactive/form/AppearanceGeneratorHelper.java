@@ -116,9 +116,7 @@ class AppearanceGeneratorHelper
         COSStream stream = appearanceStream.getCOSStream();
         PDFStreamParser parser = new PDFStreamParser(stream);
         parser.parse();
-        List<Object> tokens = parser.getTokens();
-        parser.close();
-        return tokens;
+        return parser.getTokens();
     }
 
     /**

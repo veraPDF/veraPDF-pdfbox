@@ -42,7 +42,7 @@ public class FDFAnnotationPolygon extends FDFAnnotation
     /**
      * COS Model value for SubType entry.
      */
-    public static final String SUBTYPE ="Polygon";
+    public static final String SUBTYPE = "Polygon";
 
     /**
      * Default constructor.
@@ -50,7 +50,7 @@ public class FDFAnnotationPolygon extends FDFAnnotation
     public FDFAnnotationPolygon()
     {
         super();
-        annot.setName( COSName.SUBTYPE, SUBTYPE );
+        annot.setName(COSName.SUBTYPE, SUBTYPE);
     }
 
     /**
@@ -58,23 +58,34 @@ public class FDFAnnotationPolygon extends FDFAnnotation
      *
      * @param a An existing FDF Annotation.
      */
-    public FDFAnnotationPolygon( COSDictionary a )
+    public FDFAnnotationPolygon(COSDictionary a)
     {
-        super( a );
+        super(a);
     }
 
     /**
      * Constructor.
      *
-     *  @param element An XFDF element.
+     * @param element An XFDF element.
      *
-     *  @throws IOException If there is an error extracting information from the element.
+     * @throws IOException If there is an error extracting information from the element.
      */
-    public FDFAnnotationPolygon( Element element ) throws IOException
+    public FDFAnnotationPolygon(Element element) throws IOException
     {
         super(element);
         annot.setName(COSName.SUBTYPE, SUBTYPE);
 
+        initVertices(element);
+        String color = element.getAttribute("interior-color");
+        if (color != null && color.length() == 7 && color.charAt(0) == '#')
+        {
+            int colorValue = Integer.parseInt(color.substring(1, 7), 16);
+            setInteriorColor(new Color(colorValue));
+        }
+    }
+
+    private void initVertices(Element element) throws IOException, NumberFormatException
+    {
         XPath xpath = XPathFactory.newInstance().newXPath();
         try
         {
@@ -95,14 +106,8 @@ public class FDFAnnotationPolygon extends FDFAnnotation
         {
             LOG.debug("Error while evaluating XPath expression for polygon vertices");
         }
-        String color = element.getAttribute("interior-color");
-        if (color != null && color.length() == 7 && color.charAt(0) == '#')
-        {
-            int colorValue = Integer.parseInt(color.substring(1, 7), 16);
-            setInteriorColor(new Color(colorValue));
-        }
     }
-    
+
     /**
      * This will set the coordinates of the the vertices.
      *

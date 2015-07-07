@@ -17,44 +17,46 @@
 
 package org.apache.pdfbox.tools.gui;
 
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.rendering.PDFRenderer;
-import org.apache.pdfbox.tools.PDFReader;
-
-import javax.swing.JPanel;
-import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.io.IOException;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.border.LineBorder;
+
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.rendering.PDFRenderer;
 
 
 /**
  * A class to handle some prettyness around a single PDF page.
  * @author Ben Litchfield
  */
-public class PageWrapper implements MouseMotionListener
+public class PageWrapper implements MouseMotionListener, MouseListener
 {
     private final JPanel pageWrapper = new JPanel();
     private PDFPagePanel pagePanel = null;
-    private PDFReader reader = null;
+    private final JLabel statusLabel;
 
     private static final int SPACE_AROUND_DOCUMENT = 20;
 
     /**
      * Constructor.
-     * @param aReader The reader application that holds this page.
+     * @param statusLabel The status label to use for status messages.
      * @throws IOException If there is an error creating the page drawing objects.
      */
-    public PageWrapper(PDFReader aReader) throws IOException
+    public PageWrapper(JLabel statusLabel) throws IOException
     {
-        reader = aReader;
+        this.statusLabel = statusLabel;
         pagePanel = new PDFPagePanel();
         pageWrapper.setLayout(null);
         pageWrapper.add(pagePanel);
         pagePanel.setLocation(SPACE_AROUND_DOCUMENT, SPACE_AROUND_DOCUMENT);
         pageWrapper.setBorder(LineBorder.createBlackLineBorder());
         pagePanel.addMouseMotionListener(this);
+        pagePanel.addMouseListener(this);
     }
 
     /**
@@ -95,6 +97,33 @@ public class PageWrapper implements MouseMotionListener
     @Override
     public void mouseMoved(MouseEvent e)
     {
-        reader.getBottomStatusPanel().getStatusLabel().setText(e.getX() + "," + e.getY());
+        statusLabel.setText(e.getX() + "," + e.getY());
     }
+
+    @Override
+    public void mouseClicked(MouseEvent e)
+    {
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e)
+    {
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e)
+    {
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e)
+    {
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e)
+    {
+        statusLabel.setText("");
+    }
+
 }

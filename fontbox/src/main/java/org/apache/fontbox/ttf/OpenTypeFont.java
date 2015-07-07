@@ -17,13 +17,16 @@
 
 package org.apache.fontbox.ttf;
 
+import java.awt.geom.GeneralPath;
 import java.io.IOException;
 
 /**
- * An OpenType font.
+ * An OpenType (OTF/TTF) font.
  */
 public class OpenTypeFont extends TrueTypeFont
 {
+    private boolean isPostScript;
+    
     /**
      * Constructor. Clients should use the OTFParser to create a new OpenTypeFont object.
      *
@@ -34,19 +37,47 @@ public class OpenTypeFont extends TrueTypeFont
         super(fontData);
     }
 
+    @Override
+    void setVersion(float versionValue)
+    {
+        isPostScript = versionValue != 1.0;
+        super.setVersion(versionValue);
+    }
+    
     /**
-     * Get the "cmap" table for this TTF.
+     * Get the "CFF" table for this OTF.
      *
-     * @return The "cmap" table.
+     * @return The "CFF" table.
      */
     public synchronized CFFTable getCFF() throws IOException
     {
-        CFFTable cmap = (CFFTable)tables.get(CFFTable.TAG);
-        if (cmap != null && !cmap.getInitialized())
+        if (!isPostScript)
         {
-            readTable(cmap);
+            throw new UnsupportedOperationException("TTF fonts do not have a CFF table");
         }
-        return cmap;
+        CFFTable cff = (CFFTable)tables.get(CFFTable.TAG);
+        if (cff != null && !cff.getInitialized())
+        {
+            readTable(cff);
+        }
+        return cff;
+    }
+
+    @Override
+    public synchronized GlyphTable getGlyph() throws IOException
+    {
+        if (isPostScript)
+        {
+            throw new UnsupportedOperationException("OTF fonts do not have a glyf table");
+        }
+        return super.getGlyph();
+    }
+
+    @Override
+    public GeneralPath getPath(String name) throws IOException
+    {
+        int gid = nameToGID(name);
+        return getCFF().getFont().getType2CharString(gid).getPath();
     }
 
     /**
