@@ -76,6 +76,10 @@ public final class PDActionFactory
             {
                 retval = new PDActionSound(action);
             }
+            else if (PDActionMovie.SUB_TYPE.equals(type))
+            {
+                retval = new PDActionMovie(action);
+            }
         }
         return retval;
     }
