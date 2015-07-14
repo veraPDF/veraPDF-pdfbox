@@ -80,6 +80,22 @@ public final class PDActionFactory
             {
                 retval = new PDActionMovie(action);
             }
+            else if (PDActionImportData.SUB_TYPE.equals(type))
+            {
+                retval = new PDActionImportData(action);
+            }
+            else if (PDActionResetForm.SUB_TYPE.equals(type))
+            {
+                retval = new PDActionResetForm(action);
+            }
+            else if (PDActionRemoteGoTo.SUB_TYPE.equals(type))
+            {
+                retval = new PDActionRemoteGoTo(action);
+            }
+            else if (PDActionNOP.SUB_TYPE.equals(type))
+            {
+                retval = new PDActionNOP(action);
+            }
         }
         return retval;
     }
