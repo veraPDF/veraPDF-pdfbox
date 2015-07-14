@@ -96,6 +96,10 @@ public final class PDActionFactory
             {
                 retval = new PDActionNOP(action);
             }
+            else if (PDActionSetState.SUB_TYPE.equals(type))
+            {
+                retval = new PDActionSetState(action);
+            }
         }
         return retval;
     }
