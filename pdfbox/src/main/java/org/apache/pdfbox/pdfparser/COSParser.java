@@ -2079,9 +2079,16 @@ public class COSParser extends BaseParser
         int space;
         if (validationParsing) {
             space = pdfSource.read();
-            if ((space != 0x0A && space != 0x0D) || !isDigit()) {
-                document.setIsXRefEOLCompliesPDFA(Boolean.FALSE);
-            }
+			if (space == 0x0D) {
+				if (pdfSource.peek() == 0x0A) {
+					pdfSource.read();
+				}
+				if (!isDigit()) {
+					document.setIsXRefEOLCompliesPDFA(Boolean.FALSE);
+				}
+			} else if (space != 0x0A || !isDigit()) {
+				document.setIsXRefEOLCompliesPDFA(Boolean.FALSE);
+			}
         }
         // check for trailer after xref
         String str = readString();
