@@ -16,26 +16,19 @@
  */
 package org.apache.pdfbox.pdfparser;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.contentstream.operator.Operator;
+import org.apache.pdfbox.cos.*;
+import org.apache.pdfbox.io.RandomAccessRead;
+import org.apache.pdfbox.pdmodel.common.PDStream;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.contentstream.operator.Operator;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSBoolean;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNull;
-import org.apache.pdfbox.cos.COSNumber;
-import org.apache.pdfbox.cos.COSObject;
-import org.apache.pdfbox.cos.COSStream;
-import org.apache.pdfbox.io.RandomAccessRead;
-import org.apache.pdfbox.pdmodel.common.PDStream;
 
 /**
  * This will parse a PDF byte stream and extract operands and such.
@@ -76,6 +69,20 @@ public class PDFStreamParser extends BaseParser
     public PDFStreamParser( COSStream stream ) throws IOException
     {
         super(stream);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param stream The stream to parse.
+     * @param validationParsing flag to parse according to pdfa validation
+     *
+     * @throws IOException If there is an error initializing the stream.
+     */
+    public PDFStreamParser( COSStream stream, boolean validationParsing ) throws IOException
+    {
+        super(stream);
+        this.validationParsing = validationParsing;
     }
 
     /**
