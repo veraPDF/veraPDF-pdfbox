@@ -16,9 +16,6 @@
  */
 package org.apache.pdfbox.pdmodel.font;
 
-import java.awt.geom.GeneralPath;
-import java.io.IOException;
-import java.io.InputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.fontbox.FontBoxFont;
@@ -34,6 +31,10 @@ import org.apache.pdfbox.pdmodel.font.encoding.Encoding;
 import org.apache.pdfbox.pdmodel.font.encoding.GlyphList;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.Vector;
+
+import java.awt.geom.GeneralPath;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * A PostScript Type 3 Font.
@@ -301,4 +302,16 @@ public class PDType3Font extends PDSimpleFont
         }
         return null;
     }
+
+    public PDType3CharProc getCharProc(COSName name)
+    {
+        COSStream stream;
+        stream = (COSStream)getCharProcs().getDictionaryObject(name);
+        if (stream == null)
+        {
+            return null;
+        }
+        return new PDType3CharProc(this, stream);
+    }
+
 }
