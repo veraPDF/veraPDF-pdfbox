@@ -16,21 +16,11 @@
  */
 package org.apache.pdfbox.pdmodel.font;
 
-import java.awt.geom.GeneralPath;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.fontbox.cff.Type2CharString;
 import org.apache.fontbox.cmap.CMap;
-import org.apache.fontbox.ttf.CmapSubtable;
-import org.apache.fontbox.ttf.GlyphData;
-import org.apache.fontbox.ttf.OTFParser;
-import org.apache.fontbox.ttf.OpenTypeFont;
-import org.apache.fontbox.ttf.TTFParser;
-import org.apache.fontbox.ttf.TrueTypeFont;
+import org.apache.fontbox.ttf.*;
 import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -39,6 +29,12 @@ import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.util.Matrix;
+
+import java.awt.geom.GeneralPath;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Type 2 CIDFont (TrueType).
@@ -401,6 +397,13 @@ public class PDCIDFontType2 extends PDCIDFont
     public TrueTypeFont getTrueTypeFont()
     {
         return ttf;
+    }
+
+    /**
+     * @return true if CIDFontType2 has identity Cid2Gid
+     */
+    public boolean isHasIdentityCid2Gid() {
+        return hasIdentityCid2Gid;
     }
 
     @Override
