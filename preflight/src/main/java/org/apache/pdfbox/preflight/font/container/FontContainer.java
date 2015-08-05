@@ -21,17 +21,17 @@
 
 package org.apache.pdfbox.preflight.font.container;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.pdfbox.pdmodel.font.PDFontLike;
 import org.apache.pdfbox.preflight.PreflightConstants;
 import org.apache.pdfbox.preflight.ValidationResult.ValidationError;
 import org.apache.pdfbox.preflight.font.util.GlyphDetail;
 import org.apache.pdfbox.preflight.font.util.GlyphException;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public abstract class FontContainer<T extends PDFontLike>
 {
@@ -142,7 +142,7 @@ public abstract class FontContainer<T extends PDFontLike>
      *
      * @param code character code
      */
-    protected abstract boolean hasGlyph(int code) throws IOException;
+    public abstract boolean hasGlyph(int code) throws IOException;
 
     /**
      * Check if the given character code has already been processed.
