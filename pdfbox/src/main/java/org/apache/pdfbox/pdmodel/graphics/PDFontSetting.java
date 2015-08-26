@@ -58,6 +58,7 @@ public class PDFontSetting implements COSObjectable
     /**
      * {@inheritDoc}
      */
+    @Override
     public COSBase getCOSObject()
     {
         return fontSetting;
