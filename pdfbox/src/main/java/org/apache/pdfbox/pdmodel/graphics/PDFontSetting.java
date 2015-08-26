@@ -16,11 +16,7 @@
  */
 package org.apache.pdfbox.pdmodel.graphics;
 
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSFloat;
-import org.apache.pdfbox.cos.COSNumber;
+import org.apache.pdfbox.cos.*;
 
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 
@@ -78,8 +74,11 @@ public class PDFontSetting implements COSObjectable
     public PDFont getFont() throws IOException
     {
         PDFont retval = null;
-        COSBase font = fontSetting.getObject(0);
-        if( font instanceof COSDictionary )
+        COSBase font = fontSetting.get( 0 );
+		if (font instanceof COSObject) {
+			font = ((COSObject) font).getObject();
+		}
+		if( font instanceof COSDictionary )
         {
             retval = PDFontFactory.createFont( (COSDictionary)font );
         }
