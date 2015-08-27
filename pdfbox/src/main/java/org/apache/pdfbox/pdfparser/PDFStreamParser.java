@@ -187,7 +187,7 @@ public class PDFStreamParser extends BaseParser
      *
      * @throws IOException If an io error occurs while parsing the stream.
      */
-    private Object parseNextToken() throws IOException
+    public Object parseNextToken() throws IOException
     {
         Object retval;
 
