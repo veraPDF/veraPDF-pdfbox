@@ -362,4 +362,16 @@ public class PDType3Font extends PDSimpleFont
         }
         return null;
     }
+
+    public PDType3CharProc getCharProc(COSName name)
+    {
+        COSStream stream;
+        stream = (COSStream)getCharProcs().getDictionaryObject(name);
+        if (stream == null)
+        {
+            return null;
+        }
+        return new PDType3CharProc(this, stream);
+    }
+
 }
