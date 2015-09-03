@@ -16,12 +16,7 @@
  */
 package org.apache.pdfbox.pdmodel.font;
 
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSStream;
-import org.apache.pdfbox.cos.COSString;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
@@ -304,7 +299,7 @@ public final class PDFontDescriptor implements COSObjectable
         COSName name = null;
         if( fontName != null )
         {
-            name = COSName.getPDFName( fontName );
+            name = COSName.getPDFName(fontName);
         }
         dic.setItem( COSName.FONT_NAME, name );
     }
@@ -392,7 +387,7 @@ public final class PDFontDescriptor implements COSObjectable
         COSName name = null;
         if( fontStretch != null )
         {
-            name = COSName.getPDFName( fontStretch );
+            name = COSName.getPDFName(fontStretch);
         }
         dic.setItem( COSName.FONT_STRETCH, name );
     }
@@ -406,7 +401,7 @@ public final class PDFontDescriptor implements COSObjectable
     {
         if (flags == -1)
         {
-            flags = dic.getInt( COSName.FLAGS, 0 );
+            flags = dic.getInt(COSName.FLAGS, 0);
         }
         return flags;
     }
@@ -807,6 +802,24 @@ public final class PDFontDescriptor implements COSObjectable
     public void setFontFile3( PDStream stream )
     {
         dic.setItem( COSName.FONT_FILE3, stream );
+    }
+
+    /**
+     * A stream containing a CIDSet.
+     *
+     * @return A stream containing a CIDSet.
+     */
+    public PDStream getCIDSet() {
+        COSObjectable cidSet = dic.getDictionaryObject(COSName.CID_SET);
+        if (cidSet != null) {
+            if (cidSet instanceof COSStream) {
+                return new PDStream((COSStream) cidSet);
+            }
+            if (cidSet instanceof PDStream) {
+                return (PDStream) cidSet;
+            }
+        }
+        return null;
     }
 
     /**
