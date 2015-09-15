@@ -987,7 +987,7 @@ public class COSParser extends BaseParser
 
             // pdf/a-1b specification, clause 6.1.7
             if (validationParsing) {
-                checkEndStreamSpacings(stream);
+                checkEndStreamSpacings(stream, streamLengthObj.longValue());
             }
 
             String endStream = readString();
@@ -1043,25 +1043,30 @@ public class COSParser extends BaseParser
         }
     }
 
-    private void checkEndStreamSpacings(COSStream stream) throws IOException {
-        byte eolCount = 0;
-        skipSpaces();
-        pdfSource.rewind(2);
-        int firstSymbol = pdfSource.read();
-        int secondSymbol = pdfSource.read();
-        if (secondSymbol == 10) {
-            if (firstSymbol == 13) {
-                eolCount = 2;
-            } else {
-                eolCount = 1;
-            }
-        } else if (secondSymbol == 13) {
-            eolCount = 1;
-        } else {
-            LOG.warn("End of stream at " + pdfSource.getPosition() + " offset has no contain EOL marker.");
-            stream.setEndStreamSpacingsComplyPDFA(Boolean.FALSE);
-        }
-        stream.setOriginLength(pdfSource.getPosition() - stream.getOriginLength() - eolCount);
+    private void checkEndStreamSpacings(COSStream stream, long expectedLength) throws IOException {
+		skipSpaces();
+
+		byte eolCount = 0;
+		long approximateLength = pdfSource.getPosition() - stream.getOriginLength();
+		long diff = approximateLength - expectedLength;
+
+		pdfSource.rewind(2);
+		int firstSymbol = pdfSource.read();
+		int secondSymbol = pdfSource.read();
+		if (secondSymbol == 10) {
+			if (firstSymbol == 13) {
+				eolCount = (byte) (diff == 1 ? 1 : 2);
+			} else {
+				eolCount = 1;
+			}
+		} else if (secondSymbol == 13) {
+			eolCount = 1;
+		} else {
+			LOG.warn("End of stream at " + pdfSource.getPosition() + " offset has no contain EOL marker.");
+			stream.setEndStreamSpacingsComplyPDFA(Boolean.FALSE);
+		}
+
+		stream.setOriginLength(approximateLength - eolCount);
     }
 
     /**
