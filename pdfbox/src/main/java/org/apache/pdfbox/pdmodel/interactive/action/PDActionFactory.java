@@ -100,6 +100,18 @@ public final class PDActionFactory
             {
                 retval = new PDActionSetState(action);
             }
+			else if (PDActionHide.SUB_TYPE.equals(type))
+			{
+				retval = new PDActionHide(action);
+			}
+			else if (PDActionSubmitForm.SUB_TYPE.equals(type))
+			{
+				retval = new PDActionSubmitForm(action);
+			}
+			else if (PDActionThread.SUB_TYPE.equals(type))
+			{
+				retval = new PDActionThread(action);
+			}
         }
         return retval;
     }

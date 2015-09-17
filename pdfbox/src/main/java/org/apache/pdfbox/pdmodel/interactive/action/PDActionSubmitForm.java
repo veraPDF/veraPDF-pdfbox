@@ -4,34 +4,58 @@ import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.common.filespecification.PDFileSpecification;
+
+import java.io.IOException;
 
 /**
- * @author Timur Kamalov
+ * This represents a Submit-Form action that can be executed in a PDF document.
+ *
+ * @author Evgeniy Muravitskiy
  */
-public class PDActionResetForm extends PDAction {
+public class PDActionSubmitForm extends PDAction {
 
 	/**
 	 * This type of action this object represents.
 	 */
-	public static final String SUB_TYPE = "ResetForm";
+	public static final String SUB_TYPE = "SubmitForm";
 
 	/**
-	 * Default constructor.
+	 * Default Constructor
 	 */
-	public PDActionResetForm()
-	{
-		action = new COSDictionary();
-		setSubType(SUB_TYPE);
+	public PDActionSubmitForm() {
+		super();
+		setSubType( SUB_TYPE );
 	}
 
 	/**
-	 * Constructor.
+	 * Constructor
 	 *
-	 * @param a The action dictionary.
+	 * @param a the action dictionary
 	 */
-	public PDActionResetForm(COSDictionary a)
-	{
+	public PDActionSubmitForm(COSDictionary a) {
 		super(a);
+	}
+
+	/**
+	 * This will get the file in which the destination is located.
+	 *
+	 * @return The F entry of the specific Submit-From action dictionary.
+	 * @throws IOException If there is an error creating the file spec.
+	 */
+	public PDFileSpecification getFile() throws IOException
+	{
+		return PDFileSpecification.createFS(action.getDictionaryObject("F"));
+	}
+
+	/**
+	 * This will set the file in which the destination is located.
+	 *
+	 * @param fs The file specification.
+	 */
+	public void setFile(PDFileSpecification fs)
+	{
+		action.setItem("F", fs);
 	}
 
 	/**
