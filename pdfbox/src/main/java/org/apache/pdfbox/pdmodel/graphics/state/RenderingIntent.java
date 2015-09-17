@@ -42,7 +42,12 @@ public enum RenderingIntent
     /**
      * Perceptual.
      */
-    PERCEPTUAL("Perceptual");
+    PERCEPTUAL("Perceptual"),
+
+	/**
+	 * Custom rendering intent
+	 */
+	CUSTOM("Custom");
 
     public static RenderingIntent fromString(String value)
     {
@@ -62,7 +67,9 @@ public enum RenderingIntent
         {
           return PERCEPTUAL;
         }
-        throw new IllegalArgumentException(value);
+		// "If a conforming reader does not recognize the specified name,
+		// it shall use the RelativeColorimetric intent by default."
+		return CUSTOM;
     }
 
     private final String value;
