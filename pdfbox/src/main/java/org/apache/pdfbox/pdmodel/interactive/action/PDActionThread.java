@@ -91,7 +91,7 @@ public class PDActionThread extends PDAction {
 	 */
 	public void setB(COSBase b)
 	{
-		action.setItem("D", b);
+		action.setItem("B", b);
 	}
 
 }
