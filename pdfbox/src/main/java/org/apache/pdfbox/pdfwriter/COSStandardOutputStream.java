@@ -164,4 +164,12 @@ public class COSStandardOutputStream extends FilterOutputStream
     {
         write(LF);
     }
+
+	/**
+	 * @return absorbed output stream
+	 */
+	public OutputStream getOutputStream() {
+		return out;
+	}
+
 }
