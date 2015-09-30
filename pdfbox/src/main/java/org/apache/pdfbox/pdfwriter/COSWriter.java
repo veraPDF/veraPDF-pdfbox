@@ -16,47 +16,9 @@
  */
 package org.apache.pdfbox.pdfwriter;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.SequenceInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSBoolean;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSDocument;
-import org.apache.pdfbox.cos.COSFloat;
-import org.apache.pdfbox.cos.COSInteger;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNull;
-import org.apache.pdfbox.cos.COSNumber;
-import org.apache.pdfbox.cos.COSObject;
-import org.apache.pdfbox.cos.COSObjectKey;
-import org.apache.pdfbox.cos.COSStream;
-import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.cos.COSUpdateInfo;
-import org.apache.pdfbox.cos.ICOSVisitor;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdfparser.PDFXRefStream;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -65,6 +27,13 @@ import org.apache.pdfbox.pdmodel.fdf.FDFDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.SignatureInterface;
 import org.apache.pdfbox.util.Charsets;
 import org.apache.pdfbox.util.Hex;
+
+import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.*;
 
 /**
  * This class acts on a in-memory representation of a PDF document.
@@ -265,12 +234,13 @@ public class COSWriter implements ICOSVisitor, Closeable
           long highestNumber=0;
           for ( COSObjectKey cosObjectKey : keySet ) 
           {
-            COSBase object = cosDoc.getObjectFromPool(cosObjectKey).getObject();
-            if (object != null && cosObjectKey!= null && !(object instanceof COSNumber))
-            {
-                objectKeys.put(object, cosObjectKey);
-                keyObject.put(cosObjectKey,object);
-            }
+			  COSObject objectFromPool = cosDoc.getObjectFromPool(cosObjectKey);
+			  COSBase object = objectFromPool.getObject();
+			  if (object != null && cosObjectKey!= null && !(object instanceof COSNumber))
+			  {
+				  objectKeys.put(object, cosObjectKey);
+				  keyObject.put(cosObjectKey,object);
+			  }
             
             if (cosObjectKey != null)
             {
@@ -443,27 +413,35 @@ public class COSWriter implements ICOSVisitor, Closeable
             addObjectToWrite( info );
         }
 
-        while( objectsToWrite.size() > 0 )
-        {
-            COSBase nextObject = objectsToWrite.removeFirst();
-            objectsToWriteSet.remove(nextObject);
-            doWriteObject( nextObject );
-        }
-        willEncrypt = false;
+		doWriteObjects();
+		willEncrypt = false;
         if( encrypt != null )
         {
             addObjectToWrite( encrypt );
         }
 
-        while( objectsToWrite.size() > 0 )
-        {
-            COSBase nextObject = objectsToWrite.removeFirst();
-            objectsToWriteSet.remove(nextObject);
-            doWriteObject( nextObject );
-        }
-    }
+		for (COSBase object : keyObject.values())
+		{
+			if (object instanceof COSUpdateInfo &&
+					((COSUpdateInfo) object).isNeedToBeUpdated())
+			{
+				addObjectToWrite(object);
+			}
+		}
 
-    private void addObjectToWrite( COSBase object )
+		doWriteObjects();
+	}
+
+	private void doWriteObjects() throws IOException {
+		while( objectsToWrite.size() > 0 )
+		{
+			COSBase nextObject = objectsToWrite.removeFirst();
+			objectsToWriteSet.remove(nextObject);
+			doWriteObject( nextObject );
+		}
+	}
+
+	private void addObjectToWrite( COSBase object )
     {
         COSBase actual = object;
         if( actual instanceof COSObject )
@@ -1296,11 +1274,9 @@ public class COSWriter implements ICOSVisitor, Closeable
             COSDictionary info = (COSDictionary)trailer.getDictionaryObject( COSName.INFO );
             if( info != null )
             {
-                Iterator<COSBase> values = info.getValues().iterator();
-                while( values.hasNext() )
-                {
-                    md5.update(values.next().toString().getBytes(Charsets.ISO_8859_1));
-                }
+				for (COSBase base : info.getValues()) {
+					md5.update(base.toString().getBytes(Charsets.ISO_8859_1));
+				}
             }
             // reuse origin documentID if available as first value
             COSString firstID = missingID ? new COSString( md5.digest() ) : (COSString)idArray.get(0);
@@ -1312,9 +1288,32 @@ public class COSWriter implements ICOSVisitor, Closeable
             trailer.setItem( COSName.ID, idArray );
         }
         cosDoc.accept(this);
+
+		if ( this.incrementalUpdate )
+		{
+			writeIncremental();
+		}
     }
 
-    /**
+	private void writeIncremental() throws IOException {
+		OutputStream standardOutputStream = getStandardOutput().getOutputStream();
+		if (standardOutputStream instanceof ByteArrayOutputStream) {
+			this.writeSource();
+			byte[] bytes = ((ByteArrayOutputStream) standardOutputStream).toByteArray();
+			this.incrementalOutput.write(bytes);
+		}
+	}
+
+	private void writeSource() throws IOException {
+		byte[] bytes = new byte[1024];
+		int length;
+		while ( ( length = this.incrementalInput.read(bytes) ) != -1 )
+		{
+			this.incrementalOutput.write(bytes, 0, length);
+		}
+	}
+
+	/**
      * This will write the fdf document.
      *
      * @param doc The document to write.

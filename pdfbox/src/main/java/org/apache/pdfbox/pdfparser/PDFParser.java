@@ -19,15 +19,14 @@ package org.apache.pdfbox.pdfparser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSDocument;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNull;
-import org.apache.pdfbox.cos.COSObject;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.io.RandomAccessRead;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -207,9 +206,12 @@ public class PDFParser extends COSParser
         {
             trailer = parseXref(startXRefOffset);
         }
-        else if (validationParsing) {
+        else if (validationParsing)
+		{
             throw new IOException("Document doesn't contain startxref keyword");
-        } else if (isLenient()) {
+        }
+		else if (isLenient())
+		{
             trailer = rebuildTrailer();
         }
         // prepare decryption if necessary
@@ -217,16 +219,26 @@ public class PDFParser extends COSParser
     
         parseTrailerValuesDynamically(trailer);
 
-        if (validationParsing) {
-            if (trailer != null) {
-                //VERAPDF_PT-129: current way of document parsing exclude Info dictionary 'deep' parsing
-                parseDictObjects(trailer, (COSName[]) null);
+		//VERAPDF_PT-129: current way of document parsing exclude Info dictionary 'deep' parsing
+		if (validationParsing)
+		{
+			if (trailer != null)
+			{
+				if (validationParsing)
+				{
+					parseSuspensionObjects();
+				} else
+				{
+					parseDictObjects(trailer, (COSName[]) null);
+				}
                 document.setDecrypted();
             }
-            isLinearized(Long.valueOf(fileLen));
-        } else {
+            isLinearized(fileLen);
+        } else
+		{
             COSObject catalogObj = document.getCatalog();
-            if (catalogObj != null && catalogObj.getObject() instanceof COSDictionary) {
+            if (catalogObj != null && catalogObj.getObject() instanceof COSDictionary)
+			{
                 parseDictObjects((COSDictionary) catalogObj.getObject(), (COSName[]) null);
                 document.setDecrypted();
             }
