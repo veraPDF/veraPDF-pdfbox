@@ -539,11 +539,9 @@ public class COSParser extends BaseParser
                 }
                 else if (baseObj instanceof COSArray)
                 {
-                    final Iterator<COSBase> arrIter = ((COSArray) baseObj).iterator();
-                    while (arrIter.hasNext())
-                    {
-                        addNewToList(toBeParsedList, arrIter.next(), addedObjects);
-                    }
+					for (COSBase base : ((COSArray) baseObj)) {
+						addNewToList(toBeParsedList, base, addedObjects);
+					}
                 }
                 else if (baseObj instanceof COSObject)
                 {
@@ -630,6 +628,25 @@ public class COSParser extends BaseParser
         }
     }
 
+	/**
+	 * Parse all objects of document according to xref table
+	 */
+	protected void parseSuspensionObjects()
+	{
+		for (COSObjectKey key : document.getXrefTable().keySet())
+		{
+			try
+			{
+				pdfSource.seek(document.getXrefTable().get(key));
+				COSObject suspensionObject = document.getObjectFromPool(key);
+				parseObjectDynamically(suspensionObject, false);
+			} catch (IOException e)
+			{
+				LOG.error(e);
+			}
+		}
+	}
+
     /**
      * This will parse the next object from the stream and add it to the local state.
      *
@@ -644,7 +661,7 @@ public class COSParser extends BaseParser
             boolean requireExistingNotCompressedObj) throws IOException
     {
         return parseObjectDynamically(obj.getObjectNumber(),
-                obj.getGenerationNumber(), requireExistingNotCompressedObj);
+				obj.getGenerationNumber(), requireExistingNotCompressedObj);
     }
 
     /**
@@ -733,9 +750,16 @@ public class COSParser extends BaseParser
         // ---- consistency check
         if ((readObjNr != objKey.getNumber()) || (readObjGen != objKey.getGeneration()))
         {
-            throw new IOException("XREF for " + objKey.getNumber() + ":"
-                    + objKey.getGeneration() + " points to wrong object: " + readObjNr
-                    + ":" + readObjGen);
+			String message = "XREF for " + objKey.getNumber() + ":"
+					+ objKey.getGeneration() + " points to wrong object: " + readObjNr
+					+ ":" + readObjGen;
+			if (validationParsing) {
+				LOG.error(message);
+				pdfObject.setObject(COSNull.NULL);
+				return;
+			} else {
+				throw new IOException(message);
+			}
         }
 
         if (validationParsing && !isEOL()) {
