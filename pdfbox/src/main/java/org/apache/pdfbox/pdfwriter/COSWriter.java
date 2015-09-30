@@ -238,12 +238,8 @@ public class COSWriter implements ICOSVisitor, Closeable
 			  COSBase object = objectFromPool.getObject();
 			  if (object != null && cosObjectKey!= null && !(object instanceof COSNumber))
 			  {
-				if (!incrementalUpdate || objectFromPool.isNeedToBeUpdated() ||
-						(object instanceof COSDictionary && ((COSDictionary) object).isNeedToBeUpdated()))
-				{
-					objectKeys.put(object, cosObjectKey);
-					keyObject.put(cosObjectKey, object);
-				}
+				  objectKeys.put(object, cosObjectKey);
+				  keyObject.put(cosObjectKey,object);
 			  }
             
             if (cosObjectKey != null)
