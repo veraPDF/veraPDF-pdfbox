@@ -165,7 +165,7 @@ public final class PDInlineImage implements PDImage
 			}
 			else
 			{
-				return PDColorSpace.create(cs);
+				return PDColorSpace.create(cs, resources);
 			}
 		}
 		else if (cs instanceof COSArray && ((COSArray) cs).size() > 0)
