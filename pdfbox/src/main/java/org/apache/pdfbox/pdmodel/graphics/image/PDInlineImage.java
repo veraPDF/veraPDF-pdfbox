@@ -16,13 +16,6 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.image;
 
-import java.awt.Paint;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.List;
-
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -36,6 +29,13 @@ import org.apache.pdfbox.pdmodel.common.PDMemoryStream;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
 import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceGray;
+
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * An inline image object which uses a special syntax to express the data for a
@@ -133,8 +133,7 @@ public final class PDInlineImage implements PDImage
 
         if (cs != null)
         {
-            // TODO: handling of abbreviated color space names belongs here, not in the factory
-            return PDColorSpace.create(cs, resources);
+            return create(cs);
         }
         else if (isStencil())
         {
@@ -148,7 +147,49 @@ public final class PDInlineImage implements PDImage
         }
     }
 
-    @Override
+	private PDColorSpace create(COSBase cs) throws IOException
+	{
+		if (cs instanceof COSName)
+		{
+			if (COSName.RGB.equals(cs))
+			{
+				return PDColorSpace.create(COSName.DEVICERGB, resources);
+			}
+			else if (COSName.CMYK.equals(cs))
+			{
+				return PDColorSpace.create(COSName.DEVICECMYK, resources);
+			}
+			else if (COSName.GRAY.equals(cs))
+			{
+				return PDColorSpace.create(COSName.DEVICEGRAY, resources);
+			}
+			else
+			{
+				return PDColorSpace.create(cs);
+			}
+		}
+		else if (cs instanceof COSArray && ((COSArray) cs).size() > 0)
+		{
+			COSBase csType = ((COSArray) cs).get(0);
+			if (csType instanceof COSName && csType.equals(COSName.I))
+			{
+				COSArray array = new COSArray();
+				array.addAll((COSArray) cs);
+				array.set(0, COSName.INDEXED);
+				return PDColorSpace.create(array, resources);
+			}
+			else
+			{
+				throw new IOException("Illegal type of color space in inline image: " + csType);
+			}
+		}
+		else
+		{
+			throw new IOException("Illegal type of object for color space: " + cs);
+		}
+	}
+
+	@Override
     public void setColorSpace(PDColorSpace colorSpace)
     {
         COSBase base = null;
