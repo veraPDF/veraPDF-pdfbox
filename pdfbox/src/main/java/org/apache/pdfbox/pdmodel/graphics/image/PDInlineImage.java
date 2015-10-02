@@ -159,7 +159,7 @@ public final class PDInlineImage implements PDImage
 			{
 				return PDColorSpace.create(COSName.DEVICECMYK, resources);
 			}
-			else if (COSName.GRAY.equals(cs))
+			else if (COSName.G.equals(cs))
 			{
 				return PDColorSpace.create(COSName.DEVICEGRAY, resources);
 			}
@@ -171,7 +171,8 @@ public final class PDInlineImage implements PDImage
 		else if (cs instanceof COSArray && ((COSArray) cs).size() > 0)
 		{
 			COSBase csType = ((COSArray) cs).get(0);
-			if (csType instanceof COSName && csType.equals(COSName.I))
+			if (csType instanceof COSName &&
+					(csType.equals(COSName.I) || csType.equals(COSName.INDEXED)))
 			{
 				COSArray array = new COSArray();
 				array.addAll((COSArray) cs);

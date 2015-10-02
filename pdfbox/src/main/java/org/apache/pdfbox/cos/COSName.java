@@ -258,7 +258,6 @@ public final class COSName extends COSBase implements Comparable<COSName>
     // G
     public static final COSName G = new COSName("G");
     public static final COSName GAMMA = new COSName("Gamma");
-	public static final COSName GRAY = new COSName("Gray");
     public static final COSName GROUP = new COSName("Group");
     public static final COSName GTS_PDFA1 = new COSName("GTS_PDFA1");
     // H
