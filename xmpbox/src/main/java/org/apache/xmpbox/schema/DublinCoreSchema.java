@@ -21,17 +21,11 @@
 
 package org.apache.xmpbox.schema;
 
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.type.*;
+
 import java.util.Calendar;
 import java.util.List;
-
-import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.type.ArrayProperty;
-import org.apache.xmpbox.type.Cardinality;
-import org.apache.xmpbox.type.MIMEType;
-import org.apache.xmpbox.type.PropertyType;
-import org.apache.xmpbox.type.StructuredType;
-import org.apache.xmpbox.type.TextType;
-import org.apache.xmpbox.type.Types;
 
 /**
  * Representation of a DublinCore Schema
@@ -152,10 +146,8 @@ public class DublinCoreSchema extends XMPSchema
 
     /**
      * set the autor(s) of the resource
-     * 
-     * @param properName
-     *            Value to add
-     * @throws InappropriateTypeException
+     *
+     * @param properName Value to add
      */
     public void addCreator(String properName)
     {
@@ -366,7 +358,7 @@ public class DublinCoreSchema extends XMPSchema
     /**
      * set default title
      * 
-     * @param value
+     * @param value Value to set
      */
     public void setTitle(String value)
     {
@@ -376,6 +368,8 @@ public class DublinCoreSchema extends XMPSchema
     /**
      * set the title of the document, or the name given to the resource (by language)
      * 
+     * @param lang Language concerned
+     * @param value Value to set
      * @see DublinCoreSchema#setTitle(String)
      * 
      */
@@ -657,6 +651,7 @@ public class DublinCoreSchema extends XMPSchema
      * Return the default value for Right property
      * 
      * @see DublinCoreSchema#getRights(String)
+     * @return the default rights value
      */
     public String getRights()
     {

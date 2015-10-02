@@ -21,30 +21,16 @@
 
 package org.apache.xmpbox.schema;
 
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.XmpConstants;
+import org.apache.xmpbox.type.*;
+
+import javax.xml.XMLConstants;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.xml.XMLConstants;
-
-import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.XmpConstants;
-import org.apache.xmpbox.type.AbstractField;
-import org.apache.xmpbox.type.AbstractSimpleProperty;
-import org.apache.xmpbox.type.AbstractStructuredType;
-import org.apache.xmpbox.type.ArrayProperty;
-import org.apache.xmpbox.type.Attribute;
-import org.apache.xmpbox.type.BadFieldValueException;
-import org.apache.xmpbox.type.BooleanType;
-import org.apache.xmpbox.type.Cardinality;
-import org.apache.xmpbox.type.ComplexPropertyContainer;
-import org.apache.xmpbox.type.DateType;
-import org.apache.xmpbox.type.IntegerType;
-import org.apache.xmpbox.type.TextType;
-import org.apache.xmpbox.type.TypeMapping;
-import org.apache.xmpbox.type.Types;
 
 /**
  * This class represents a metadata schema that can be stored in an XMP document. It handles all generic properties that
@@ -631,7 +617,7 @@ public class XMPSchema extends AbstractStructuredType
         ArrayProperty array = (ArrayProperty) getAbstractProperty(arrayName);
         if (array != null)
         {
-            ArrayList<AbstractField> toDelete = new ArrayList<AbstractField>();
+            List<AbstractField> toDelete = new ArrayList<AbstractField>();
             Iterator<AbstractField> it = array.getContainer().getAllProperties().iterator();
             while (it.hasNext())
             {
@@ -750,7 +736,7 @@ public class XMPSchema extends AbstractStructuredType
         ArrayProperty array = (ArrayProperty) getAbstractProperty(qualifiedArrayName);
         if (array != null)
         {
-            ArrayList<AbstractField> toDelete = new ArrayList<AbstractField>();
+            List<AbstractField> toDelete = new ArrayList<AbstractField>();
             Iterator<AbstractField> it = array.getContainer().getAllProperties().iterator();
             while (it.hasNext())
             {
@@ -888,7 +874,7 @@ public class XMPSchema extends AbstractStructuredType
         ArrayProperty seq = (ArrayProperty) getAbstractProperty(qualifiedSeqName);
         if (seq != null)
         {
-            ArrayList<AbstractField> toDelete = new ArrayList<AbstractField>();
+            List<AbstractField> toDelete = new ArrayList<AbstractField>();
             Iterator<AbstractField> it = seq.getContainer().getAllProperties().iterator();
             while (it.hasNext())
             {
@@ -992,8 +978,8 @@ public class XMPSchema extends AbstractStructuredType
         if (xdefaultFound)
         {
             it = alt.getAllProperties().iterator();
-            ArrayList<AbstractField> reordered = new ArrayList<AbstractField>();
-            ArrayList<AbstractField> toDelete = new ArrayList<AbstractField>();
+            List<AbstractField> reordered = new ArrayList<AbstractField>();
+            List<AbstractField> toDelete = new ArrayList<AbstractField>();
             reordered.add(xdefault);
             while (it.hasNext())
             {
@@ -1027,6 +1013,10 @@ public class XMPSchema extends AbstractStructuredType
     public void setUnqualifiedLanguagePropertyValue(String name, String language, String value)
     {
         String qualifiedName = name;
+        if (language == null || language.isEmpty())
+        {
+            language = XmpConstants.X_DEFAULT;
+        }
         AbstractField property = getAbstractProperty(qualifiedName);
         ArrayProperty arrayProp;
         if (property != null)
