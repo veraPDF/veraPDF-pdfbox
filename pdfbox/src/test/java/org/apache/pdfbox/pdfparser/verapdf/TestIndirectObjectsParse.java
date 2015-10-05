@@ -55,7 +55,7 @@ public class TestIndirectObjectsParse extends BaseTest {
 		COSObjectKey key = new COSObjectKey(7, 0);
 		COSObject object = actual.getObjectFromPool(key);
 		COSBase base = object.getObject();
-		Assert.assertTrue(base != null && base instanceof COSNull);
+		Assert.assertNull(base);
 	}
 
 	@AfterClass

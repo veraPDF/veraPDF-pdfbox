@@ -20,24 +20,14 @@
  ****************************************************************************/
 package org.apache.xmpbox;
 
+import org.apache.xmpbox.schema.*;
+import org.apache.xmpbox.type.StructuredType;
+import org.apache.xmpbox.type.TypeMapping;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.xmpbox.schema.AdobePDFSchema;
-import org.apache.xmpbox.schema.DublinCoreSchema;
-import org.apache.xmpbox.schema.PDFAExtensionSchema;
-import org.apache.xmpbox.schema.PDFAIdentificationSchema;
-import org.apache.xmpbox.schema.PhotoshopSchema;
-import org.apache.xmpbox.schema.XMPBasicJobTicketSchema;
-import org.apache.xmpbox.schema.XMPBasicSchema;
-import org.apache.xmpbox.schema.XMPMediaManagementSchema;
-import org.apache.xmpbox.schema.XMPRightsManagementSchema;
-import org.apache.xmpbox.schema.XMPSchema;
-import org.apache.xmpbox.schema.XmpSchemaException;
-import org.apache.xmpbox.type.StructuredType;
-import org.apache.xmpbox.type.TypeMapping;
 
 /**
  * Object representation of XMPMetaData Be CAREFUL: typically, metadata should contain only one schema for each type
@@ -175,7 +165,7 @@ public class XMPMetadata
      */
     public List<XMPSchema> getAllSchemas()
     {
-        ArrayList<XMPSchema> schem = new ArrayList<XMPSchema>();
+        List<XMPSchema> schem = new ArrayList<XMPSchema>();
         Iterator<XMPSchema> it = schemas.iterator();
         while (it.hasNext())
         {

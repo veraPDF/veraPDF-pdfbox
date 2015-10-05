@@ -62,7 +62,6 @@
 					<configLocation>../pdfbox-checkstyle-5.xml</configLocation>
 				</configuration>
 			</plugin>
-			
 		</plugins>
 	</build>
 

@@ -88,9 +88,18 @@ public class TestValidFiles
         // load expected errors
         // prepare config
         List<Object[]> data = new ArrayList<Object[]>();
-        Collection<?> files = FileUtils.listFiles(root, new String[] { "pdf" }, true);
+        Collection<?> files;
+		if (root.isDirectory())
+		{
+			files = FileUtils.listFiles(root, new String[]{"pdf"}, true);
+		}
+		else
+		{
+			staticLogger.error("Parameter 'directory' is not a directory");
+			files = new ArrayList<Object>();
+		}
 
-        for (Object object : files)
+		for (Object object : files)
         {
             File file = (File) object;
             Object[] tmp = new Object[] { file };
