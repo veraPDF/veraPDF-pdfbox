@@ -21,11 +21,11 @@
 
 package org.apache.xmpbox.type;
 
-import java.io.IOException;
-import java.util.Calendar;
-
 import org.apache.xmpbox.DateConverter;
 import org.apache.xmpbox.XMPMetadata;
+
+import java.io.IOException;
+import java.util.Calendar;
 
 /**
  * Object representation of a Date XMP type
@@ -59,10 +59,8 @@ public class DateType extends AbstractSimpleProperty
 
     /**
      * Set property value
-     * 
-     * @param value
-     *            the new Calendar element value
-     * @throws InappropriateTypeException
+     *
+     * @param value the new Calendar element value
      */
     private void setValueFromCalendar(Calendar value)
     {

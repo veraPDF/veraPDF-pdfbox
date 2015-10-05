@@ -20,35 +20,25 @@
 
 package org.apache.xmpbox.xml;
 
-import java.io.OutputStream;
-import java.util.List;
-import java.util.Map;
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.XmpConstants;
+import org.apache.xmpbox.schema.XMPSchema;
+import org.apache.xmpbox.type.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.ProcessingInstruction;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Result;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.XmpConstants;
-import org.apache.xmpbox.schema.XMPSchema;
-import org.apache.xmpbox.type.AbstractComplexProperty;
-import org.apache.xmpbox.type.AbstractField;
-import org.apache.xmpbox.type.AbstractSimpleProperty;
-import org.apache.xmpbox.type.AbstractStructuredType;
-import org.apache.xmpbox.type.ArrayProperty;
-import org.apache.xmpbox.type.Attribute;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.ProcessingInstruction;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.Map;
 
 public class XmpSerializer
 {
@@ -95,12 +85,12 @@ public class XmpSerializer
         fillElementWithAttributes(selem, schema);
         // the content
         List<AbstractField> fields = schema.getAllProperties();
-        serializeFields(doc, selem, fields,schema.getPrefix(), true);
+        serializeFields(doc, selem, fields,schema.getPrefix(), null, null, true);
         // return created schema
         return selem;
     }
 
-    public void serializeFields(Document doc, Element parent, List<AbstractField> fields, String resourceNS, boolean wrapWithProperty)
+    public void serializeFields(Document doc, Element parent, List<AbstractField> fields, String resourceNS, String prefix, String propertyName, boolean wrapWithProperty)
     {
         for (AbstractField field : fields)
         {
@@ -108,8 +98,36 @@ public class XmpSerializer
             if (field instanceof AbstractSimpleProperty)
             {
                 AbstractSimpleProperty simple = (AbstractSimpleProperty) field;
-                Element esimple = doc.createElement(simple.getPrefix() + ":" + simple.getPropertyName());
+                
+                String localPrefix;
+                String localPropertyName;
+
+                if (prefix != null && !prefix.isEmpty())
+                {
+                    localPrefix = prefix;
+                }
+                else
+                {
+                    localPrefix = simple.getPrefix();
+                }
+
+				if (propertyName != null && !propertyName.isEmpty()
+						&& XmpConstants.DEFAULT_RDF_PREFIX.equals(localPrefix))
+				{
+					localPropertyName = propertyName;
+				}
+				else
+				{
+					localPropertyName = simple.getPropertyName();
+				}
+
+                Element esimple = doc.createElement(localPrefix + ":" + localPropertyName);
                 esimple.setTextContent(simple.getStringValue());
+                List<Attribute> attributes = simple.getAllAttributes();
+                for (Attribute attribute : attributes)
+                {
+                    esimple.setAttributeNS(attribute.getNamespace(), attribute.getName(), attribute.getValue());
+                }
                 parent.appendChild(esimple);
             }
             else if (field instanceof ArrayProperty)
@@ -125,7 +143,7 @@ public class XmpSerializer
                 asimple.appendChild(econtainer);
                 // for each element of the array
                 List<AbstractField> innerFields = array.getAllProperties();
-                serializeFields(doc, econtainer, innerFields,resourceNS, false);
+                serializeFields(doc, econtainer, innerFields,resourceNS, XmpConstants.DEFAULT_RDF_PREFIX, XmpConstants.LIST_NAME, false);
             }
             else if (field instanceof AbstractStructuredType)
             {
@@ -148,7 +166,7 @@ public class XmpSerializer
                 {
                     estructured.setAttribute("rdf:parseType", "Resource");
                     // all properties
-                    serializeFields(doc, estructured, innerFields,resourceNS, true);
+                    serializeFields(doc, estructured, innerFields,resourceNS, null, null, true);
                 }
                 else
                 {
@@ -156,7 +174,7 @@ public class XmpSerializer
                     Element econtainer = doc.createElement(XmpConstants.DEFAULT_RDF_PREFIX + ":" + "Description");
                     estructured.appendChild(econtainer);
                     // all properties
-                    serializeFields(doc, econtainer, innerFields,resourceNS, true);
+                    serializeFields(doc, econtainer, innerFields,resourceNS, null, null, true);
                 }
             }
             else
