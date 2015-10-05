@@ -60,137 +60,137 @@ public abstract class PDColorSpace implements COSObjectable
      * @throws MissingResourceException if the color space is missing in the resources dictionary
      * @throws IOException if the color space is unknown or cannot be created
      */
-    public static PDColorSpace create(COSBase colorSpace,
-                                      PDResources resources)
-                                      throws IOException
-    {
-        if (colorSpace instanceof COSObject)
-        {
-            return create(((COSObject) colorSpace).getObject(), resources);
-        }
-        else if (colorSpace instanceof COSName)
-        {
-            COSName name = (COSName)colorSpace;
+	public static PDColorSpace create(COSBase colorSpace,
+									  PDResources resources)
+			throws IOException
+	{
+		if (colorSpace instanceof COSObject)
+		{
+			return create(((COSObject) colorSpace).getObject(), resources);
+		}
+		else if (colorSpace instanceof COSName)
+		{
+			COSName name = (COSName)colorSpace;
 
-            // default color spaces
-            if (resources != null)
-            {
-                COSName defaultName = null;
-                if (name.equals(COSName.DEVICECMYK) &&
-                    resources.hasColorSpace(COSName.DEFAULT_CMYK))
-                {
-                    defaultName = COSName.DEFAULT_CMYK;
-                }
-                else if (name.equals(COSName.DEVICERGB) &&
-                         resources.hasColorSpace(COSName.DEFAULT_RGB))
-                {
-                    defaultName = COSName.DEFAULT_RGB;
-                }
-                else if (name.equals(COSName.DEVICEGRAY) &&
-                         resources.hasColorSpace(COSName.DEFAULT_GRAY))
-                {
-                    defaultName = COSName.DEFAULT_GRAY;
-                }
+			// default color spaces
+			if (resources != null)
+			{
+				COSName defaultName = null;
+				if (name.equals(COSName.DEVICECMYK) &&
+						resources.hasColorSpace(COSName.DEFAULT_CMYK))
+				{
+					defaultName = COSName.DEFAULT_CMYK;
+				}
+				else if (name.equals(COSName.DEVICERGB) &&
+						resources.hasColorSpace(COSName.DEFAULT_RGB))
+				{
+					defaultName = COSName.DEFAULT_RGB;
+				}
+				else if (name.equals(COSName.DEVICEGRAY) &&
+						resources.hasColorSpace(COSName.DEFAULT_GRAY))
+				{
+					defaultName = COSName.DEFAULT_GRAY;
+				}
 
-                if (resources.hasColorSpace(defaultName))
-                {
-                    return resources.getColorSpace(defaultName);
-                }
-            }
+				if (resources.hasColorSpace(defaultName))
+				{
+					return resources.getColorSpace(defaultName);
+				}
+			}
 
-            // built-in color spaces
-            if (name == COSName.DEVICECMYK || name == COSName.CMYK)
-            {
-                return PDDeviceCMYK.INSTANCE;
-            }
-            else if (name == COSName.DEVICERGB || name == COSName.RGB)
-            {
-                return PDDeviceRGB.INSTANCE;
-            }
-            else if (name == COSName.DEVICEGRAY || name == COSName.G)
-            {
-                return PDDeviceGray.INSTANCE;
-            }
-            else if (name == COSName.PATTERN)
-            {
-                return new PDPattern(resources);
-            }
-            else if (resources != null)
-            {
-                if (!resources.hasColorSpace(name))
-                {
-                    throw new MissingResourceException("Missing color space: " + name.getName());
-                }
-                return resources.getColorSpace(name);
-            }
-            else
-            {
-                throw new MissingResourceException("Unknown color space: " + name.getName());
-            }
-        }
-        else if (colorSpace instanceof COSArray)
-        {
-            COSArray array = (COSArray)colorSpace;
-            COSName name = (COSName)array.get(0);
+			// built-in color spaces
+			if (name == COSName.DEVICECMYK)
+			{
+				return PDDeviceCMYK.INSTANCE;
+			}
+			else if (name == COSName.DEVICERGB)
+			{
+				return PDDeviceRGB.INSTANCE;
+			}
+			else if (name == COSName.DEVICEGRAY)
+			{
+				return PDDeviceGray.INSTANCE;
+			}
+			else if (name == COSName.PATTERN)
+			{
+				return new PDPattern(resources);
+			}
+			else if (resources != null)
+			{
+				if (!resources.hasColorSpace(name))
+				{
+					throw new MissingResourceException("Missing color space: " + name.getName());
+				}
+				return resources.getColorSpace(name);
+			}
+			else
+			{
+				throw new MissingResourceException("Unknown color space: " + name.getName());
+			}
+		}
+		else if (colorSpace instanceof COSArray)
+		{
+			COSArray array = (COSArray)colorSpace;
+			COSName name = (COSName)array.getObject(0);
 
-            // TODO cache these returned color spaces?
+			// TODO cache these returned color spaces?
 
-            if (name == COSName.CALGRAY)
-            {
-                return new PDCalGray(array);
-            }
-            else if (name == COSName.CALRGB)
-            {
-                return new PDCalRGB(array);
-            }
-            else if (name == COSName.DEVICEN)
-            {
-                return new PDDeviceN(array);
-            }
-            else if (name == COSName.INDEXED || name == COSName.I)
-            {
-                return new PDIndexed(array);
-            }
-            else if (name == COSName.SEPARATION)
-            {
-                return new PDSeparation(array);
-            }
-            else if (name == COSName.ICCBASED)
-            {
-                return new PDICCBased(array);
-            }
-            else if (name == COSName.LAB)
-            {
-                return new PDLab(array);
-            }
-            else if (name == COSName.PATTERN)
-            {
-                if (array.size() == 1)
-                {
-                    return new PDPattern(resources);
-                }
-                else
-                {
-                    return new PDPattern(resources, PDColorSpace.create(array.get(1)));
-                }
-            }
-            else if (name == COSName.DEVICECMYK || name == COSName.CMYK ||
-                     name == COSName.DEVICERGB  || name == COSName.RGB ||
-                     name == COSName.DEVICEGRAY || name == COSName.PATTERN)
-            {
-                // not allowed in an array, but we sometimes encounter these regardless
-                return create(name, resources);
-            }
-            else
-            {
-                throw new IOException("Invalid color space kind: " + name);
-            }
-        }
-        else
-        {
-            throw new IOException("Expected a name or array but got: " + colorSpace);
-        }
-    }
+			if (name == COSName.CALGRAY)
+			{
+				return new PDCalGray(array);
+			}
+			else if (name == COSName.CALRGB)
+			{
+				return new PDCalRGB(array);
+			}
+			else if (name == COSName.DEVICEN)
+			{
+				return new PDDeviceN(array);
+			}
+			else if (name == COSName.INDEXED || name == COSName.I)
+			{
+				return new PDIndexed(array);
+			}
+			else if (name == COSName.SEPARATION)
+			{
+				return new PDSeparation(array);
+			}
+			else if (name == COSName.ICCBASED)
+			{
+				return new PDICCBased(array);
+			}
+			else if (name == COSName.LAB)
+			{
+				return new PDLab(array);
+			}
+			else if (name == COSName.PATTERN)
+			{
+				if (array.size() == 1)
+				{
+					return new PDPattern(resources);
+				}
+				else
+				{
+					return new PDPattern(resources, PDColorSpace.create(array.get(1)));
+				}
+			}
+			else if (name == COSName.DEVICECMYK ||
+					name == COSName.DEVICERGB ||
+					name == COSName.DEVICEGRAY)
+			{
+				// not allowed in an array, but we sometimes encounter these regardless
+				return create(name, resources);
+			}
+			else
+			{
+				throw new IOException("Invalid color space kind: " + name);
+			}
+		}
+		else
+		{
+			throw new IOException("Expected a name or array but got: " + colorSpace);
+		}
+	}
 
     // array for the given parameters
     protected COSArray array;
