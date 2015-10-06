@@ -85,12 +85,12 @@ public class XmpSerializer
         fillElementWithAttributes(selem, schema);
         // the content
         List<AbstractField> fields = schema.getAllProperties();
-        serializeFields(doc, selem, fields,schema.getPrefix(), null, null, true);
+        serializeFields(doc, selem, fields,schema.getPrefix(), null, true);
         // return created schema
         return selem;
     }
 
-    public void serializeFields(Document doc, Element parent, List<AbstractField> fields, String resourceNS, String prefix, String propertyName, boolean wrapWithProperty)
+    public void serializeFields(Document doc, Element parent, List<AbstractField> fields, String resourceNS, String prefix, boolean wrapWithProperty)
     {
         for (AbstractField field : fields)
         {
@@ -100,7 +100,6 @@ public class XmpSerializer
                 AbstractSimpleProperty simple = (AbstractSimpleProperty) field;
                 
                 String localPrefix;
-                String localPropertyName;
 
                 if (prefix != null && !prefix.isEmpty())
                 {
@@ -111,17 +110,7 @@ public class XmpSerializer
                     localPrefix = simple.getPrefix();
                 }
 
-				if (propertyName != null && !propertyName.isEmpty()
-						&& XmpConstants.DEFAULT_RDF_PREFIX.equals(localPrefix))
-				{
-					localPropertyName = propertyName;
-				}
-				else
-				{
-					localPropertyName = simple.getPropertyName();
-				}
-
-                Element esimple = doc.createElement(localPrefix + ":" + localPropertyName);
+                Element esimple = doc.createElement(localPrefix + ":" + simple.getPropertyName());
                 esimple.setTextContent(simple.getStringValue());
                 List<Attribute> attributes = simple.getAllAttributes();
                 for (Attribute attribute : attributes)
@@ -143,7 +132,7 @@ public class XmpSerializer
                 asimple.appendChild(econtainer);
                 // for each element of the array
                 List<AbstractField> innerFields = array.getAllProperties();
-                serializeFields(doc, econtainer, innerFields,resourceNS, XmpConstants.DEFAULT_RDF_PREFIX, XmpConstants.LIST_NAME, false);
+                serializeFields(doc, econtainer, innerFields,resourceNS, XmpConstants.DEFAULT_RDF_PREFIX, false);
             }
             else if (field instanceof AbstractStructuredType)
             {
@@ -166,7 +155,7 @@ public class XmpSerializer
                 {
                     estructured.setAttribute("rdf:parseType", "Resource");
                     // all properties
-                    serializeFields(doc, estructured, innerFields,resourceNS, null, null, true);
+                    serializeFields(doc, estructured, innerFields,resourceNS, null, true);
                 }
                 else
                 {
@@ -174,7 +163,7 @@ public class XmpSerializer
                     Element econtainer = doc.createElement(XmpConstants.DEFAULT_RDF_PREFIX + ":" + "Description");
                     estructured.appendChild(econtainer);
                     // all properties
-                    serializeFields(doc, econtainer, innerFields,resourceNS, null, null, true);
+                    serializeFields(doc, econtainer, innerFields,resourceNS, null, true);
                 }
             }
             else
