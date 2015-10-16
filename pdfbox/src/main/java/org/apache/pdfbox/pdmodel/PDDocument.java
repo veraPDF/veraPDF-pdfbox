@@ -921,6 +921,23 @@ public class PDDocument implements Closeable
         return load(input, "", null, null, useScratchFiles);
     }
 
+	/**
+	 * Parses a PDF. Depending on the parameter useScratchFiles the given input
+	 * stream is either copied to the memory or to a temporary file to enable
+	 * random access to the pdf.
+	 *
+	 * @param input stream that contains the document.
+	 * @param useScratchFiles enables the usage of a scratch file if set to true
+	 *
+	 * @return loaded document
+	 *
+	 * @throws IOException in case of a file reading or parsing error
+	 */
+	public static PDDocument load(InputStream input, boolean useScratchFiles, boolean validationParsing) throws IOException
+	{
+		return load(input, "", null, null, useScratchFiles, validationParsing);
+	}
+
     /**
      * Parses a PDF. The given input stream is copied to the memory to enable random access to the pdf.
      * 
@@ -1015,6 +1032,38 @@ public class PDDocument implements Closeable
         parser.parse();
         return parser.getPDDocument();
     }
+
+	/**
+	 * Parses a PDF. Depending on the parameter useScratchFiles the given input
+	 * stream is either copied to the memory or to a temporary file to enable
+	 * random access to the pdf.
+	 *
+	 * @param input stream that contains the document.
+	 * @param password password to be used for decryption
+	 * @param keyStore key store to be used for decryption when using public key security
+	 * @param alias alias to be used for decryption when using public key security
+	 * @param useScratchFiles enables the usage of a scratch file if set to true
+	 *
+	 * @return loaded document
+	 *
+	 * @throws IOException in case of a file reading or parsing error
+	 */
+	public static PDDocument load(InputStream input, String password, InputStream keyStore,
+								  String alias, boolean useScratchFiles, boolean validationParsing) throws IOException
+	{
+		RandomAccessRead source = null;
+		if (useScratchFiles)
+		{
+			source = new RandomAccessBufferedFileInputStream(input);
+		}
+		else
+		{
+			source = new RandomAccessBuffer(input);
+		}
+		PDFParser parser = new PDFParser(source, password, keyStore, alias, useScratchFiles, validationParsing);
+		parser.parse();
+		return parser.getPDDocument();
+	}
 
     /**
      * Parses a PDF.
