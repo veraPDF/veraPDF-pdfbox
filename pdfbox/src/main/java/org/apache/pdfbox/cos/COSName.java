@@ -539,11 +539,6 @@ public final class COSName extends COSBase implements Comparable<COSName>
     // fields
     private final String name;
     private final int hashCode;
-    private Integer originalLength;
-
-    public Integer getOriginalLength() {
-        return originalLength != null ? originalLength : name.length();
-    }
 
     /**
      * This will get a COSName object with that name.
@@ -571,39 +566,6 @@ public final class COSName extends COSBase implements Comparable<COSName>
             }
         }
         return name;
-    }
-
-    /**
-     * This will get a COSName object with that name. Also take into account length
-     * of current name.
-     *
-     * @param aName The name of the object.
-     *
-     * @return A COSName with the specified name.
-     */
-    public static COSName getPDFName(String aName, int originalLength) {
-        COSName name = null;
-        if (aName != null)
-        {
-            // Is it a common COSName ??
-            name = commonNameMap.get(aName);
-            if (name == null)
-            {
-                // It seems to be a document specific COSName
-                name = nameMap.get(aName);
-                if (name == null)
-                {
-                    // name is added to the synchronized map in the constructor
-                    name = new COSName(aName, false, originalLength);
-                }
-            }
-        }
-        return name;
-    }
-
-    private COSName(String name, boolean staticValue, int originalLength) {
-        this(name, staticValue);
-        this.originalLength = originalLength;
     }
 
     /**

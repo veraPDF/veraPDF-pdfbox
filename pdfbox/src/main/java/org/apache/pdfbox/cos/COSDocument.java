@@ -85,87 +85,99 @@ public class COSDocument extends COSBase implements Closeable
 
     private ScratchFile scratchFile;
 
-    private Boolean eofComplyPDFA = Boolean.TRUE;
-    /** Header start not from first byte, or not from '%', or something else*/
-    private Boolean nonValidHeader = Boolean.FALSE;
-    /** second line start not from '%' */
-    private Boolean nonValidCommentStart = Boolean.FALSE;
-    /** in second line after '%' less than 4 symbols */
-    private Boolean nonValidCommentLength = Boolean.FALSE;
-    /** in second line after '%' first four symbols has byte value less than 128 */
-    private Boolean nonValidCommentContent = Boolean.FALSE;
-    /** true if the current document is linearized */
-    private Boolean isLinearized = Boolean.FALSE;
-    /** false if xref keyword and subsection has no corresponding eol marker */
-    private Boolean isXRefEOLCompliesPDFA = Boolean.TRUE;
-    /** false if xref subsection has no corresponding spacings */
-    private Boolean isXRefSpacingsCompliesPDFA = Boolean.TRUE;
+    private int postEOFDataSize = -1;
+    private boolean isLinearized = false;
+    private boolean xrefEOLMarkersComplyPDFA = true;
+    private boolean subsectionHeaderSpaceSeparated = true;
 
-    public Boolean getEofComplyPDFA() {
-        return eofComplyPDFA;
+	private long headerOffset;
+	private String header;
+	private int headerCommentByte1;
+	private int headerCommentByte2;
+	private int headerCommentByte3;
+	private int headerCommentByte4;
+
+	public int getPostEOFDataSize() {
+        return this.postEOFDataSize;
     }
 
-    public void setEofComplyPDFA(Boolean eofComplyPDFA) {
-        this.eofComplyPDFA = eofComplyPDFA;
+    public void setPostEOFDataSize(int postEOFDataSize) {
+        this.postEOFDataSize = postEOFDataSize;
     }
 
-    public Boolean getNonValidHeader() {
-        return nonValidHeader;
+    public boolean isLinearized() {
+        return this.isLinearized;
     }
 
-    public void setNonValidHeader(Boolean nonValidHeader) {
-        this.nonValidHeader = nonValidHeader;
-    }
-
-    public Boolean getNonValidCommentStart() {
-        return nonValidCommentStart;
-    }
-
-    public void setNonValidCommentStart(Boolean nonValidCommentStart) {
-        this.nonValidCommentStart = nonValidCommentStart;
-    }
-
-    public Boolean getNonValidCommentLength() {
-        return nonValidCommentLength;
-    }
-
-    public void setNonValidCommentLength(Boolean nonValidCommentLength) {
-        this.nonValidCommentLength = nonValidCommentLength;
-    }
-
-    public Boolean getNonValidCommentContent() {
-        return nonValidCommentContent;
-    }
-
-    public void setNonValidCommentContent(Boolean nonValidCommentContent) {
-        this.nonValidCommentContent = nonValidCommentContent;
-    }
-
-    public Boolean isLinearized() {
-        return isLinearized;
-    }
-
-    public void setIsLinearized(Boolean isLinearized) {
+    public void setIsLinearized(boolean isLinearized) {
         this.isLinearized = isLinearized;
     }
 
-    public Boolean isXRefEOLCompliesPDFA() {
-        return isXRefEOLCompliesPDFA;
+    public Boolean isXrefEOLMarkersComplyPDFA() {
+        return this.xrefEOLMarkersComplyPDFA;
     }
 
-    public void setIsXRefEOLCompliesPDFA(Boolean isXRefEOLCompliesPDFA) {
-        this.isXRefEOLCompliesPDFA = isXRefEOLCompliesPDFA;
+    public void setXrefEOLMarkersComplyPDFA(Boolean xrefEOLMarkersComplyPDFA) {
+        this.xrefEOLMarkersComplyPDFA = xrefEOLMarkersComplyPDFA;
     }
 
-    public Boolean isXRefSpacingsCompliesPDFA() {
-        return isXRefSpacingsCompliesPDFA;
+    public Boolean subSectionHeaderSpaceSeparated() {
+        return this.subsectionHeaderSpaceSeparated;
     }
 
-    public void setIsXRefSpacingsCompliesPDFA(Boolean isXRefSpacingsCompliesPDFA) {
-        this.isXRefSpacingsCompliesPDFA = isXRefSpacingsCompliesPDFA;
+    public void setSubsectionHeaderSpaceSeparated(Boolean subsectionHeaderSpaceSeparated) {
+        this.subsectionHeaderSpaceSeparated = subsectionHeaderSpaceSeparated;
     }
 
-    /**
+	public void setHeaderOffset(long headerOffset) {
+		this.headerOffset = headerOffset;
+	}
+
+	public long getHeaderOffset() {
+		return this.headerOffset;
+	}
+
+	public String getHeader() {
+		return this.header;
+	}
+
+	public void setHeader(String header) {
+		this.header = header;
+	}
+
+	public int getHeaderCommentByte1() {
+		return this.headerCommentByte1;
+	}
+
+	public void setHeaderCommentByte1(int headerCommentByte1) {
+		this.headerCommentByte1 = headerCommentByte1;
+	}
+
+	public int getHeaderCommentByte2() {
+		return this.headerCommentByte2;
+	}
+
+	public void setHeaderCommentByte2(int headerCommentByte2) {
+		this.headerCommentByte2 = headerCommentByte2;
+	}
+
+	public int getHeaderCommentByte3() {
+		return this.headerCommentByte3;
+	}
+
+	public void setHeaderCommentByte3(int headerCommentByte3) {
+		this.headerCommentByte3 = headerCommentByte3;
+	}
+
+	public int getHeaderCommentByte4() {
+		return this.headerCommentByte4;
+	}
+
+	public void setHeaderCommentByte4(int headerCommentByte4) {
+		this.headerCommentByte4 = headerCommentByte4;
+	}
+
+	/**
      * Constructor.
      *
      * @param useScratchFiles enables the usage of a scratch file if set to true
@@ -743,4 +755,5 @@ public class COSDocument extends COSBase implements Closeable
     {
         isXRefStream = isXRefStreamValue;
     }
+
 }

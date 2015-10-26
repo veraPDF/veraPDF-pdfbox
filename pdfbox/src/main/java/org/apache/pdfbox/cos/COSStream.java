@@ -72,10 +72,10 @@ public class COSStream extends COSDictionary implements Closeable
 
     /** true if spacings around of 'stream' keyword comply PDF/A standard
      */
-    private Boolean isStreamSpacingsComplyPDFA = true;
+    private Boolean streamKeywordCRLFCompliant = true;
     /** true if spacings around of 'endstream' keyword comply PDF/A standard
      */
-    private Boolean isEndStreamSpacingsComplyPDFA = true;
+    private Boolean endstreamKeywordEOLCompliant = true;
 
     /**
      * Constructor.  Creates a new stream with an empty dictionary.
@@ -661,20 +661,20 @@ public class COSStream extends COSDictionary implements Closeable
         this.originLength = originLength;
     }
 
-    public Boolean getStreamSpacingsComplyPDFA() {
-        return isStreamSpacingsComplyPDFA;
+    public boolean isStreamKeywordCRLFCompliant() {
+        return streamKeywordCRLFCompliant;
     }
 
-    public void setStreamSpacingsComplyPDFA(Boolean streamSpacingsComplyPDFA) {
-        this.isStreamSpacingsComplyPDFA = streamSpacingsComplyPDFA;
+    public void setStreamKeywordCRLFCompliant(boolean streamSpacingsComplyPDFA) {
+        this.streamKeywordCRLFCompliant = streamSpacingsComplyPDFA;
     }
 
-    public Boolean getEndStreamSpacingsComplyPDFA() {
-        return isEndStreamSpacingsComplyPDFA;
+    public Boolean isEndstreamKeywordEOLCompliant() {
+        return this.endstreamKeywordEOLCompliant;
     }
 
-    public void setEndStreamSpacingsComplyPDFA(Boolean endStreamSpacingsComplyPDFA) {
-        this.isEndStreamSpacingsComplyPDFA = endStreamSpacingsComplyPDFA;
+    public void setEndstreamKeywordEOLCompliant(Boolean endStreamSpacingsComplyPDFA) {
+        this.endstreamKeywordEOLCompliant = endStreamSpacingsComplyPDFA;
     }
 
     @Override
