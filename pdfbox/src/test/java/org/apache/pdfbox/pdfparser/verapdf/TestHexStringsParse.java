@@ -23,7 +23,7 @@ public class TestHexStringsParse extends BaseTest{
 		COSString string = getCosString("6-1-6-t01-fail-b.pdf");
 		Assert.assertTrue(string.getHexCount() % 2 == 0);
 		Assert.assertTrue(string.isHex());
-		Assert.assertFalse(string.getIsHexSymbols());
+		Assert.assertFalse(string.isContainsOnlyHex());
 	}
 
 	private COSString getCosString(String name) throws IOException, URISyntaxException {

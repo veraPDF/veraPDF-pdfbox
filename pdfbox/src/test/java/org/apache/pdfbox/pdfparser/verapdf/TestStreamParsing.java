@@ -18,8 +18,8 @@ public class TestStreamParsing extends BaseTest {
 		COSObjectKey key = new COSObjectKey(4, 0);
 		COSObject object = actual.getObjectFromPool(key);
 		COSStream stream = (COSStream) object.getObject();
-		Assert.assertFalse(stream.getStreamSpacingsComplyPDFA());
-		Assert.assertTrue(stream.getEndStreamSpacingsComplyPDFA());
+		Assert.assertFalse(stream.isStreamKeywordCRLFCompliant());
+		Assert.assertTrue(stream.isEndstreamKeywordEOLCompliant());
 	}
 
 	@Test
@@ -28,8 +28,8 @@ public class TestStreamParsing extends BaseTest {
 		COSObjectKey key = new COSObjectKey(6, 0);
 		COSObject object = actual.getObjectFromPool(key);
 		COSStream stream = (COSStream) object.getObject();
-		Assert.assertFalse(stream.getEndStreamSpacingsComplyPDFA());
-		Assert.assertTrue(stream.getStreamSpacingsComplyPDFA());
+		Assert.assertFalse(stream.isEndstreamKeywordEOLCompliant());
+		Assert.assertTrue(stream.isStreamKeywordCRLFCompliant());
 	}
 
 	@Test
