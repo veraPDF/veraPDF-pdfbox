@@ -20,7 +20,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.io.RandomAccessRead;
-import org.apache.pdfbox.util.Charsets;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -679,7 +678,7 @@ public abstract class BaseParser
         }
         COSString result = COSString.parseHex(sBuf.toString());
         result.setHexCount(hexCount);
-        result.setIsHexSymbols(isHexSymbols);
+        result.setContainsOnlyHex(isHexSymbols);
 
         return result;
     }
@@ -771,14 +770,12 @@ public abstract class BaseParser
     protected COSName parseCOSName() throws IOException
     {
         readExpectedChar('/');
-        // we are counting name length to support implementation limits
-        // pdf reference 1.4, appendix c
-        int nameLength = 0;
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+		// we are get internal representation of name for support implementation limits
+		// pdf reference 1.4, appendix c
         int c = pdfSource.read();
         while (c != -1)
         {
-            nameLength++;
             int ch = c;
             if (ch == '#')
             {
@@ -825,8 +822,8 @@ public abstract class BaseParser
         {
             pdfSource.rewind(1);
         }
-        String string = new String(buffer.toByteArray(), Charsets.UTF_8);
-        return validationParsing ? COSName.getPDFName(string, nameLength - 1) : COSName.getPDFName(string);
+        String string = new String(buffer.toByteArray());
+        return COSName.getPDFName(string);
     }
 
     /**
