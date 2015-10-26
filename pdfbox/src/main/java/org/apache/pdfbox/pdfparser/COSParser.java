@@ -356,7 +356,7 @@ public class COSParser extends BaseParser
         {
             if (validationParsing) {
                 // pdf/a-1b specification, clause 6.1.3
-                document.setEofComplyPDFA(Boolean.FALSE);
+                document.setPostEOFDataSize(-1);
             }
             if (isLenient)
             {
@@ -364,7 +364,7 @@ public class COSParser extends BaseParser
                 bufOff = buf.length;
                 LOG.debug("Missing end of file marker '" + new String(EOF_MARKER) + "'");
             }
-            else
+            else if (!validationParsing)
             {
                 throw new IOException("Missing end of file marker '" + new String(EOF_MARKER) + "'");
             }
@@ -372,11 +372,21 @@ public class COSParser extends BaseParser
             // If there's more than six bytes after the start offset of the last eof marker
             // or 5th and 6th bytes are not EOL markers we consider the document as an invalid PDF/A document
             // 0x0A - LF (10), 0x0D - CR (13)
-            final Boolean isNotSingleEOL = buf.length - bufOff == 6 && buf[buf.length - 1] != 0x0A && buf[buf.length - 1] != 0x0D;
-            final Boolean isNotCRLFEOL = buf.length - bufOff == 7 && buf[buf.length - 2] != 0x0D && buf[buf.length - 1] != 0x0A;
-            if (buf.length - bufOff > 7 || isNotSingleEOL || isNotCRLFEOL) {
-                document.setEofComplyPDFA(Boolean.FALSE);
-            }
+			int endOfEOF = bufOff + 5;
+			int postEOFDateSize = buf.length - endOfEOF;
+			if (postEOFDateSize > 0) {
+				if (buf[endOfEOF] == 0x0D) {
+					int nextEOL = endOfEOF + 1;
+					if (nextEOL < buf.length && buf[nextEOL] == 0x0A) {
+						postEOFDateSize -= 2;
+					} else {
+						postEOFDateSize -= 1;
+					}
+				} else if (buf[endOfEOF] == 0x0A) {
+					postEOFDateSize -= 1;
+				}
+			}
+			this.document.setPostEOFDataSize(postEOFDateSize);
         }
         // find last startxref preceding EOF marker
         bufOff = lastIndexOf(STARTXREF, buf, bufOff);
@@ -1020,7 +1030,7 @@ public class COSParser extends BaseParser
                 LOG.warn("stream ends with 'endobj' instead of 'endstream' at offset "
                         + pdfSource.getPosition());
                 if (validationParsing) {
-                    stream.setEndStreamSpacingsComplyPDFA(Boolean.FALSE);
+                    stream.setEndstreamKeywordEOLCompliant(Boolean.FALSE);
                 }
                 // avoid follow-up warning about missing endobj
                 pdfSource.rewind(ENDOBJ.length);
@@ -1030,7 +1040,7 @@ public class COSParser extends BaseParser
                 LOG.warn("stream ends with '" + endStream + "' instead of 'endstream' at offset "
                         + pdfSource.getPosition());
                 if (validationParsing) {
-                    stream.setEndStreamSpacingsComplyPDFA(Boolean.FALSE);
+                    stream.setEndstreamKeywordEOLCompliant(Boolean.FALSE);
                 }
                 // unread the "extra" bytes
                 pdfSource.rewind(endStream.substring(9).getBytes(ISO_8859_1).length);
@@ -1057,12 +1067,12 @@ public class COSParser extends BaseParser
         if (whiteSpace == 13) {
             whiteSpace = pdfSource.read();
             if (whiteSpace != 10) {
-                stream.setStreamSpacingsComplyPDFA(Boolean.FALSE);
+                stream.setStreamKeywordCRLFCompliant(Boolean.FALSE);
                 pdfSource.rewind(1);
             }
         } else if (whiteSpace != 10) {
             LOG.warn("Stream at " + pdfSource.getPosition() + " offset has no EOL marker.");
-            stream.setStreamSpacingsComplyPDFA(Boolean.FALSE);
+            stream.setStreamKeywordCRLFCompliant(Boolean.FALSE);
             pdfSource.rewind(1);
         }
     }
@@ -1087,7 +1097,7 @@ public class COSParser extends BaseParser
 			eolCount = 1;
 		} else {
 			LOG.warn("End of stream at " + pdfSource.getPosition() + " offset has no contain EOL marker.");
-			stream.setEndStreamSpacingsComplyPDFA(Boolean.FALSE);
+			stream.setEndstreamKeywordEOLCompliant(Boolean.FALSE);
 		}
 
 		stream.setOriginLength(approximateLength - eolCount);
@@ -1963,7 +1973,6 @@ public class COSParser extends BaseParser
         // some pdf-documents are broken and the pdf-version is in one of the following lines
         if (!header.contains(headerMarker))
         {
-            document.setNonValidHeader(Boolean.TRUE);
             header = readLine();
             while (!header.contains(headerMarker) && !header.contains(headerMarker.substring(1)))
             {
@@ -1974,11 +1983,22 @@ public class COSParser extends BaseParser
                 }
                 header = readLine();
             }
-        } else if (header.charAt(0) != '%') {
-            document.setNonValidHeader(Boolean.TRUE);
         }
 
-        // nothing found
+		do {
+			this.pdfSource.rewind(1);
+		} while (isEOL());
+		this.pdfSource.read();
+
+		final int headerStart = header.indexOf(headerMarker);
+		final long headerOffset = this.pdfSource.getPosition() - header.length() + headerStart;
+
+		this.document.setHeaderOffset(headerOffset);
+		this.document.setHeader(header);
+
+		skipWhiteSpaces();
+
+		// nothing found
         if (!header.contains(headerMarker))
         {
             pdfSource.seek(0);
@@ -1987,10 +2007,6 @@ public class COSParser extends BaseParser
 				return false;
 			}
         }
-
-        //sometimes there is some garbage in the header before the header
-        //actually starts, so lets try to find the header first.
-        int headerStart = header.indexOf( headerMarker );
 
         // greater than zero because if it is zero then there is no point of trimming
         if ( headerStart > 0 )
@@ -2002,35 +2018,29 @@ public class COSParser extends BaseParser
         // This is used if there is garbage after the header on the same line
         if (header.startsWith(headerMarker) && !header.matches(headerMarker + "\\d.\\d"))
         {
-            document.setNonValidHeader(Boolean.TRUE);
-            if (header.length() < headerMarker.length() + 3)
-            {
-                // No version number at all, set to 1.4 as default
-                header = headerMarker + defaultVersion;
-                LOG.debug("No version found, set to " + defaultVersion + " as default.");
-            }
-            else
-            {
-                if (validationParsing) {
-                    // trying to parse header version if it has some garbage
-                    Integer pos = null;
-                    if (header.indexOf(37) > -1) {
-                        pos = Integer.valueOf(header.indexOf(37));
-                    } else if (header.contains("PDF-")) {
-                        pos = Integer.valueOf(header.indexOf("PDF-"));
-                    }
-                    if (pos != null) {
-                        Integer length = Math.min(8, header.substring(pos).length());
-                        header = header.substring(pos, pos + length);
-                    }
-                } else {
-                    String headerGarbage = header.substring(headerMarker.length() + 3, header.length()) + "\n";
-                    header = header.substring(0, headerMarker.length() + 3);
-                    pdfSource.rewind(headerGarbage.getBytes(ISO_8859_1).length);
-                }
-            }
-        }
-        float headerVersion = -1;
+			if (header.length() < headerMarker.length() + 3) {
+				// No version number at all, set to 1.4 as default
+				header = headerMarker + defaultVersion;
+				LOG.warn("No version found, set to " + defaultVersion + " as default.");
+			} else if (validationParsing) {
+				// trying to parse header version if it has some garbage
+				Integer pos = null;
+				if (header.indexOf(37) > -1) {
+					pos = Integer.valueOf(header.indexOf(37));
+				} else if (header.contains("PDF-")) {
+					pos = Integer.valueOf(header.indexOf("PDF-"));
+				}
+				if (pos != null) {
+					Integer length = Math.min(8, header.substring(pos).length());
+					header = header.substring(pos, pos + length);
+				}
+			} else {
+				String headerGarbage = header.substring(headerMarker.length() + 3, header.length()) + "\n";
+				header = header.substring(0, headerMarker.length() + 3);
+				pdfSource.rewind(headerGarbage.getBytes(ISO_8859_1).length);
+			}
+		}
+		float headerVersion = 1.4f;
         try
         {
             String[] headerParts = header.split("-");
@@ -2041,48 +2051,49 @@ public class COSParser extends BaseParser
         }
         catch (NumberFormatException exception)
         {
-            LOG.debug("Can't parse the header version.", exception);
+            LOG.warn("Can't parse the header version.", exception);
         }
-        if (headerVersion < 0)
-        {
-            document.setNonValidHeader(Boolean.TRUE);
-        } else {
-            document.setVersion(headerVersion);
-        }
-        if (validationParsing) {
-            checkComment();
+        this.document.setVersion(headerVersion);
+        if (this.validationParsing) {
+            this.checkComment();
         }
         // rewind
-        pdfSource.seek(0);
+        this.pdfSource.seek(0);
         return true;
     }
 
     /** check second line of pdf header
      */
     private void checkComment() throws IOException {
-        String comment = readLine();
+		String comment = readLine();
+		boolean isValidComment = true;
 
-        if (comment != null && !comment.isEmpty()) {
-            if (comment.charAt(0) != '%') {
-                document.setNonValidCommentStart(Boolean.TRUE);
-            }
+		if (comment != null && !comment.isEmpty()) {
+			if (comment.charAt(0) != '%') {
+				isValidComment = false;
+			}
 
-            Integer pos = comment.indexOf('%') > -1 ? comment.indexOf('%') + 1 : 0;
-            if (comment.substring(pos).trim().length() < 4) {
-                document.setNonValidCommentLength(Boolean.TRUE);
-            }
-
-            Integer repetition = Math.min(4, comment.substring(pos).length());
-            for (int i = 0; i < repetition; i++, pos++) {
-                if ((int) comment.charAt(pos) < 128) {
-                    document.setNonValidCommentContent(Boolean.TRUE);
-                    break;
-                }
-            }
-        } else {
-            document.setNonValidCommentContent(Boolean.TRUE);
-        }
+			int pos = comment.indexOf('%') > -1 ? comment.indexOf('%') + 1 : 0;
+			if (comment.substring(pos).length() < 4) {
+				isValidComment = false;
+			}
+		} else {
+			isValidComment = false;
+		}
+		if (isValidComment) {
+			setBinaryHeaderBytes(comment.charAt(1), comment.charAt(2),
+					comment.charAt(3), comment.charAt(4));
+		} else {
+			setBinaryHeaderBytes(-1, -1, -1, -1);
+		}
     }
+
+	private void setBinaryHeaderBytes(int first, int second, int third, int fourth) {
+		this.document.setHeaderCommentByte1(first);
+		this.document.setHeaderCommentByte2(second);
+		this.document.setHeaderCommentByte3(third);
+		this.document.setHeaderCommentByte4(fourth);
+	}
 
     /**
      * This will parse the xref table from the stream and add it to the state
@@ -2113,10 +2124,10 @@ public class COSParser extends BaseParser
 					pdfSource.read();
 				}
 				if (!isDigit()) {
-					document.setIsXRefEOLCompliesPDFA(Boolean.FALSE);
+					document.setXrefEOLMarkersComplyPDFA(Boolean.FALSE);
 				}
 			} else if (space != 0x0A || !isDigit()) {
-				document.setIsXRefEOLCompliesPDFA(Boolean.FALSE);
+				document.setXrefEOLMarkersComplyPDFA(Boolean.FALSE);
 			}
         }
         // check for trailer after xref
@@ -2144,7 +2155,7 @@ public class COSParser extends BaseParser
             if (validationParsing) {
                 space = pdfSource.read();
                 if (space != 0x20 || !isDigit()) {
-                    document.setIsXRefSpacingsCompliesPDFA(Boolean.FALSE);
+                    document.setSubsectionHeaderSpaceSeparated(Boolean.FALSE);
                 }
             }
 

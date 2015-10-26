@@ -51,20 +51,20 @@ public final class COSString extends COSBase
     public static final boolean FORCE_PARSING =
             Boolean.getBoolean("org.apache.pdfbox.forceParsing");
 
-    private Boolean isHex = Boolean.FALSE;
+    private boolean isHex = Boolean.FALSE;
 
-    public Boolean isHex() {
+    public boolean isHex() {
         return isHex;
     }
 
-    private Boolean isHexSymbols = true;
+    private boolean containsOnlyHex = true;
 
-    public Boolean getIsHexSymbols() {
-        return isHexSymbols;
+    public boolean isContainsOnlyHex() {
+        return containsOnlyHex;
     }
 
-    public void setIsHexSymbols(Boolean isHexSymbols) {
-        this.isHexSymbols = isHexSymbols;
+    public void setContainsOnlyHex(boolean isHexSymbols) {
+        this.containsOnlyHex = isHexSymbols;
     }
 
     private Long hexCount = 0L;
