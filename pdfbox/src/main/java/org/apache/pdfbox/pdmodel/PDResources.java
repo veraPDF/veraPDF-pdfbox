@@ -16,9 +16,6 @@
  */
 package org.apache.pdfbox.pdmodel;
 
-import java.io.IOException;
-import java.util.Collections;
-
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
@@ -27,14 +24,17 @@ import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDPropertyList;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontFactory;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup;
-import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
+import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDAbstractPattern;
 import org.apache.pdfbox.pdmodel.graphics.shading.PDShading;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.pdmodel.graphics.PDXObject;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+
+import java.io.IOException;
+import java.util.Collections;
 
 /**
  * A set of resources available at the page/pages/stream level.
@@ -96,23 +96,35 @@ public final class PDResources implements COSObjectable
         return PDFontFactory.createFont(dict);
     }
 
+	/**
+	 * Returns the color space resource with the given name, or null if none exists.
+	 *
+	 * @param name Name of the color space resource.
+	 * @throws java.io.IOException if something went wrong.
+	 */
+	public PDColorSpace getColorSpace(COSName name) throws IOException {
+		return getColorSpace(name, false);
+	}
+
     /**
      * Returns the color space resource with the given name, or null if none exists.
      * 
      * @param name Name of the color space resource.
+	 * @param wasDefault indicate is current color space used by default color space
      * @throws java.io.IOException if something went wrong.
      */
-    public PDColorSpace getColorSpace(COSName name) throws IOException
+    public PDColorSpace getColorSpace(COSName name,
+									  boolean wasDefault) throws IOException
     {
         // get the instance
         COSBase object = get(COSName.COLORSPACE, name);
         if (object != null)
         {
-            return PDColorSpace.create(object, this);
+            return PDColorSpace.create(object, this, wasDefault);
         }
         else
         {
-            return PDColorSpace.create(name, this);
+            return PDColorSpace.create(name, this, wasDefault);
         }
     }
 
