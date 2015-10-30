@@ -192,7 +192,7 @@ public abstract class PDColorSpace implements COSObjectable
 					name == COSName.DEVICEGRAY)
 			{
 				// not allowed in an array, but we sometimes encounter these regardless
-				return create(name, resources);
+				return create(name, resources, wasDefault);
 			}
 			else
 			{
