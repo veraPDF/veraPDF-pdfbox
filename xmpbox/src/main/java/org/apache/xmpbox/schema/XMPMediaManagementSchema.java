@@ -21,21 +21,10 @@
 
 package org.apache.xmpbox.schema;
 
-import java.util.List;
-
 import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.type.AgentNameType;
-import org.apache.xmpbox.type.ArrayProperty;
-import org.apache.xmpbox.type.Cardinality;
-import org.apache.xmpbox.type.IntegerType;
-import org.apache.xmpbox.type.PropertyType;
-import org.apache.xmpbox.type.RenditionClassType;
-import org.apache.xmpbox.type.ResourceRefType;
-import org.apache.xmpbox.type.StructuredType;
-import org.apache.xmpbox.type.TextType;
-import org.apache.xmpbox.type.Types;
-import org.apache.xmpbox.type.URIType;
-import org.apache.xmpbox.type.URLType;
+import org.apache.xmpbox.type.*;
+
+import java.util.List;
 
 /**
  * Representation of XMPMediaManagement Schema
@@ -456,52 +445,52 @@ public class XMPMediaManagementSchema extends XMPSchema
     // --------------------------------------- InstanceID
     // ----------------------------
 
-    @PropertyType(type = Types.URI, card = Cardinality.Simple)
-    public static final String INSTANCEID = "InstanceID";
+//    @PropertyType(type = Types.URI, card = Cardinality.Simple)
+//    public static final String INSTANCEID = "InstanceID";
 
-    /**
-     * Set InstanceId value
-     * 
-     * @param value
-     *            InstanceId value to set
-     */
-    public void setInstanceID(String value)
-    {
-        URIType tt = (URIType) instanciateSimple(INSTANCEID, value);
-        setInstanceIDProperty(tt);
-    }
+//    /**
+//     * Set InstanceId value
+//     *
+//     * @param value
+//     *            InstanceId value to set
+//     */
+//    public void setInstanceID(String value)
+//    {
+//        URIType tt = (URIType) instanciateSimple(INSTANCEID, value);
+//        setInstanceIDProperty(tt);
+//    }
 
-    /**
-     * Set InstanceId property
-     * 
-     * @param tt
-     *            InstanceId property to set
-     */
-    public void setInstanceIDProperty(URIType tt)
-    {
-        addProperty(tt);
-    }
+//    /**
+//     * Set InstanceId property
+//     *
+//     * @param tt
+//     *            InstanceId property to set
+//     */
+//    public void setInstanceIDProperty(URIType tt)
+//    {
+//        addProperty(tt);
+//    }
 
-    /**
-     * Get InstanceId property
-     * 
-     * @return InstanceId property
-     */
-    public TextType getInstanceIDProperty()
-    {
-        return (TextType) getProperty(INSTANCEID);
-    }
+//    /**
+//     * Get InstanceId property
+//     *
+//     * @return InstanceId property
+//     */
+//    public TextType getInstanceIDProperty()
+//    {
+//        return (TextType) getProperty(INSTANCEID);
+//    }
 
-    /**
-     * Get InstanceId value
-     * 
-     * @return InstanceId value
-     */
-    public String getInstanceID()
-    {
-        TextType tt = getInstanceIDProperty();
-        return tt != null ? tt.getStringValue() : null;
-    }
+//    /**
+//     * Get InstanceId value
+//     *
+//     * @return InstanceId value
+//     */
+//    public String getInstanceID()
+//    {
+//        TextType tt = getInstanceIDProperty();
+//        return tt != null ? tt.getStringValue() : null;
+//    }
 
     // --------------------------------------- ManageFrom
     // ----------------------------
@@ -533,52 +522,52 @@ public class XMPMediaManagementSchema extends XMPSchema
     // --------------------------------------- OriginalDocumentID
     // ----------------------------
 
-    @PropertyType(type = Types.Text, card = Cardinality.Simple)
-    public static final String ORIGINALDOCUMENTID = "OriginalDocumentID";
+//    @PropertyType(type = Types.Text, card = Cardinality.Simple)
+//    public static final String ORIGINALDOCUMENTID = "OriginalDocumentID";
 
-    /**
-     * Set OriginalDocumentId value
-     * 
-     * @param url
-     *            OriginalDocumentId value to set
-     */
-    public void setOriginalDocumentID(String url)
-    {
-        TextType tt = (TextType) instanciateSimple(ORIGINALDOCUMENTID, url);
-        setOriginalDocumentIDProperty(tt);
-    }
+//    /**
+//     * Set OriginalDocumentId value
+//     *
+//     * @param url
+//     *            OriginalDocumentId value to set
+//     */
+//    public void setOriginalDocumentID(String url)
+//    {
+//        TextType tt = (TextType) instanciateSimple(ORIGINALDOCUMENTID, url);
+//        setOriginalDocumentIDProperty(tt);
+//    }
 
-    /**
-     * Set OriginalDocumentId property
-     * 
-     * @param tt
-     *            OriginalDocumentId property to set
-     */
-    public void setOriginalDocumentIDProperty(TextType tt)
-    {
-        addProperty(tt);
-    }
+//    /**
+//     * Set OriginalDocumentId property
+//     *
+//     * @param tt
+//     *            OriginalDocumentId property to set
+//     */
+//    public void setOriginalDocumentIDProperty(TextType tt)
+//    {
+//        addProperty(tt);
+//    }
 
-    /**
-     * Get OriginalDocumentId property
-     * 
-     * @return OriginalDocumentId property
-     */
-    public TextType getOriginalDocumentIDProperty()
-    {
-        return (TextType) getProperty(ORIGINALDOCUMENTID);
-    }
+//    /**
+//     * Get OriginalDocumentId property
+//     *
+//     * @return OriginalDocumentId property
+//     */
+//    public TextType getOriginalDocumentIDProperty()
+//    {
+//        return (TextType) getProperty(ORIGINALDOCUMENTID);
+//    }
 
-    /**
-     * Get OriginalDocumentId value
-     * 
-     * @return OriginalDocumentId value
-     */
-    public String getOriginalDocumentID()
-    {
-        TextType tt = getOriginalDocumentIDProperty();
-        return tt != null ? tt.getStringValue() : null;
-    }
+//    /**
+//     * Get OriginalDocumentId value
+//     *
+//     * @return OriginalDocumentId value
+//     */
+//    public String getOriginalDocumentID()
+//    {
+//        TextType tt = getOriginalDocumentIDProperty();
+//        return tt != null ? tt.getStringValue() : null;
+//    }
 
     // --------------------------------------- RenditionClass
     // ----------------------------
@@ -796,38 +785,38 @@ public class XMPMediaManagementSchema extends XMPSchema
     // --------------------------------------- Ingredients
     // ----------------------------
 
-    @PropertyType(type = Types.Text, card = Cardinality.Bag)
-    public static final String INGREDIENTS = "Ingredients";
-
-    /**
-     * Add an Ingredients value
-     * 
-     * @param ingredients
-     *            Ingredients value to add
-     */
-    public void addIngredients(String ingredients)
-    {
-        addQualifiedBagValue(INGREDIENTS, ingredients);
-    }
-
-    /**
-     * . Get Ingredients Property
-     * 
-     * @return Ingredients property
-     */
-    public ArrayProperty getIngredientsProperty()
-    {
-        return (ArrayProperty) getProperty(INGREDIENTS);
-    }
-
-    /**
-     * Get List of Ingredients values
-     * 
-     * @return List of Ingredients values
-     */
-    public List<String> getIngredients()
-    {
-        return getUnqualifiedBagValueList(INGREDIENTS);
-    }
+//    @PropertyType(type = Types.Text, card = Cardinality.Bag)
+//    public static final String INGREDIENTS = "Ingredients";
+//
+//    /**
+//     * Add an Ingredients value
+//     *
+//     * @param ingredients
+//     *            Ingredients value to add
+//     */
+//    public void addIngredients(String ingredients)
+//    {
+//        addQualifiedBagValue(INGREDIENTS, ingredients);
+//    }
+//
+//    /**
+//     * . Get Ingredients Property
+//     *
+//     * @return Ingredients property
+//     */
+//    public ArrayProperty getIngredientsProperty()
+//    {
+//        return (ArrayProperty) getProperty(INGREDIENTS);
+//    }
+//
+//    /**
+//     * Get List of Ingredients values
+//     *
+//     * @return List of Ingredients values
+//     */
+//    public List<String> getIngredients()
+//    {
+//        return getUnqualifiedBagValueList(INGREDIENTS);
+//    }
 
 }

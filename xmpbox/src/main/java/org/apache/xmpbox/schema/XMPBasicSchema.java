@@ -21,24 +21,12 @@
 
 package org.apache.xmpbox.schema;
 
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.type.*;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-
-import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.type.AbstractField;
-import org.apache.xmpbox.type.AgentNameType;
-import org.apache.xmpbox.type.ArrayProperty;
-import org.apache.xmpbox.type.BadFieldValueException;
-import org.apache.xmpbox.type.Cardinality;
-import org.apache.xmpbox.type.DateType;
-import org.apache.xmpbox.type.IntegerType;
-import org.apache.xmpbox.type.PropertyType;
-import org.apache.xmpbox.type.StructuredType;
-import org.apache.xmpbox.type.TextType;
-import org.apache.xmpbox.type.ThumbnailType;
-import org.apache.xmpbox.type.Types;
-import org.apache.xmpbox.type.URLType;
 
 /**
  * Representation of XMPBasic Schema
@@ -65,8 +53,8 @@ public class XMPBasicSchema extends XMPSchema
     @PropertyType(type = Types.Text, card = Cardinality.Bag)
     public static final String IDENTIFIER = "Identifier";
 
-    @PropertyType(type = Types.Text, card = Cardinality.Simple)
-    public static final String LABEL = "Label";
+//    @PropertyType(type = Types.Text, card = Cardinality.Simple)
+//    public static final String LABEL = "Label";
 
     @PropertyType(type = Types.Date, card = Cardinality.Simple)
     public static final String METADATADATE = "MetadataDate";
@@ -77,14 +65,14 @@ public class XMPBasicSchema extends XMPSchema
     @PropertyType(type = Types.Text, card = Cardinality.Simple)
     public static final String NICKNAME = "Nickname";
 
-    @PropertyType(type = Types.Integer, card = Cardinality.Simple)
-    public static final String RATING = "Rating";
+//    @PropertyType(type = Types.Integer, card = Cardinality.Simple)
+//    public static final String RATING = "Rating";
 
     @PropertyType(type = Types.Thumbnail, card = Cardinality.Alt)
     public static final String THUMBNAILS = "Thumbnails";
 
-    @PropertyType(type= Types.Date, card = Cardinality.Simple)
-    public static final String MODIFIER_DATE = "ModifierDate";
+//    @PropertyType(type= Types.Date, card = Cardinality.Simple)
+//    public static final String MODIFIER_DATE = "ModifierDate";
 
     private ArrayProperty altThumbs;
 
@@ -242,17 +230,17 @@ public class XMPBasicSchema extends XMPSchema
         removeUnqualifiedBagValue(IDENTIFIER, text);
     }
 
-    /**
-     * set a word or a short phrase which identifies a document as a member of a user-defined collection
-     * 
-     * @param text
-     *            the label value to set
-     */
-    public void setLabel(String text)
-    {
-        TextType tt = (TextType) instanciateSimple(LABEL, text);
-        setLabelProperty(tt);
-    }
+//    /**
+//     * set a word or a short phrase which identifies a document as a member of a user-defined collection
+//     *
+//     * @param text
+//     *            the label value to set
+//     */
+//    public void setLabel(String text)
+//    {
+//        TextType tt = (TextType) instanciateSimple(LABEL, text);
+//        setLabelProperty(tt);
+//    }
 
     /**
      * set the label property
@@ -301,11 +289,11 @@ public class XMPBasicSchema extends XMPSchema
         setModifyDateProperty(tt);
     }
 
-    public void setModifierDate(Calendar date)
-    {
-        DateType tt = (DateType) instanciateSimple(MODIFIER_DATE, date);
-        setModifierDateProperty(tt);
-    }
+//    public void setModifierDate(Calendar date)
+//    {
+//        DateType tt = (DateType) instanciateSimple(MODIFIER_DATE, date);
+//        setModifierDateProperty(tt);
+//    }
 
     /**
      * Set the ModifyDate property
@@ -346,19 +334,19 @@ public class XMPBasicSchema extends XMPSchema
         addProperty(text);
     }
 
-    /**
-     * Set a number that indicates a document's status relative to other documents, used to organize documents in a file
-     * browser (values are user-defined within an application-defined range)
-     * 
-     * @param rate
-     *            the rate value to set
-     */
-    public void setRating(Integer rate)
-    {
-        IntegerType tt = (IntegerType) instanciateSimple(RATING, rate);
-        setRatingProperty(tt);
-
-    }
+//    /**
+//     * Set a number that indicates a document's status relative to other documents, used to organize documents in a file
+//     * browser (values are user-defined within an application-defined range)
+//     *
+//     * @param rate
+//     *            the rate value to set
+//     */
+//    public void setRating(Integer rate)
+//    {
+//        IntegerType tt = (IntegerType) instanciateSimple(RATING, rate);
+//        setRatingProperty(tt);
+//
+//    }
 
     /**
      * Set Rating Property
@@ -478,26 +466,26 @@ public class XMPBasicSchema extends XMPSchema
         return getUnqualifiedBagValueList(IDENTIFIER);
     }
 
-    /**
-     * Get the label property
-     * 
-     * @return the label property
-     */
-    public TextType getLabelProperty()
-    {
-        return (TextType) getProperty(LABEL);
-    }
+//    /**
+//     * Get the label property
+//     *
+//     * @return the label property
+//     */
+//    public TextType getLabelProperty()
+//    {
+//        return (TextType) getProperty(LABEL);
+//    }
 
-    /**
-     * Get the label property value
-     * 
-     * @return the label value
-     */
-    public String getLabel()
-    {
-        TextType tt = ((TextType) getProperty(LABEL));
-        return tt == null ? null : tt.getStringValue();
-    }
+//    /**
+//     * Get the label property value
+//     *
+//     * @return the label value
+//     */
+//    public String getLabel()
+//    {
+//        TextType tt = ((TextType) getProperty(LABEL));
+//        return tt == null ? null : tt.getStringValue();
+//    }
 
     /**
      * Get the MetadataDate property
@@ -530,10 +518,10 @@ public class XMPBasicSchema extends XMPSchema
         return (DateType) getProperty(MODIFYDATE);
     }
 
-    public DateType getModifierDateProperty()
-    {
-        return (DateType) getProperty(MODIFIER_DATE);
-    }
+//    public DateType getModifierDateProperty()
+//    {
+//        return (DateType) getProperty(MODIFIER_DATE);
+//    }
 
     /**
      * Get the ModifyDate property value
@@ -551,16 +539,16 @@ public class XMPBasicSchema extends XMPSchema
 
     }
 
-    public Calendar getModifierDate()
-    {
-        DateType modifierDate = (DateType) getProperty(MODIFIER_DATE);
-        if (modifierDate != null)
-        {
-            return modifierDate.getValue();
-        }
-        return null;
-
-    }
+//    public Calendar getModifierDate()
+//    {
+//        DateType modifierDate = (DateType) getProperty(MODIFIER_DATE);
+//        if (modifierDate != null)
+//        {
+//            return modifierDate.getValue();
+//        }
+//        return null;
+//
+//    }
 
     /**
      * Get the Nickname property
@@ -583,26 +571,26 @@ public class XMPBasicSchema extends XMPSchema
         return tt == null ? null : tt.getStringValue();
     }
 
-    /**
-     * Get the Rating property
-     * 
-     * @return the Rating property
-     */
-    public IntegerType getRatingProperty()
-    {
-        return ((IntegerType) getProperty(RATING));
-    }
+//    /**
+//     * Get the Rating property
+//     *
+//     * @return the Rating property
+//     */
+//    public IntegerType getRatingProperty()
+//    {
+//        return ((IntegerType) getProperty(RATING));
+//    }
 
     /**
      * Get the Rating property value
      * 
      * @return the Rating value
      */
-    public Integer getRating()
-    {
-        IntegerType it = ((IntegerType) getProperty(RATING));
-        return it == null ? null : it.getValue();
-    }
+//    public Integer getRating()
+//    {
+//        IntegerType it = ((IntegerType) getProperty(RATING));
+//        return it == null ? null : it.getValue();
+//    }
 
     /**
      * Get list of Thumbnails

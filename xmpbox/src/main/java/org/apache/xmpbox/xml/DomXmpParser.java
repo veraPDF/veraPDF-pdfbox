@@ -21,49 +21,24 @@
 
 package org.apache.xmpbox.xml;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
-import java.util.StringTokenizer;
+import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.XmpConstants;
+import org.apache.xmpbox.schema.XMPSchema;
+import org.apache.xmpbox.schema.XmpSchemaException;
+import org.apache.xmpbox.type.*;
+import org.apache.xmpbox.xml.XmpParsingException.ErrorType;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
-import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.XmpConstants;
-import org.apache.xmpbox.schema.XMPSchema;
-import org.apache.xmpbox.schema.XmpSchemaException;
-import org.apache.xmpbox.type.AbstractField;
-import org.apache.xmpbox.type.AbstractSimpleProperty;
-import org.apache.xmpbox.type.AbstractStructuredType;
-import org.apache.xmpbox.type.ArrayProperty;
-import org.apache.xmpbox.type.Attribute;
-import org.apache.xmpbox.type.BadFieldValueException;
-import org.apache.xmpbox.type.Cardinality;
-import org.apache.xmpbox.type.ComplexPropertyContainer;
-import org.apache.xmpbox.type.PropertiesDescription;
-import org.apache.xmpbox.type.PropertyType;
-import org.apache.xmpbox.type.TypeMapping;
-import org.apache.xmpbox.type.Types;
-import org.apache.xmpbox.xml.XmpParsingException.ErrorType;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Comment;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.ProcessingInstruction;
-import org.w3c.dom.Text;
-import org.xml.sax.SAXException;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 public class DomXmpParser
 {
@@ -263,7 +238,9 @@ public class DomXmpParser
             //Default to text if no type is found
             if( type == null)
             {
-                type = TypeMapping.createPropertyType(Types.Text, Cardinality.Simple);
+//                type = TypeMapping.createPropertyType(Types.Text, Cardinality.Simple);
+                throw new XmpParsingException(ErrorType.InvalidType, "No type defined for {" + namespace + "}"
+                    + attr.getName());
             }
             
             try
@@ -277,6 +254,9 @@ public class DomXmpParser
                 throw new XmpParsingException(ErrorType.Format,
                         e.getMessage() + " in " + schema.getPrefix() + ":" + attr.getLocalName(), e);
             }
+        } else {
+            throw new XmpParsingException(ErrorType.NoSchema,
+                    "This namespace is not a schema or a structured type : " + namespace);
         }
     }
 
