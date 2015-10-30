@@ -21,23 +21,8 @@
 
 package org.apache.xmpbox.schema;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.xmpbox.XMPMetadata;
-import org.apache.xmpbox.type.AbstractField;
-import org.apache.xmpbox.type.ArrayProperty;
-import org.apache.xmpbox.type.BadFieldValueException;
-import org.apache.xmpbox.type.Cardinality;
-import org.apache.xmpbox.type.DateType;
-import org.apache.xmpbox.type.IntegerType;
-import org.apache.xmpbox.type.LayerType;
-import org.apache.xmpbox.type.ProperNameType;
-import org.apache.xmpbox.type.PropertyType;
-import org.apache.xmpbox.type.StructuredType;
-import org.apache.xmpbox.type.TextType;
-import org.apache.xmpbox.type.Types;
-import org.apache.xmpbox.type.URIType;
+import org.apache.xmpbox.type.*;
 
 @StructuredType(preferedPrefix = "photoshop", namespace = "http://ns.adobe.com/photoshop/1.0/")
 public class PhotoshopSchema extends XMPSchema
@@ -53,8 +38,8 @@ public class PhotoshopSchema extends XMPSchema
         super(metadata, ownPrefix);
     }
 
-    @PropertyType(type = Types.URI, card = Cardinality.Simple)
-    public static final String ANCESTORID = "AncestorID";
+//    @PropertyType(type = Types.URI, card = Cardinality.Simple)
+//    public static final String ANCESTORID = "AncestorID";
 
     @PropertyType(type = Types.Text, card = Cardinality.Simple)
     public static final String AUTHORS_POSITION = "AuthorsPosition";
@@ -68,8 +53,8 @@ public class PhotoshopSchema extends XMPSchema
     @PropertyType(type = Types.Text, card = Cardinality.Simple)
     public static final String CITY = "City";
 
-    @PropertyType(type = Types.Integer, card = Cardinality.Simple)
-    public static final String COLOR_MODE = "ColorMode";
+//    @PropertyType(type = Types.Integer, card = Cardinality.Simple)
+//    public static final String COLOR_MODE = "ColorMode";
 
     @PropertyType(type = Types.Text, card = Cardinality.Simple)
     public static final String COUNTRY = "Country";
@@ -80,17 +65,17 @@ public class PhotoshopSchema extends XMPSchema
     @PropertyType(type = Types.Date, card = Cardinality.Simple)
     public static final String DATE_CREATED = "DateCreated";
 
-    @PropertyType(type = Types.Text, card = Cardinality.Bag)
-    public static final String DOCUMENT_ANCESTORS = "DocumentAncestors";
+//    @PropertyType(type = Types.Text, card = Cardinality.Bag)
+//    public static final String DOCUMENT_ANCESTORS = "DocumentAncestors";
 
     @PropertyType(type = Types.Text, card = Cardinality.Simple)
     public static final String HEADLINE = "Headline";
 
-    @PropertyType(type = Types.Text, card = Cardinality.Simple)
-    public static final String HISTORY = "History";
-
-    @PropertyType(type = Types.Text, card = Cardinality.Simple)
-    public static final String ICC_PROFILE = "ICCProfile";
+//    @PropertyType(type = Types.Text, card = Cardinality.Simple)
+//    public static final String HISTORY = "History";
+//
+//    @PropertyType(type = Types.Text, card = Cardinality.Simple)
+//    public static final String ICC_PROFILE = "ICCProfile";
 
     @PropertyType(type = Types.Text, card = Cardinality.Simple)
     public static final String INSTRUCTIONS = "Instructions";
@@ -104,8 +89,8 @@ public class PhotoshopSchema extends XMPSchema
     @PropertyType(type = Types.Text, card = Cardinality.Simple)
     public static final String SUPPLEMENTAL_CATEGORIES = "SupplementalCategories";
 
-    @PropertyType(type = Types.Layer, card = Cardinality.Seq)
-    public static final String TEXT_LAYERS = "TextLayers";
+//    @PropertyType(type = Types.Layer, card = Cardinality.Seq)
+//    public static final String TEXT_LAYERS = "TextLayers";
 
     private ArrayProperty seqLayer;
 
@@ -115,22 +100,22 @@ public class PhotoshopSchema extends XMPSchema
     @PropertyType(type = Types.Integer, card = Cardinality.Simple)
     public static final String URGENCY = "Urgency";
 
-    public URIType getAncestorIDProperty()
-    {
-        return (URIType) getProperty(ANCESTORID);
-    }
-
-    public String getAncestorID()
-    {
-        TextType tt = ((TextType) getProperty(ANCESTORID));
-        return tt == null ? null : tt.getStringValue();
-    }
-
-    public void setAncestorID(String text)
-    {
-        URIType tt = (URIType) instanciateSimple(ANCESTORID, text);
-        setAncestorIDProperty(tt);
-    }
+//    public URIType getAncestorIDProperty()
+//    {
+//        return (URIType) getProperty(ANCESTORID);
+//    }
+//
+//    public String getAncestorID()
+//    {
+//        TextType tt = ((TextType) getProperty(ANCESTORID));
+//        return tt == null ? null : tt.getStringValue();
+//    }
+//
+//    public void setAncestorID(String text)
+//    {
+//        URIType tt = (URIType) instanciateSimple(ANCESTORID, text);
+//        setAncestorIDProperty(tt);
+//    }
 
     public void setAncestorIDProperty(URIType text)
     {
@@ -225,22 +210,22 @@ public class PhotoshopSchema extends XMPSchema
         addProperty(text);
     }
 
-    public IntegerType getColorModeProperty()
-    {
-        return (IntegerType) getProperty(COLOR_MODE);
-    }
-
-    public Integer getColorMode()
-    {
-        IntegerType tt = ((IntegerType) getProperty(COLOR_MODE));
-        return tt == null ? null : tt.getValue();
-    }
-
-    public void setColorMode(String text)
-    {
-        IntegerType tt = (IntegerType) instanciateSimple(COLOR_MODE, text);
-        setColorModeProperty(tt);
-    }
+//    public IntegerType getColorModeProperty()
+//    {
+//        return (IntegerType) getProperty(COLOR_MODE);
+//    }
+//
+//    public Integer getColorMode()
+//    {
+//        IntegerType tt = ((IntegerType) getProperty(COLOR_MODE));
+//        return tt == null ? null : tt.getValue();
+//    }
+//
+//    public void setColorMode(String text)
+//    {
+//        IntegerType tt = (IntegerType) instanciateSimple(COLOR_MODE, text);
+//        setColorModeProperty(tt);
+//    }
 
     public void setColorModeProperty(IntegerType text)
     {
@@ -313,20 +298,20 @@ public class PhotoshopSchema extends XMPSchema
         addProperty(text);
     }
 
-    public void addDocumentAncestors(String text)
-    {
-        addQualifiedBagValue(DOCUMENT_ANCESTORS, text);
-    }
-
-    public ArrayProperty getDocumentAncestorsProperty()
-    {
-        return (ArrayProperty) getProperty(DOCUMENT_ANCESTORS);
-    }
-
-    public List<String> getDocumentAncestors()
-    {
-        return getUnqualifiedBagValueList(DOCUMENT_ANCESTORS);
-    }
+//    public void addDocumentAncestors(String text)
+//    {
+//        addQualifiedBagValue(DOCUMENT_ANCESTORS, text);
+//    }
+//
+//    public ArrayProperty getDocumentAncestorsProperty()
+//    {
+//        return (ArrayProperty) getProperty(DOCUMENT_ANCESTORS);
+//    }
+//
+//    public List<String> getDocumentAncestors()
+//    {
+//        return getUnqualifiedBagValueList(DOCUMENT_ANCESTORS);
+//    }
 
     public TextType getHeadlineProperty()
     {
@@ -350,49 +335,49 @@ public class PhotoshopSchema extends XMPSchema
         addProperty(text);
     }
 
-    public TextType getHistoryProperty()
-    {
-        return (TextType) getProperty(HISTORY);
-    }
-
-    public String getHistory()
-    {
-        TextType tt = ((TextType) getProperty(HISTORY));
-        return tt == null ? null : tt.getStringValue();
-    }
-
-    public void setHistory(String text)
-    {
-        TextType tt = (TextType) instanciateSimple(HISTORY, text);
-        setHistoryProperty(tt);
-    }
-
-    public void setHistoryProperty(TextType text)
-    {
-        addProperty(text);
-    }
-
-    public TextType getICCProfileProperty()
-    {
-        return (TextType) getProperty(ICC_PROFILE);
-    }
-
-    public String getICCProfile()
-    {
-        TextType tt = ((TextType) getProperty(ICC_PROFILE));
-        return tt == null ? null : tt.getStringValue();
-    }
-
-    public void setICCProfile(String text)
-    {
-        TextType tt = (TextType) instanciateSimple(ICC_PROFILE, text);
-        setICCProfileProperty(tt);
-    }
-
-    public void setICCProfileProperty(TextType text)
-    {
-        addProperty(text);
-    }
+//    public TextType getHistoryProperty()
+//    {
+//        return (TextType) getProperty(HISTORY);
+//    }
+//
+//    public String getHistory()
+//    {
+//        TextType tt = ((TextType) getProperty(HISTORY));
+//        return tt == null ? null : tt.getStringValue();
+//    }
+//
+//    public void setHistory(String text)
+//    {
+//        TextType tt = (TextType) instanciateSimple(HISTORY, text);
+//        setHistoryProperty(tt);
+//    }
+//
+//    public void setHistoryProperty(TextType text)
+//    {
+//        addProperty(text);
+//    }
+//
+//    public TextType getICCProfileProperty()
+//    {
+//        return (TextType) getProperty(ICC_PROFILE);
+//    }
+//
+//    public String getICCProfile()
+//    {
+//        TextType tt = ((TextType) getProperty(ICC_PROFILE));
+//        return tt == null ? null : tt.getStringValue();
+//    }
+//
+//    public void setICCProfile(String text)
+//    {
+//        TextType tt = (TextType) instanciateSimple(ICC_PROFILE, text);
+//        setICCProfileProperty(tt);
+//    }
+//
+//    public void setICCProfileProperty(TextType text)
+//    {
+//        addProperty(text);
+//    }
 
     public TextType getInstructionsProperty()
     {
@@ -483,42 +468,42 @@ public class PhotoshopSchema extends XMPSchema
         addProperty(text);
     }
 
-    public void addTextLayers(String layerName, String layerText)
-    {
-        if (seqLayer == null)
-        {
-            seqLayer = createArrayProperty(TEXT_LAYERS, Cardinality.Seq);
-            addProperty(seqLayer);
-        }
-        LayerType layer = new LayerType(getMetadata());
-        layer.setLayerName(layerName);
-        layer.setLayerText(layerText);
-        seqLayer.getContainer().addProperty(layer);
-    }
-
-    public List<LayerType> getTextLayers() throws BadFieldValueException
-    {
-        List<AbstractField> tmp = getUnqualifiedArrayList(TEXT_LAYERS);
-        if (tmp != null)
-        {
-            List<LayerType> layers = new ArrayList<LayerType>();
-            for (AbstractField abstractField : tmp)
-            {
-                if (abstractField instanceof LayerType)
-                {
-                    layers.add((LayerType) abstractField);
-                }
-                else
-                {
-                    throw new BadFieldValueException("Layer expected and " + abstractField.getClass().getName()
-                            + " found.");
-                }
-            }
-            return layers;
-        }
-        return null;
-
-    }
+//    public void addTextLayers(String layerName, String layerText)
+//    {
+//        if (seqLayer == null)
+//        {
+//            seqLayer = createArrayProperty(TEXT_LAYERS, Cardinality.Seq);
+//            addProperty(seqLayer);
+//        }
+//        LayerType layer = new LayerType(getMetadata());
+//        layer.setLayerName(layerName);
+//        layer.setLayerText(layerText);
+//        seqLayer.getContainer().addProperty(layer);
+//    }
+//
+//    public List<LayerType> getTextLayers() throws BadFieldValueException
+//    {
+//        List<AbstractField> tmp = getUnqualifiedArrayList(TEXT_LAYERS);
+//        if (tmp != null)
+//        {
+//            List<LayerType> layers = new ArrayList<LayerType>();
+//            for (AbstractField abstractField : tmp)
+//            {
+//                if (abstractField instanceof LayerType)
+//                {
+//                    layers.add((LayerType) abstractField);
+//                }
+//                else
+//                {
+//                    throw new BadFieldValueException("Layer expected and " + abstractField.getClass().getName()
+//                            + " found.");
+//                }
+//            }
+//            return layers;
+//        }
+//        return null;
+//
+//    }
 
     public TextType getTransmissionReferenceProperty()
     {

@@ -22,13 +22,9 @@
 package org.apache.xmpbox.schema;
 
 import org.apache.xmpbox.XMPMetadata;
+import org.apache.xmpbox.type.*;
 
 import java.util.List;
-import org.apache.xmpbox.type.ArrayProperty;
-import org.apache.xmpbox.type.Cardinality;
-import org.apache.xmpbox.type.PropertyType;
-import org.apache.xmpbox.type.StructuredType;
-import org.apache.xmpbox.type.Types;
 
 /**
  * Representation of a Exif Schema
@@ -62,6 +58,10 @@ public class ExifSchema extends XMPSchema
 
     @PropertyType(type=Types.Integer, card= Cardinality.Simple)
     public static final String PIXEL_Y_DIMENSION = "PixelYDimension";
+
+    //Added Property
+    @PropertyType(type=Types.Text, card= Cardinality.Simple)
+    public static final String MAKER_NOTE = "MakerNote";
 
     @PropertyType(type=Types.Text, card= Cardinality.Simple)
     public static final String RELATED_SOUND_FILE = "RelatedSoundFile";
@@ -270,8 +270,8 @@ public class ExifSchema extends XMPSchema
     @PropertyType(type = Types.Flash)
     public static final String FLASH = "Flash";
 
-    @PropertyType(type = Types.CFAPattern)
-    public static final String CFA_PATTERN_TYPE = "CFAPatternType";
+//    @PropertyType(type = Types.CFAPattern)
+//    public static final String CFA_PATTERN_TYPE = "CFAPatternType";
 
     @PropertyType(type = Types.DeviceSettings)
     public static final String DEVICE_SETTING_DESCRIPTION = "DeviceSettingDescription";
