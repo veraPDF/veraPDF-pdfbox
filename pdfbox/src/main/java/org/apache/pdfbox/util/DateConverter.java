@@ -370,19 +370,24 @@ public final class DateConverter
      */
     static GregorianCalendar newGreg()
     {
-        GregorianCalendar retCal = new GregorianCalendar(Locale.ENGLISH);
-        retCal.setTimeZone(new SimpleTimeZone(0, "UTC"));
-        retCal.setLenient(false);
-        retCal.set(Calendar.MILLISECOND, 0);
-        return retCal;
+		return newGreg(true);
     }
-    
-    /*
-     * Install a TimeZone on a GregorianCalendar without changing the 
-     * hours value. A plain GregorianCalendat.setTimeZone() 
-     * adjusts the Calendar.HOUR value to compensate. This is *BAD*
-     * (not to say *EVIL*) when we have already set the time.
-     */
+
+	private static GregorianCalendar newGreg(boolean useUTC) {
+		GregorianCalendar retCal = new GregorianCalendar(Locale.ENGLISH);
+		TimeZone zone = useUTC ? new SimpleTimeZone(0, "UTC") : TimeZone.getDefault();
+		retCal.setTimeZone(zone);
+		retCal.setLenient(false);
+		retCal.set(Calendar.MILLISECOND, 0);
+		return retCal;
+	}
+
+	/*
+	 * Install a TimeZone on a GregorianCalendar without changing the
+	 * hours value. A plain GregorianCalendat.setTimeZone()
+	 * adjusts the Calendar.HOUR value to compensate. This is *BAD*
+	 * (not to say *EVIL*) when we have already set the time.
+	 */
     private static void adjustTimeZoneNicely(GregorianCalendar cal, TimeZone tz)
     {
         cal.setTimeZone(tz);
@@ -472,7 +477,7 @@ public final class DateConverter
      * The error index is ignored and unchanged.
      */
     private static GregorianCalendar parseBigEndianDate(String text,
-            ParsePosition initialWhere) 
+            ParsePosition initialWhere, boolean useUTC)
     {
         ParsePosition where = new ParsePosition(initialWhere.getIndex());
         int year = parseTimeField(text, where, 4, 0);
@@ -497,7 +502,7 @@ public final class DateConverter
             parseTimeField(text, where, 19, 0);
         }
 
-        GregorianCalendar dest = newGreg();
+        GregorianCalendar dest = newGreg(useUTC);
         try 
         {
             dest.set(year, month, day, hour, minute, second);
@@ -529,13 +534,13 @@ public final class DateConverter
      * part of the format, the time zone will be GMT+0
      */
     private static GregorianCalendar parseSimpleDate(String text, String[] fmts,
-            ParsePosition initialWhere) 
+													 ParsePosition initialWhere, boolean useUTC)
     {
         for(String fmt : fmts)
         {
             ParsePosition where = new ParsePosition(initialWhere.getIndex());
             SimpleDateFormat sdf = new SimpleDateFormat(fmt, Locale.ENGLISH);
-            GregorianCalendar retCal = newGreg();
+            GregorianCalendar retCal = newGreg(useUTC);
             sdf.setCalendar(retCal);
             if (sdf.parse(text, where) != null)
             {
@@ -565,7 +570,7 @@ public final class DateConverter
      * - The formats tried are alphaStartFormats or digitStartFormat and
      * any listed in the value of moreFmts.
      */
-    private static Calendar parseDate(String text, ParsePosition initialWhere)
+    private static Calendar parseDate(String text, ParsePosition initialWhere, boolean useUTC)
     {
         if (text == null || text.isEmpty())
         {
@@ -586,7 +591,7 @@ public final class DateConverter
         int startPosition = where.getIndex();
 
         // try big-endian parse
-        GregorianCalendar retCal = parseBigEndianDate(text, where);
+        GregorianCalendar retCal = parseBigEndianDate(text, where, useUTC);
         // check for success and a timezone
         if (retCal != null && (where.getIndex() == text.length() ||
                                parseTZoffset(text, retCal, where)))
@@ -608,7 +613,7 @@ public final class DateConverter
                 = Character.isDigit(text.charAt(startPosition))
                 ? DIGIT_START_FORMATS
                 : ALPHA_START_FORMATS;
-        retCal = parseSimpleDate(text, formats, where);
+        retCal = parseSimpleDate(text, formats, where, useUTC);
         // check for success and a timezone
         if (retCal != null &&
                 (where.getIndex() == text.length() ||
@@ -647,14 +652,28 @@ public final class DateConverter
      */
     public static Calendar toCalendar(COSString text)
     {
-        if (text == null)
-        {
-            return null;    
-        }
-        return toCalendar(text.getString());
+		return toCalendar(text, true);
     }
 
-    /**
+	/**
+	 * Returns the Calendar for a given COS string containing a date,
+	 * or {@code null} if it cannot be parsed.
+	 *
+	 * The returned value will have 0 for DST_OFFSET.
+	 *
+	 * @param text A COS string containing a date.
+	 * @param useUTC is use UTC as default time zone
+	 * @return The Calendar that the text string represents, or {@code null} if it cannot be parsed.
+	 */
+	public static Calendar toCalendar(COSString text, boolean useUTC) {
+		if (text == null)
+		{
+			return null;
+		}
+		return toCalendar(text.getString(), useUTC);
+	}
+
+	/**
      * Returns the Calendar for a given string containing a date,
      * or {@code null} if it cannot be parsed.
      *
@@ -665,21 +684,35 @@ public final class DateConverter
      */
     public static Calendar toCalendar(String text)
     {
-        if (text == null || text.trim().isEmpty())
-        {
-            return null;
-        }
-
-        ParsePosition where = new ParsePosition(0);
-        skipOptionals(text, where, " ");
-        skipString(text, "D:", where);
-        Calendar calendar = parseDate(text, where);
-
-        if (calendar == null || where.getIndex() != text.length())
-        {
-            // the date string is invalid
-            return null;
-        }
-        return calendar;
+		return toCalendar(text, true);
     }
+
+	/**
+	 * Returns the Calendar for a given string containing a date,
+	 * or {@code null} if it cannot be parsed.
+	 *
+	 * The returned value will have 0 for DST_OFFSET.
+	 *
+	 * @param text A COS string containing a date.
+	 * @param useUTC is use UTC as default time zone
+	 * @return The Calendar that the text string represents, or {@code null} if it cannot be parsed.
+	 */
+	public static Calendar toCalendar(String text, boolean useUTC) {
+		if (text == null || text.trim().isEmpty())
+		{
+			return null;
+		}
+
+		ParsePosition where = new ParsePosition(0);
+		skipOptionals(text, where, " ");
+		skipString(text, "D:", where);
+		Calendar calendar = parseDate(text, where, useUTC);
+
+		if (calendar == null || where.getIndex() != text.length())
+		{
+			// the date string is invalid
+			return null;
+		}
+		return calendar;
+	}
 }
