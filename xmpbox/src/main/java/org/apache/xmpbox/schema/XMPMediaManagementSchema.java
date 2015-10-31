@@ -445,52 +445,52 @@ public class XMPMediaManagementSchema extends XMPSchema
     // --------------------------------------- InstanceID
     // ----------------------------
 
-//    @PropertyType(type = Types.URI, card = Cardinality.Simple)
-//    public static final String INSTANCEID = "InstanceID";
+    @PropertyType(type = Types.URI, card = Cardinality.Simple)
+    public static final String INSTANCEID = "InstanceID";
 
-//    /**
-//     * Set InstanceId value
-//     *
-//     * @param value
-//     *            InstanceId value to set
-//     */
-//    public void setInstanceID(String value)
-//    {
-//        URIType tt = (URIType) instanciateSimple(INSTANCEID, value);
-//        setInstanceIDProperty(tt);
-//    }
+    /**
+     * Set InstanceId value
+     *
+     * @param value
+     *            InstanceId value to set
+     */
+    public void setInstanceID(String value)
+    {
+        URIType tt = (URIType) instanciateSimple(INSTANCEID, value);
+        setInstanceIDProperty(tt);
+    }
 
-//    /**
-//     * Set InstanceId property
-//     *
-//     * @param tt
-//     *            InstanceId property to set
-//     */
-//    public void setInstanceIDProperty(URIType tt)
-//    {
-//        addProperty(tt);
-//    }
+    /**
+     * Set InstanceId property
+     *
+     * @param tt
+     *            InstanceId property to set
+     */
+    public void setInstanceIDProperty(URIType tt)
+    {
+        addProperty(tt);
+    }
 
-//    /**
-//     * Get InstanceId property
-//     *
-//     * @return InstanceId property
-//     */
-//    public TextType getInstanceIDProperty()
-//    {
-//        return (TextType) getProperty(INSTANCEID);
-//    }
+    /**
+     * Get InstanceId property
+     *
+     * @return InstanceId property
+     */
+    public TextType getInstanceIDProperty()
+    {
+        return (TextType) getProperty(INSTANCEID);
+    }
 
-//    /**
-//     * Get InstanceId value
-//     *
-//     * @return InstanceId value
-//     */
-//    public String getInstanceID()
-//    {
-//        TextType tt = getInstanceIDProperty();
-//        return tt != null ? tt.getStringValue() : null;
-//    }
+    /**
+     * Get InstanceId value
+     *
+     * @return InstanceId value
+     */
+    public String getInstanceID()
+    {
+        TextType tt = getInstanceIDProperty();
+        return tt != null ? tt.getStringValue() : null;
+    }
 
     // --------------------------------------- ManageFrom
     // ----------------------------
