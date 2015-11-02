@@ -738,7 +738,7 @@ public class COSParser extends BaseParser
             //pdf/a-1b spec, clause 6.1.8
             skipSpaces();
             pdfSource.seek(pdfSource.getPosition() - 1);
-            if (!isEOL()) {
+            if (!isEOL(pdfSource.read())) {
                 pdfObject.setHeaderOfObjectComplyPDFA(Boolean.FALSE);
             }
         }
