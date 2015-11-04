@@ -88,22 +88,7 @@ public abstract class PDColorSpace implements COSObjectable
 			// default color spaces
 			if (resources != null)
 			{
-				COSName defaultName = null;
-				if (name.equals(COSName.DEVICECMYK) &&
-						resources.hasColorSpace(COSName.DEFAULT_CMYK))
-				{
-					defaultName = COSName.DEFAULT_CMYK;
-				}
-				else if (name.equals(COSName.DEVICERGB) &&
-						resources.hasColorSpace(COSName.DEFAULT_RGB))
-				{
-					defaultName = COSName.DEFAULT_RGB;
-				}
-				else if (name.equals(COSName.DEVICEGRAY) &&
-						resources.hasColorSpace(COSName.DEFAULT_GRAY))
-				{
-					defaultName = COSName.DEFAULT_GRAY;
-				}
+				COSName defaultName = getDefaultValue(resources, name);
 
 				if (resources.hasColorSpace(defaultName) && !wasDefault)
 				{
@@ -205,7 +190,38 @@ public abstract class PDColorSpace implements COSObjectable
 		}
 	}
 
-    // array for the given parameters
+	/**
+	 * Returns name of corresponding default color space if passed name
+	 * is device depended color space
+	 *
+	 * @param resources current resource dictionary
+	 * @param name color space name
+	 * @return name of corresponding default color space if passed name
+	 * 		   is device depended color space
+	 */
+	public static COSName getDefaultValue(PDResources resources, COSName name) {
+		if (name.equals(COSName.DEVICECMYK) &&
+				resources.hasColorSpace(COSName.DEFAULT_CMYK))
+		{
+			return COSName.DEFAULT_CMYK;
+		}
+		else if (name.equals(COSName.DEVICERGB) &&
+				resources.hasColorSpace(COSName.DEFAULT_RGB))
+		{
+			return COSName.DEFAULT_RGB;
+		}
+		else if (name.equals(COSName.DEVICEGRAY) &&
+				resources.hasColorSpace(COSName.DEFAULT_GRAY))
+		{
+			return COSName.DEFAULT_GRAY;
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+	// array for the given parameters
     protected COSArray array;
 
     /**
