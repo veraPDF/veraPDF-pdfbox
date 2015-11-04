@@ -42,7 +42,7 @@ import java.util.Collections;
  * @author Ben Litchfield
  * @author John Hewson
  */
-public final class PDResources implements COSObjectable
+public class PDResources implements COSObjectable
 {
     private final COSDictionary resources;
 
