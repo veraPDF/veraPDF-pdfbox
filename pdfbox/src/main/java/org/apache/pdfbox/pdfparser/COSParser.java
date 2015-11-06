@@ -647,7 +647,13 @@ public class COSParser extends BaseParser
 		{
 			try
 			{
-				pdfSource.seek(document.getXrefTable().get(key));
+				long position = document.getXrefTable().get(key);
+				if (position < 0)
+				{
+					position = xrefTrailerResolver.getXrefTable().get(
+							new COSObjectKey(-position, key.getGeneration()));
+				}
+				pdfSource.seek(position);
 				COSObject suspensionObject = document.getObjectFromPool(key);
 				parseObjectDynamically(suspensionObject, false);
 			} catch (IOException e)
