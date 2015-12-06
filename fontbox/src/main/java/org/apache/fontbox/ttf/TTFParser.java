@@ -127,7 +127,10 @@ public class TTFParser
         for (int i = 0; i < numberOfTables; i++)
         {
             TTFTable table = readTableDirectory(font, raf);
-            font.addTable(table);
+            // skip tables with zero length
+            if (table != null) {
+                font.addTable(table);
+            }
         }
         // parse tables if wanted
         if (!parseOnDemandOnly)
@@ -283,6 +286,12 @@ public class TTFParser
         table.setCheckSum(raf.readUnsignedInt());
         table.setOffset(raf.readUnsignedInt());
         table.setLength(raf.readUnsignedInt());
+
+        // skip tables with zero length
+        if (table.getLength() == 0) {
+            return null;
+        }
+
         return table;
     }
 
