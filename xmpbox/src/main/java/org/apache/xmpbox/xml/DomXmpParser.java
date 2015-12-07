@@ -233,7 +233,7 @@ public class DomXmpParser
         {
             ComplexPropertyContainer container = schema.getContainer();
             PropertyType type = checkPropertyDefinition(xmp,
-                    new QName(attr.getNamespaceURI(), attr.getName(), attr.getPrefix()));
+                    new QName(attr.getNamespaceURI(), attr.getLocalName(), attr.getPrefix()));
 
             //Default to text if no type is found
             if( type == null)
