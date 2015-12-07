@@ -1,5 +1,5 @@
 /*****************************************************************************
- * 
+ *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -7,16 +7,16 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- * 
+ *
  ****************************************************************************/
 
 package org.apache.xmpbox.xml;
@@ -233,8 +233,8 @@ public class DomXmpParser
         {
             ComplexPropertyContainer container = schema.getContainer();
             PropertyType type = checkPropertyDefinition(xmp,
-                    new QName(attr.getNamespaceURI(), attr.getLocalName()));
-            
+                    new QName(attr.getNamespaceURI(), attr.getLocalName(), attr.getPrefix()));
+
             //Default to text if no type is found
             if( type == null)
             {
@@ -242,7 +242,12 @@ public class DomXmpParser
                 throw new XmpParsingException(ErrorType.InvalidType, "No type defined for {" + namespace + "}"
                     + attr.getName());
             }
-            
+            else if (type.card().isArray() || (!(type.type().isSimple()) || type.type() == Types.LangAlt))
+            {
+                throw new XmpParsingException(ErrorType.InvalidType, "Non simple element {" + namespace + "}"
+                        + attr.getName() + " was defined in description attributes");
+            }
+
             try
             {
                 AbstractSimpleProperty sp = tm.instanciateSimpleProperty(namespace, schema.getPrefix(),
@@ -753,19 +758,19 @@ public class DomXmpParser
 
     /**
      * Remove all the comments node in the parent element of the parameter
-     * 
+     *
      * @param root
      *            the first node of an element or document to clear
      */
     private void removeComments(Node root)
     {
-        if (root.getChildNodes().getLength()<=1) 
+        if (root.getChildNodes().getLength()<=1)
         {
             // There is only one node so we do not remove it
             return;
         }
         NodeList nl = root.getChildNodes();
-        for (int i=0; i < nl.getLength(); i++) 
+        for (int i=0; i < nl.getLength(); i++)
         {
             Node node = nl.item(i);
             if (node instanceof Comment)
