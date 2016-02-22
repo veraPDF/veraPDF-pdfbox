@@ -107,17 +107,13 @@ public abstract class CFFCharset
      * @param sid SID
      * @return GID
      */
-    int getGIDForSID(int sid)
+    Integer getGIDForSID(int sid)
     {
         if (isCIDFont)
         {
             throw new IllegalStateException("Not a Type 1-equivalent font");
         }
         Integer gid = sidOrCidToGid.get(sid);
-        if (gid == null)
-        {
-            return 0;
-        }
         return gid;
     }
 
