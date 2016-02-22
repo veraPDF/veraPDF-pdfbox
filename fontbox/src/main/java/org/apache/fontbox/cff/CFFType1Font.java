@@ -16,14 +16,15 @@
  */
 package org.apache.fontbox.cff;
 
+import org.apache.fontbox.EncodedFont;
+import org.apache.fontbox.type1.Type1CharStringReader;
+
 import java.awt.geom.GeneralPath;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.fontbox.EncodedFont;
-import org.apache.fontbox.type1.Type1CharStringReader;
 
 /**
  * A Type 1-equivalent font program represented in a CFF file. Thread safe.
@@ -70,9 +71,14 @@ public class CFFType1Font extends CFFFont implements EncodedFont
     public boolean hasGlyph(String name)
     {
         int sid = charset.getSID(name);
-        int gid = charset.getGIDForSID(sid);
-        return gid != 0;
+        Integer gid = charset.getGIDForSID(sid);
+        if (gid == null) {
+            return false;
+        } else {
+            return true;
+        }
     }
+
 
     @Override
     public List<Number> getFontMatrix()
@@ -105,7 +111,10 @@ public class CFFType1Font extends CFFFont implements EncodedFont
     {
         // some fonts have glyphs beyond their encoding, so we look up by charset SID
         int sid = charset.getSID(name);
-        return charset.getGIDForSID(sid);
+        Integer gid = charset.getGIDForSID(sid);
+        if (gid == null) {
+            return 0;
+        } else return gid;
     }
 
     /**
