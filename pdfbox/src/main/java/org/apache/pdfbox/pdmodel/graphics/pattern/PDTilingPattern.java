@@ -169,7 +169,11 @@ public class PDTilingPattern extends PDAbstractPattern implements PDContentStrea
     @Override
     public COSStream getContentStream()
     {
-        return (COSStream)getCOSObject();
+        COSDictionary dict = getCOSObject();
+        if (dict instanceof COSStream) {
+            return ((COSStream) getCOSObject());
+        }
+        return null;
     }
 
     /**
