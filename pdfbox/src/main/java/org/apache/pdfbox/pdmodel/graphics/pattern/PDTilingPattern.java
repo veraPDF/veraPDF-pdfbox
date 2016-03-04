@@ -16,6 +16,8 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.pattern;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.contentstream.PDContentStream;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -30,6 +32,9 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
  */
 public class PDTilingPattern extends PDAbstractPattern implements PDContentStream
 {
+
+    private static final Log LOG = LogFactory.getLog(PDTilingPattern.class);
+
     /** paint type 1 = colored tiling pattern. */
     public static final int PAINT_COLORED = 1;
 
@@ -171,6 +176,7 @@ public class PDTilingPattern extends PDAbstractPattern implements PDContentStrea
     {
         COSDictionary dict = getCOSObject();
         if (dict instanceof COSStream) {
+            LOG.warn("Invalid Tiling Pattern object type. Assuming the pattern has no content.");
             return ((COSStream) getCOSObject());
         }
         return null;
