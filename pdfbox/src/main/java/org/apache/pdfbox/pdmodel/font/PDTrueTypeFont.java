@@ -16,6 +16,17 @@
  */
 package org.apache.pdfbox.pdmodel.font;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.fontbox.FontBoxFont;
+import org.apache.fontbox.ttf.*;
+import org.apache.fontbox.util.BoundingBox;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.apache.pdfbox.pdmodel.font.encoding.*;
+
 import java.awt.geom.GeneralPath;
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,25 +34,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.fontbox.FontBoxFont;
-import org.apache.fontbox.ttf.CmapSubtable;
-import org.apache.fontbox.ttf.CmapTable;
-import org.apache.fontbox.ttf.GlyphData;
-import org.apache.fontbox.ttf.PostScriptTable;
-import org.apache.fontbox.ttf.TTFParser;
-import org.apache.fontbox.ttf.TrueTypeFont;
-import org.apache.fontbox.util.BoundingBox;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.common.PDStream;
-import org.apache.pdfbox.pdmodel.font.encoding.BuiltInEncoding;
-import org.apache.pdfbox.pdmodel.font.encoding.Encoding;
-import org.apache.pdfbox.pdmodel.font.encoding.GlyphList;
-import org.apache.pdfbox.pdmodel.font.encoding.MacOSRomanEncoding;
-import org.apache.pdfbox.pdmodel.font.encoding.Type1Encoding;
 
 /**
  * TrueType font.
@@ -556,4 +548,9 @@ public class PDTrueTypeFont extends PDSimpleFont implements PDVectorFont
         }
         cmapInitialized = true;
     }
+
+    public CmapSubtable getCmapWinUnicode() {
+        return cmapWinUnicode;
+    }
+
 }
