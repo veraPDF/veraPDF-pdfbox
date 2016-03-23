@@ -18,8 +18,8 @@ public class PDImageXObjectProxy extends PDXObject {
     private PDColorSpace colorSpace;
     private PDResources resources;
 
-    public PDImageXObjectProxy(PDStream stream, PDResources resources, COSName subtype) {
-        super(stream, subtype);
+    public PDImageXObjectProxy(PDStream stream, PDResources resources) {
+        super(stream, COSName.IMAGE);
         this.resources = resources;
     }
 
@@ -45,5 +45,9 @@ public class PDImageXObjectProxy extends PDXObject {
             }
         }
         return colorSpace;
+    }
+
+    public PDResources getResources() {
+        return resources;
     }
 }

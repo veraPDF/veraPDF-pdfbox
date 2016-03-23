@@ -66,7 +66,7 @@ public class PDXObject implements COSObjectable
         {
             // We do not need image parsing here
             // return new PDImageXObject(new PDStream(stream), resources);
-            return new PDImageXObjectProxy(new PDStream(stream), resources, null);
+            return new PDImageXObjectProxy(new PDStream(stream), resources);
         }
         else if (COSName.FORM.getName().equals(subtype))
         {
