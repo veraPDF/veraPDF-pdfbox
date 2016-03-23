@@ -24,7 +24,7 @@ import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObjectProxy;
 
 import java.io.IOException;
 
@@ -64,7 +64,9 @@ public class PDXObject implements COSObjectable
 
         if (COSName.IMAGE.getName().equals(subtype))
         {
-            return new PDImageXObject(new PDStream(stream), resources);
+            // We do not need image parsing here
+            // return new PDImageXObject(new PDStream(stream), resources);
+            return new PDImageXObjectProxy(new PDStream(stream), resources);
         }
         else if (COSName.FORM.getName().equals(subtype))
         {
