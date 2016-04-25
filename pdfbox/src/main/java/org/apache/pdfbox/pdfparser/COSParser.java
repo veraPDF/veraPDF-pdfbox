@@ -653,7 +653,8 @@ public class COSParser extends BaseParser
 					position = xrefTrailerResolver.getXrefTable().get(
 							new COSObjectKey(-position, key.getGeneration()));
 				}
-				pdfSource.seek(position);
+                //this is required to support pdf files with junk before header
+				pdfSource.seek(position + this.document.getHeaderOffset());
 				COSObject suspensionObject = document.getObjectFromPool(key);
 				parseObjectDynamically(suspensionObject, false);
 			} catch (IOException e)
@@ -706,6 +707,8 @@ public class COSParser extends BaseParser
             // not previously parsed
             // ---- read offset or object stream object number from xref table
             Long offsetOrObjstmObNr = xrefTrailerResolver.getXrefTable().get(objKey);
+            //this is required to support pdf files with junk before header
+            offsetOrObjstmObNr += this.document.getHeaderOffset();
 
             // sanity test to circumvent loops with broken documents
             if (requireExistingNotCompressedObj
@@ -1417,6 +1420,8 @@ public class COSParser extends BaseParser
             for (Entry<COSObjectKey, Long> objectEntry : xrefOffset.entrySet()) {
                 COSObjectKey objectKey = objectEntry.getKey();
                 Long objectOffset = objectEntry.getValue();
+                //this is required to support pdf files with junk before header
+                objectOffset += this.document.getHeaderOffset();
                 // a negative offset number represents a object number itself
                 // see type 2 entry in xref stream
                 if (objectOffset != null && objectOffset >= 0
