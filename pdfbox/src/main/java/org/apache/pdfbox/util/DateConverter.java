@@ -270,7 +270,8 @@ public final class DateConverter
     static String formatTZoffset(long millis, String sep)
     {
         SimpleDateFormat sdf = new SimpleDateFormat("Z"); // #hhmm
-        sdf.setTimeZone(new SimpleTimeZone(restrainTZoffset(millis),"unknown"));
+        //sdf.setTimeZone(new SimpleTimeZone(restrainTZoffset(millis),"unknown"));
+        sdf.setTimeZone(new SimpleTimeZone((int) millis,"unknown"));    // Offset in more than 2^31 - 1 milliseconds will be processed wrongly. It's about 596.5 years
         String tz = sdf.format(new Date());
         return tz.substring(0,3) + sep + tz.substring(3);
     }
@@ -435,8 +436,10 @@ public final class DateConverter
         {
             // we parsed a time zone in default format
             int hrSign = (sign == '-' ? -1 : 1);
-            tz.setRawOffset(restrainTZoffset(hrSign * (tzHours * MILLIS_PER_HOUR + tzMin *
-                                                       (long) MILLIS_PER_MINUTE)));
+            //tz.setRawOffset(restrainTZoffset(hrSign * (tzHours * MILLIS_PER_HOUR + tzMin *
+            //                                          (long) MILLIS_PER_MINUTE)));
+            tz.setRawOffset((int)(hrSign * (tzHours * MILLIS_PER_HOUR + tzMin *
+                    (long) MILLIS_PER_MINUTE)));    // Offset in more than 2^31 - 1 milliseconds will be processed wrongly. It's about 596.5 years
             tz.setID("unknown");
         }
         else if ( ! hadGMT)
