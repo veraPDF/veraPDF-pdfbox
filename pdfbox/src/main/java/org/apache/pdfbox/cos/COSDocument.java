@@ -19,10 +19,8 @@ package org.apache.pdfbox.cos;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.io.ScratchFile;
@@ -96,6 +94,9 @@ public class COSDocument extends COSBase implements Closeable
 	private int headerCommentByte2;
 	private int headerCommentByte3;
 	private int headerCommentByte4;
+
+    private final Set<COSDictionary> signaturesWithGoodByteRange =
+            new HashSet<COSDictionary>();
 
 	public int getPostEOFDataSize() {
         return this.postEOFDataSize;
@@ -177,7 +178,11 @@ public class COSDocument extends COSBase implements Closeable
 		this.headerCommentByte4 = headerCommentByte4;
 	}
 
-	/**
+    public Set<COSDictionary> getSignaturesWithGoodByteRange() {
+        return signaturesWithGoodByteRange;
+    }
+
+    /**
      * Constructor.
      *
      * @param useScratchFiles enables the usage of a scratch file if set to true

@@ -282,6 +282,7 @@ public class PDFParser extends COSParser
                 document = null;
             }
         }
+        processByteRangeValidationStructures();
     }
 
     /**
