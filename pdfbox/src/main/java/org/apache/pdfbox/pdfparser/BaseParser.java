@@ -208,8 +208,8 @@ public abstract class BaseParser
         long numOffset2 = pdfSource.getPosition();
         skipSpaces();
         if (!isDigit()) {
-            structure.setByteRangeLength1(numOffset1);
-            structure.setByteRangeOffset2(numOffset2);
+            structure.setContentsBeginningOffset(numOffset1);
+            structure.setContentsEndingOffset(numOffset2);
             return number;
         }
         long genOffset = pdfSource.getPosition();
@@ -280,7 +280,7 @@ public abstract class BaseParser
         readExpectedChar('>');
         readExpectedChar('>');
         if(structure.isSignature()) {
-            structure.setByteRangeOffset2(getOffsetOfNextEOF(pdfSource.getPosition()));
+            structure.setFirstEofOffset(getOffsetOfNextEOF(pdfSource.getPosition()));
             byteRangeValidationStructures.add(structure);
         }
         return obj;
@@ -1559,8 +1559,8 @@ public abstract class BaseParser
         long numOffset2 = pdfSource.getPosition();
         skipSpaces();
         if (!isDigit()) {
-            structure.setByteRangeLength1(numOffset1);
-            structure.setByteRangeOffset2(numOffset2);
+            structure.setContentsBeginningOffset(numOffset1);
+            structure.setContentsEndingOffset(numOffset2);
             return;
         }
         long genOffset = pdfSource.getPosition();
@@ -1643,30 +1643,30 @@ public abstract class BaseParser
 		/**
          * Sets the offset of beginning of signature /Contents hex string
          * respectively to the beginning of document itself.
-         * @param length1
+         * @param offset
          */
-        public void setByteRangeLength1(long length1) {
-            byteRangeOffsets[0] = length1 - document.getHeaderOffset();
+        public void setContentsBeginningOffset(long offset) {
+            byteRangeOffsets[0] = offset - document.getHeaderOffset();
             checkCalculatedActualByteRange();
         }
 
 		/**
 		 * Sets the offset of ending of signature /Contents hex string
          * respectively to the beginning of document itself.
-         * @param offset2
+         * @param offset
          */
-        public void setByteRangeOffset2(long offset2) {
-            byteRangeOffsets[1] = offset2 - document.getHeaderOffset();
+        public void setContentsEndingOffset(long offset) {
+            byteRangeOffsets[1] = offset - document.getHeaderOffset();
             checkCalculatedActualByteRange();
         }
 
 		/**
 		 * Sets the offset of %%EOF, corresponding to given dictionary
          * respectively to the beginning of document itself.
-         * @param length2
+         * @param offset
          */
-        public void setByteRangeLength2(long length2) {
-            byteRangeOffsets[2] = length2 - document.getHeaderOffset();
+        public void setFirstEofOffset(long offset) {
+            byteRangeOffsets[2] = offset - document.getHeaderOffset();
             checkCalculatedActualByteRange();
         }
 
