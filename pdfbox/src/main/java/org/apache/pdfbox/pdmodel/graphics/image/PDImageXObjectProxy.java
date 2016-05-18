@@ -1,7 +1,9 @@
 package org.apache.pdfbox.pdmodel.graphics.image;
 
+import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
@@ -45,6 +47,81 @@ public class PDImageXObjectProxy extends PDXObject {
             }
         }
         return colorSpace;
+    }
+
+    /**
+     * Returns the Mask Image XObject associated with this image, or null if there is none.
+     * @return Mask Image XObject
+     */
+    public PDImageXObjectProxy getMask() throws IOException
+    {
+        COSBase mask = getCOSStream().getDictionaryObject(COSName.MASK);
+        if (mask instanceof COSArray)
+        {
+            // color key mask, no explicit mask to return
+            return null;
+        }
+        else
+        {
+            COSStream cosStream = (COSStream)getCOSStream().getDictionaryObject(COSName.MASK);
+            if (cosStream != null)
+            {
+                // always DeviceGray
+                return new PDImageXObjectProxy(new PDStream(cosStream), null);
+            }
+            return null;
+        }
+    }
+
+    /**
+     * Returns the Soft Mask Image XObject associated with this image, or null if there is none.
+     * @return the SMask Image XObject, or null.
+     */
+    public PDImageXObjectProxy getSoftMask() throws IOException
+    {
+        COSStream cosStream = (COSStream)getCOSStream().getDictionaryObject(COSName.SMASK);
+        if (cosStream != null)
+        {
+            // always DeviceGray
+            return new PDImageXObjectProxy(new PDStream(cosStream), null);
+        }
+        return null;
+    }
+
+    public int getHeight()
+    {
+        return getCOSStream().getInt(COSName.HEIGHT);
+    }
+
+    public int getWidth()
+    {
+        return getCOSStream().getInt(COSName.WIDTH);
+    }
+
+    /**
+     * Returns the key of this XObject in the structural parent tree.
+     * @return this object's key the structural parent tree
+     */
+    public int getStructParent()
+    {
+        return getCOSStream().getInt(COSName.STRUCT_PARENT, 0);
+    }
+
+    public int getBitsPerComponent()
+    {
+        if (isStencil())
+        {
+            return 1;
+        }
+        else
+        {
+            return getCOSStream().getInt(COSName.BITS_PER_COMPONENT, COSName.BPC);
+        }
+    }
+
+    public PDStream getStream() throws IOException
+    {
+        return getPDStream();
     }
 
     public PDResources getResources() {
