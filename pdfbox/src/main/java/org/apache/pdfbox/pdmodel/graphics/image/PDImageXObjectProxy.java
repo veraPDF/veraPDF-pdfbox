@@ -5,6 +5,7 @@ import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSStream;
 import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
@@ -126,5 +127,19 @@ public class PDImageXObjectProxy extends PDXObject {
 
     public PDResources getResources() {
         return resources;
+    }
+
+    /**
+     * Returns the metadata associated with this XObject, or null if there is none.
+     * @return the metadata associated with this object.
+     */
+    public PDMetadata getMetadata()
+    {
+        COSStream cosStream = (COSStream) getCOSStream().getDictionaryObject(COSName.METADATA);
+        if (cosStream != null)
+        {
+            return new PDMetadata(cosStream);
+        }
+        return null;
     }
 }
