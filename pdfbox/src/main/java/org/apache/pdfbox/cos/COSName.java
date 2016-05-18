@@ -175,7 +175,9 @@ public final class COSName extends COSBase implements Comparable<COSName>
     public static final COSName DI = new COSName("Di");
     public static final COSName DIFFERENCE = new COSName("Difference");
     public static final COSName DIFFERENCES = new COSName("Differences");
+    public static final COSName DIGEST_LOCATION = new COSName("DigestLocation");
     public static final COSName DIGEST_METHOD = new COSName("DigestMethod");
+    public static final COSName DIGEST_VALUE = new COSName("DigestValue");
     public static final COSName DIGEST_RIPEMD160 = new COSName("RIPEMD160");
     public static final COSName DIGEST_SHA1 = new COSName("SHA1");
     public static final COSName DIGEST_SHA256 = new COSName("SHA256");
@@ -187,6 +189,7 @@ public final class COSName extends COSBase implements Comparable<COSName>
     public static final COSName DM = new COSName("Dm");
     public static final COSName DOC = new COSName("Doc");
     public static final COSName DOC_CHECKSUM = new COSName("DocChecksum");
+    public static final COSName DOC_MDP = new COSName("DocMDP");
     public static final COSName DOC_TIME_STAMP = new COSName("DocTimeStamp");
     public static final COSName DOMAIN = new COSName("Domain");
     public static final COSName DOS = new COSName("DOS");
@@ -489,6 +492,7 @@ public final class COSName extends COSBase implements Comparable<COSName>
     public static final COSName TR = new COSName("TR");
     public static final COSName TRAPPED = new COSName("Trapped");
     public static final COSName TRANS = new COSName("Trans");
+    public static final COSName TRANSFORM_METHOD = new COSName("TransformMethod");
     public static final COSName TRANSPARENCY = new COSName("Transparency");
     public static final COSName TREF = new COSName("TRef");
     public static final COSName TRIM_BOX = new COSName("TrimBox");

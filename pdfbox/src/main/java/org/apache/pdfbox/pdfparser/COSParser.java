@@ -177,6 +177,7 @@ public class COSParser extends BaseParser
     {
         pdfSource.seek(startXRefOffset);
         long startXrefOffset = Math.max(0, parseStartXref());
+        startXrefOffset += document.getHeaderOffset();
         // check the startxref offset
         long fixedOffset = checkXRefOffset(startXrefOffset);
         if (fixedOffset > -1)
