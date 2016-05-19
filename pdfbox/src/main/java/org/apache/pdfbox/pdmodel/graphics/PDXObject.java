@@ -34,9 +34,11 @@ import java.io.IOException;
  * @author Ben Litchfield
  * @author John Hewson
  */
-public class PDXObject implements COSObjectable
+public class PDXObject implements COSObjectable, PDInheritableResource
 {
     private final PDStream stream;
+
+    private boolean inherited = false;
 
     /**
      * Creates a new XObject instance of the appropriate type for the COS stream.
@@ -116,6 +118,11 @@ public class PDXObject implements COSObjectable
         return stream.getCOSObject();
     }
 
+    @Override
+    public boolean isInherited() {
+        return this.inherited;
+    }
+
     /**
      * Returns the stream.
      * @return The stream for this object.
@@ -133,4 +140,9 @@ public class PDXObject implements COSObjectable
     {
         return stream;
     }
+
+    public void setInherited(boolean inherited) {
+        this.inherited = inherited;
+    }
+
 }

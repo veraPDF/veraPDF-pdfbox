@@ -16,26 +16,29 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.pattern;
 
-import java.awt.geom.AffineTransform;
-import java.io.IOException;
-
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSFloat;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
+import org.apache.pdfbox.pdmodel.graphics.PDInheritableResource;
 import org.apache.pdfbox.util.Matrix;
+
+import java.awt.geom.AffineTransform;
+import java.io.IOException;
 
 /**
  * A Pattern dictionary from a page's resources.
  */
-public abstract class PDAbstractPattern implements COSObjectable
+public abstract class PDAbstractPattern implements COSObjectable, PDInheritableResource
 {
     /** Tiling pattern type. */
     public static final int TYPE_TILING_PATTERN = 1;
 
     /** Shading pattern type. */
     public static final int TYPE_SHADING_PATTERN = 2;
+
+    private boolean inherited = false;
 
     /**
      * Create the correct PD Model pattern based on the COS base pattern.
@@ -89,6 +92,11 @@ public abstract class PDAbstractPattern implements COSObjectable
     public COSDictionary getCOSObject()
     {
         return patternDictionary;
+    }
+
+    @Override
+    public boolean isInherited() {
+        return inherited;
     }
 
     /**
@@ -191,6 +199,10 @@ public abstract class PDAbstractPattern implements COSObjectable
             matrix.add(new COSFloat((float)v));
         }
         getCOSObject().setItem(COSName.MATRIX, matrix);
+    }
+
+    public void setInherited(boolean inherited) {
+        this.inherited = inherited;
     }
 
 }
