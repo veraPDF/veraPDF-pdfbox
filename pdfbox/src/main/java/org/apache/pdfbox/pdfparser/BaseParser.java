@@ -23,6 +23,9 @@ import org.apache.pdfbox.io.RandomAccessRead;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.apache.pdfbox.util.Charsets.ISO_8859_1;
 
@@ -92,6 +95,8 @@ public abstract class BaseParser
      */
     private static final String NULL = "null";
 
+    private static final byte [] EOF_STRING = "%%EOF".getBytes();
+
     /**
      * ASCII code for line feed.
      */
@@ -119,6 +124,12 @@ public abstract class BaseParser
      */
     protected COSDocument document;
 
+	/**
+     * These are structures that contain digital signatures and their byte
+     * ranges.
+     */
+    private List<ByteRangeValidationStructure> byteRangeValidationStructures
+            = new ArrayList<ByteRangeValidationStructure>();
     /**
      * Default constructor.
      */
@@ -188,6 +199,35 @@ public abstract class BaseParser
         return getObjectFromPool(key);
     }
 
+    private COSBase parseSignatureDictionaryValue(ByteRangeValidationStructure structure)
+            throws IOException
+    {
+        skipSpaces();
+        long numOffset1 = pdfSource.getPosition();
+        COSBase number = parseDirObject();
+        long numOffset2 = pdfSource.getPosition();
+        skipSpaces();
+        if (!isDigit()) {
+            structure.setContentsBeginningOffset(numOffset1);
+            structure.setContentsEndingOffset(numOffset2);
+            return number;
+        }
+        long genOffset = pdfSource.getPosition();
+        COSBase generationNumber = parseDirObject();
+        skipSpaces();
+        readExpectedChar('R');
+        if (!(number instanceof COSInteger)) {
+            throw new IOException("expected number, actual=" + number + " at offset " + numOffset1);
+        }
+        if (!(generationNumber instanceof COSInteger)) {
+            throw new IOException("expected number, actual=" + number + " at offset " + genOffset);
+        }
+        COSObjectKey key = new COSObjectKey(((COSInteger) number).longValue(),
+                ((COSInteger) generationNumber).intValue());
+        structure.setIndirectReference(key);
+        return getObjectFromPool(key);
+    }
+
     private COSBase getObjectFromPool(COSObjectKey key) throws IOException
     {
         if (document == null)
@@ -211,6 +251,8 @@ public abstract class BaseParser
         readExpectedChar('<');
         skipSpaces();
         COSDictionary obj = new COSDictionary();
+        ByteRangeValidationStructure structure =
+                new ByteRangeValidationStructure(obj);
         boolean done = false;
         while (!done)
         {
@@ -222,7 +264,7 @@ public abstract class BaseParser
             }
             else if (c == '/')
             {
-                parseCOSDictionaryNameValuePair(obj);
+                parseCOSDictionaryNameValuePair(obj, structure);
             }
             else
             {
@@ -237,6 +279,10 @@ public abstract class BaseParser
         }
         readExpectedChar('>');
         readExpectedChar('>');
+        if(structure.isSignature()) {
+            structure.setFirstEofOffset(getOffsetOfNextEOF(pdfSource.getPosition()));
+            byteRangeValidationStructures.add(structure);
+        }
         return obj;
     }
 
@@ -286,10 +332,17 @@ public abstract class BaseParser
         return false;
     }
 
-    private void parseCOSDictionaryNameValuePair(COSDictionary obj) throws IOException
+    private void parseCOSDictionaryNameValuePair(COSDictionary obj,
+                                                 ByteRangeValidationStructure structure) throws IOException
     {
         COSName key = parseCOSName();
-        COSBase value = parseCOSDictionaryValue();
+        COSBase value;
+        if(key.compareTo(COSName.CONTENTS) != 0) {
+            value = parseCOSDictionaryValue();
+        } else {
+            value = parseSignatureDictionaryValue(structure);
+        }
+
         skipSpaces();
         if (((char) pdfSource.peek()) == 'd')
         {
@@ -1467,5 +1520,216 @@ public abstract class BaseParser
         }
         return buffer;
     }
-    
+
+	/**
+     * Calculates actual byte range for all ByteRangeValidation structures for
+     * which it is not determined yet and fills set of signatures with good byte
+     * range in COS document.
+     */
+    protected void processByteRangeValidationStructures() {
+        try {
+            for(ByteRangeValidationStructure structure: byteRangeValidationStructures) {
+                if(!structure.isActualByteRangeCalculated) {
+                    if(structure.indirectReference != null) {
+                        processIndirectByteRangeValidationStructure(structure);
+                    } else throw new IllegalStateException("Byte range is not calculated and indirect reference is not present.");
+                }
+                if(structure.isValidByteRange()) {
+                    document.getSignaturesWithGoodByteRange().add(structure.dictionary);
+                }
+            }
+        } catch (IOException ex) {
+            LOG.error("Error in reading file stream", ex);
+        }
+    }
+
+	/**
+     * Calculates actual byte range for ByteRangeValidation structure for which
+     * it is not determined yet. Method recursively skips all indirect references.
+     * @param structure
+     * @throws IOException
+     */
+    private void processIndirectByteRangeValidationStructure(ByteRangeValidationStructure structure)
+            throws IOException {
+        pdfSource.seek(document.getXrefTable().get(structure.indirectReference) +
+                         document.getHeaderOffset());
+        skipSpaces();
+        long numOffset1 = pdfSource.getPosition();
+        COSBase number = parseDirObject();
+        long numOffset2 = pdfSource.getPosition();
+        skipSpaces();
+        if (!isDigit()) {
+            structure.setContentsBeginningOffset(numOffset1);
+            structure.setContentsEndingOffset(numOffset2);
+            return;
+        }
+        long genOffset = pdfSource.getPosition();
+        COSBase generationNumber = parseDirObject();
+        skipSpaces();
+        int c = pdfSource.read();
+        if(c == 'R') {  // Indirect reference
+            if (!(number instanceof COSInteger)) {
+                throw new IOException("expected number, actual=" + number + " at offset " + numOffset1);
+            }
+            if (!(generationNumber instanceof COSInteger)) {
+                throw new IOException("expected number, actual=" + number + " at offset " + genOffset);
+            }
+            COSObjectKey key = new COSObjectKey(((COSInteger) number).longValue(),
+                    ((COSInteger) generationNumber).intValue());
+            long keyOffset = this.document.getXrefTable().get(key);
+            pdfSource.seek(keyOffset + document.getHeaderOffset());
+            parseSignatureDictionaryValue(structure);    // Recursive parsing to get to the contents hex string itself
+        } if(c == 'o') {    // Object itself
+            readExpectedChar('b');
+            readExpectedChar('j');
+            skipSpaces();
+            numOffset1 = pdfSource.getPosition();
+            parseCOSString();
+            numOffset2 = pdfSource.getPosition();
+            structure.setContentsBeginningOffset(numOffset1);
+            structure.setContentsEndingOffset(numOffset2);
+        } else {
+            throw new IOException("\"R\" or \"obj\" expected, but \'" + (char)c + "\' found.");
+        }
+    }
+
+	/**
+     * Scans stream till next %%EOF is found.
+     * @param currentOffset byte offset of position, from which scanning strats
+     * @return number of byte that contains 'F' in %%EOF
+     * @throws IOException
+     */
+    protected long getOffsetOfNextEOF(long currentOffset) throws IOException {
+        byte [] buffer = new byte[EOF_STRING.length];
+        pdfSource.seek(currentOffset + document.getHeaderOffset());
+        pdfSource.read(buffer);
+        pdfSource.rewind(buffer.length - 1);
+        while(!Arrays.equals(buffer,EOF_STRING)) {	//TODO: does it need to be optimized?
+            pdfSource.read(buffer);
+            if(pdfSource.isEOF()) {
+                pdfSource.seek(currentOffset + document.getHeaderOffset());
+                return pdfSource.length();
+            }
+            pdfSource.rewind(buffer.length - 1);
+        }
+        long result = pdfSource.getPosition() + buffer.length - 1;
+        pdfSource.seek(currentOffset + document.getHeaderOffset());
+        return result;
+    }
+
+	/**
+	 * Structure that contains actual byte range of particular signature or
+     * COS object key in case if /Contents is present indirectly.
+     * COS dictionary is considered to be signature in this context if it
+     * contains /Contents and /ByteRange entries. (Spec 32000-2008 says that
+     * entry Type is optional in Signature dictionary)
+     */
+    protected class ByteRangeValidationStructure {
+        private COSDictionary dictionary;
+        private final long [] byteRangeOffsets = new long[3];
+        private boolean isActualByteRangeCalculated = false;
+        COSObjectKey indirectReference = null;
+
+		/**
+         * Constructor from dictionary.
+         * @param dictionary
+         */
+        public ByteRangeValidationStructure(COSDictionary dictionary) {
+            this.dictionary = dictionary;
+            for(int i = 0; i < 3; ++i) {
+                byteRangeOffsets[i] = -1;
+            }
+        }
+
+		/**
+		 * @return true if contained dictionary contains /Contents and
+         * /ByteRange entries.
+         */
+        public boolean isSignature() {
+            if(dictionary.containsKey(COSName.TYPE) &&
+                    ((COSName)dictionary.getDictionaryObject(COSName.TYPE)).compareTo(COSName.SIG) != 0) {
+                return false;
+            }
+            return (dictionary.containsKey(COSName.CONTENTS) &&
+                    dictionary.containsKey(COSName.BYTERANGE));
+        }
+
+		/**
+         * Sets the offset of beginning of signature /Contents hex string
+         * respectively to the beginning of document itself.
+         * @param offset is value of offset in bytes.
+         */
+        void setContentsBeginningOffset(long offset) {
+            byteRangeOffsets[0] = offset - document.getHeaderOffset();
+            checkCalculatedActualByteRange();
+        }
+
+		/**
+		 * Sets the offset of ending of signature /Contents hex string
+         * respectively to the beginning of document itself.
+         * @param offset is value of offset in bytes.
+         */
+        void setContentsEndingOffset(long offset) {
+            byteRangeOffsets[1] = offset - document.getHeaderOffset();
+            checkCalculatedActualByteRange();
+        }
+
+		/**
+		 * Sets the offset of %%EOF, corresponding to given dictionary
+         * respectively to the beginning of document itself.
+         * @param offset is value of offset in bytes.
+         */
+        void setFirstEofOffset(long offset) {
+            byteRangeOffsets[2] = offset - document.getHeaderOffset();
+            checkCalculatedActualByteRange();
+        }
+
+		/**
+         * @param indirectReference indirect reference to value obtained by
+         * /Contents key.
+         */
+        void setIndirectReference(COSObjectKey indirectReference) {
+            this.indirectReference = indirectReference;
+        }
+
+        /**
+         * @return true if entry /ByteRange in dictionary is equal to actual
+         * byte range.
+         */
+        boolean isValidByteRange() {
+            try {
+                COSArray byteRange =
+                        (COSArray) dictionary.getDictionaryObject(COSName.BYTERANGE);
+                COSBase num = byteRange.get(0);
+                if(((COSInteger) num).longValue() != 0) {
+                    return false;
+                }
+                for(int i = 1; i < 2; ++i) {
+                    num = byteRange.get(i);
+                    if(((COSInteger) num).longValue() != byteRangeOffsets[i - 1]) {
+                        return false;
+                    }
+                }
+                num = byteRange.get(3);
+                if(((COSInteger) num).longValue() != byteRangeOffsets[2] -
+                        byteRangeOffsets[1] + 1) {
+                    return false;
+                }
+                return true;
+            } catch (ClassCastException e) {
+                LOG.warn("ByteRange array contains not COSIntegers", e);
+                return false;
+            }
+        }
+
+        private void checkCalculatedActualByteRange() {
+            for(int i = 0; i < 3; ++i) {
+                if(byteRangeOffsets[i] == -1) {
+                    isActualByteRangeCalculated = false;
+                    return;
+                }
+            }
+            isActualByteRangeCalculated = true;
+        }
+    }
 }
