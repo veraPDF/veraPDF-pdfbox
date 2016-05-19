@@ -17,17 +17,19 @@
 
 package org.apache.pdfbox.pdmodel.font;
 
-import java.io.IOException;
 import org.apache.fontbox.util.BoundingBox;
+import org.apache.pdfbox.pdmodel.graphics.PDInheritableResource;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.Vector;
+
+import java.io.IOException;
 
 /**
  * A font-like object.
  *
  * @author John Hewson
  */
-public interface PDFontLike
+public interface PDFontLike extends PDInheritableResource
 {
     /**
      * Returns the name of this font, either the PostScript "BaseName" or the Type 3 "Name".

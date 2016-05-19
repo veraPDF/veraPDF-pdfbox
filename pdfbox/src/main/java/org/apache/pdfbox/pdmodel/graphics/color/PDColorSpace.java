@@ -23,6 +23,7 @@ import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.pdmodel.MissingResourceException;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
+import org.apache.pdfbox.pdmodel.graphics.PDInheritableResource;
 
 import java.awt.*;
 import java.awt.color.ColorSpace;
@@ -35,8 +36,11 @@ import java.io.IOException;
  * @author John Hewson
  * @author Ben Litchfield
  */
-public abstract class PDColorSpace implements COSObjectable
+public abstract class PDColorSpace implements COSObjectable, PDInheritableResource
 {
+
+	private boolean inherited = false;
+
     /**
      * Creates a color space space given a name or array.
      * @param colorSpace the color space COS object
@@ -294,4 +298,14 @@ public abstract class PDColorSpace implements COSObjectable
     {
         return array;
     }
+
+	@Override
+	public boolean isInherited() {
+		return this.inherited;
+	}
+
+	public void setInherited(boolean inherited) {
+		this.inherited = inherited;
+	}
+
 }

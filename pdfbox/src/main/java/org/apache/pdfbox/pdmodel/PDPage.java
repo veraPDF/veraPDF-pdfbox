@@ -16,31 +16,20 @@
  */
 package org.apache.pdfbox.pdmodel;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.apache.pdfbox.contentstream.PDContentStream;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSFloat;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNumber;
-import org.apache.pdfbox.cos.COSStream;
-import org.apache.pdfbox.pdmodel.common.COSArrayList;
-import org.apache.pdfbox.pdmodel.common.COSObjectable;
-import org.apache.pdfbox.pdmodel.common.COSStreamArray;
-import org.apache.pdfbox.pdmodel.common.PDMetadata;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.common.PDStream;
+import org.apache.pdfbox.cos.*;
+import org.apache.pdfbox.pdmodel.common.*;
 import org.apache.pdfbox.pdmodel.interactive.action.PDPageAdditionalActions;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.pagenavigation.PDThreadBead;
 import org.apache.pdfbox.pdmodel.interactive.pagenavigation.PDTransition;
 import org.apache.pdfbox.util.Matrix;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A page in a PDF document.
@@ -150,6 +139,32 @@ public class PDPage implements COSObjectable, PDContentStream
         {
             page.removeItem(COSName.RESOURCES);
         }
+    }
+
+    public PDResources getPageResources() {
+        if (pageResources == null) {
+            COSDictionary value = (COSDictionary) page.getDictionaryObject(COSName.RESOURCES);
+            if (value != null) {
+                return new PDResources(value);
+            }
+        }
+
+        return null;
+    }
+
+    public PDResources getInheritedResources() {
+        COSDictionary parent = (COSDictionary) page.getDictionaryObject(COSName.PARENT, COSName.P);
+
+        if (parent != null) {
+            COSDictionary resources = (COSDictionary) PDPageTree.getInheritableAttribute(parent, COSName.RESOURCES);
+
+            // note: it's an error for resources to not be present
+            if (resources != null) {
+                return new PDResources(resources);
+            }
+        }
+
+        return null;
     }
 
     /**

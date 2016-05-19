@@ -26,6 +26,7 @@ import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.common.COSArrayList;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.font.encoding.GlyphList;
+import org.apache.pdfbox.pdmodel.graphics.PDInheritableResource;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.Vector;
 
@@ -41,7 +42,7 @@ import java.util.List;
  * 
  * @author Ben Litchfield
  */
-public abstract class PDFont implements COSObjectable, PDFontLike
+public abstract class PDFont implements COSObjectable, PDFontLike, PDInheritableResource
 {
     private static final Log LOG = LogFactory.getLog(PDFont.class);
     protected static final Matrix DEFAULT_FONT_MATRIX = new Matrix(0.001f, 0, 0, 0.001f, 0, 0);
@@ -54,6 +55,8 @@ public abstract class PDFont implements COSObjectable, PDFontLike
     private List<Integer> widths;
     private float avgFontWidth;
     private float fontWidthOfSpace = -1f;
+
+    private boolean inherited = false;
 
     /**
      * Constructor for embedding.
@@ -547,6 +550,15 @@ public abstract class PDFont implements COSObjectable, PDFontLike
     
     @Override
     public abstract boolean isDamaged();
+
+    @Override
+    public boolean isInherited() {
+        return this.inherited;
+    }
+
+    public void setInherited(boolean inherited) {
+        this.inherited = inherited;
+    }
 
     @Override
     public boolean equals(Object other)
