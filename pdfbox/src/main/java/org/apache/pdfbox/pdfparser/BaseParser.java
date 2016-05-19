@@ -1690,15 +1690,15 @@ public abstract class BaseParser
                 if(((COSInteger) num).longValue() != 0) {
                     return false;
                 }
-                for(int i = 0; i < 2; ++i) {
+                for(int i = 1; i < 2; ++i) {
                     num = byteRange.get(i);
-                    if(((COSInteger) num).longValue() != byteRangeOffsets[i]) {
+                    if(((COSInteger) num).longValue() != byteRangeOffsets[i - 1]) {
                         return false;
                     }
                 }
                 num = byteRange.get(3);
-                if(((COSInteger) num).longValue() != byteRangeOffsets[3] -
-                        byteRangeOffsets[2] + 1) {
+                if(((COSInteger) num).longValue() != byteRangeOffsets[2] -
+                        byteRangeOffsets[1] + 1) {
                     return false;
                 }
                 return true;
