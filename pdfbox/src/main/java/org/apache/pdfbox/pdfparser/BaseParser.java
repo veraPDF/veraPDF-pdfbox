@@ -1539,7 +1539,7 @@ public abstract class BaseParser
                 }
             }
         } catch (IOException ex) {
-            LOG.error("File stream cannot be read", ex);
+            LOG.error("Error in reading file stream", ex);
         }
     }
 
@@ -1566,18 +1566,31 @@ public abstract class BaseParser
         long genOffset = pdfSource.getPosition();
         COSBase generationNumber = parseDirObject();
         skipSpaces();
-        readExpectedChar('R');
-        if (!(number instanceof COSInteger)) {
-            throw new IOException("expected number, actual=" + number + " at offset " + numOffset1);
+        int c = pdfSource.read();
+        if(c == 'R') {  // Indirect reference
+            if (!(number instanceof COSInteger)) {
+                throw new IOException("expected number, actual=" + number + " at offset " + numOffset1);
+            }
+            if (!(generationNumber instanceof COSInteger)) {
+                throw new IOException("expected number, actual=" + number + " at offset " + genOffset);
+            }
+            COSObjectKey key = new COSObjectKey(((COSInteger) number).longValue(),
+                    ((COSInteger) generationNumber).intValue());
+            long keyOffset = this.document.getXrefTable().get(key);
+            pdfSource.seek(keyOffset + document.getHeaderOffset());
+            parseSignatureDictionaryValue(structure);    // Recursive parsing to get to the contents hex string itself
+        } if(c == 'o') {    // Object itself
+            readExpectedChar('b');
+            readExpectedChar('j');
+            skipSpaces();
+            numOffset1 = pdfSource.getPosition();
+            parseCOSString();
+            numOffset2 = pdfSource.getPosition();
+            structure.setContentsBeginningOffset(numOffset1);
+            structure.setContentsEndingOffset(numOffset2);
+        } else {
+            throw new IOException("\"R\" or \"obj\" expected, but \'" + (char)c + "\' found.");
         }
-        if (!(generationNumber instanceof COSInteger)) {
-            throw new IOException("expected number, actual=" + number + " at offset " + genOffset);
-        }
-        COSObjectKey key = new COSObjectKey(((COSInteger) number).longValue(),
-                ((COSInteger) generationNumber).intValue());
-        long keyOffset = this.document.getXrefTable().get(key);
-        pdfSource.seek(keyOffset + document.getHeaderOffset());
-        parseSignatureDictionaryValue(structure);	// Recursive parsing to get to the contents hex string itself
     }
 
 	/**
@@ -1594,7 +1607,8 @@ public abstract class BaseParser
         while(!Arrays.equals(buffer,EOF_STRING)) {	//TODO: does it need to be optimized?
             pdfSource.read(buffer);
             if(pdfSource.isEOF()) {
-                throw new IOException("End of file is reached before %%EOF");
+                pdfSource.seek(currentOffset + document.getHeaderOffset());
+                return pdfSource.length();
             }
             pdfSource.rewind(buffer.length - 1);
         }
@@ -1643,9 +1657,9 @@ public abstract class BaseParser
 		/**
          * Sets the offset of beginning of signature /Contents hex string
          * respectively to the beginning of document itself.
-         * @param offset
+         * @param offset is value of offset in bytes.
          */
-        public void setContentsBeginningOffset(long offset) {
+        void setContentsBeginningOffset(long offset) {
             byteRangeOffsets[0] = offset - document.getHeaderOffset();
             checkCalculatedActualByteRange();
         }
@@ -1653,9 +1667,9 @@ public abstract class BaseParser
 		/**
 		 * Sets the offset of ending of signature /Contents hex string
          * respectively to the beginning of document itself.
-         * @param offset
+         * @param offset is value of offset in bytes.
          */
-        public void setContentsEndingOffset(long offset) {
+        void setContentsEndingOffset(long offset) {
             byteRangeOffsets[1] = offset - document.getHeaderOffset();
             checkCalculatedActualByteRange();
         }
@@ -1663,9 +1677,9 @@ public abstract class BaseParser
 		/**
 		 * Sets the offset of %%EOF, corresponding to given dictionary
          * respectively to the beginning of document itself.
-         * @param offset
+         * @param offset is value of offset in bytes.
          */
-        public void setFirstEofOffset(long offset) {
+        void setFirstEofOffset(long offset) {
             byteRangeOffsets[2] = offset - document.getHeaderOffset();
             checkCalculatedActualByteRange();
         }
@@ -1674,7 +1688,7 @@ public abstract class BaseParser
          * @param indirectReference indirect reference to value obtained by
          * /Contents key.
          */
-        public void setIndirectReference(COSObjectKey indirectReference) {
+        void setIndirectReference(COSObjectKey indirectReference) {
             this.indirectReference = indirectReference;
         }
 
@@ -1682,7 +1696,7 @@ public abstract class BaseParser
          * @return true if entry /ByteRange in dictionary is equal to actual
          * byte range.
          */
-        public boolean isValidByteRange() {
+        boolean isValidByteRange() {
             try {
                 COSArray byteRange =
                         (COSArray) dictionary.getDictionaryObject(COSName.BYTERANGE);
