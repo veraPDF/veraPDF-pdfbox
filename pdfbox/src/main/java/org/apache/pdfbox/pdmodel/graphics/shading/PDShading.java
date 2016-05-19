@@ -16,8 +16,6 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
-import java.awt.Paint;
-import java.io.IOException;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -25,14 +23,18 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.function.PDFunction;
+import org.apache.pdfbox.pdmodel.graphics.PDInheritableResource;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
 import org.apache.pdfbox.util.Matrix;
+
+import java.awt.*;
+import java.io.IOException;
 
 /**
  * A Shading Resource.
  *
  */
-public abstract class PDShading implements COSObjectable
+public abstract class PDShading implements COSObjectable, PDInheritableResource
 {
     private final COSDictionary dictionary;
     private COSArray background = null;
@@ -40,6 +42,8 @@ public abstract class PDShading implements COSObjectable
     private PDColorSpace colorSpace = null;
     private PDFunction function = null;
     private PDFunction[] functionArray = null;
+
+    private boolean inherited = false;
 
     /**
      * shading type 1 = function based shading.
@@ -424,4 +428,14 @@ public abstract class PDShading implements COSObjectable
      * @return an AWT Paint instance
      */
     public abstract Paint toPaint(Matrix matrix);
+
+    @Override
+    public boolean isInherited() {
+        return this.inherited;
+    }
+
+    public void setInherited(boolean inherited) {
+        this.inherited = inherited;
+    }
+
 }

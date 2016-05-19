@@ -16,19 +16,15 @@
  */
 package org.apache.pdfbox.pdmodel.font;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.fontbox.util.BoundingBox;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNumber;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.Vector;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A CIDFont. A CIDFont is a PDF object that contains information about a CIDFont program. Although
@@ -51,6 +47,8 @@ public abstract class PDCIDFont implements COSObjectable, PDFontLike, PDVectorFo
 
     protected final COSDictionary dict;
     private PDFontDescriptor fontDescriptor;
+
+    private boolean inherited = false;
 
     /**
      * Constructor.
@@ -418,4 +416,14 @@ public abstract class PDCIDFont implements COSObjectable, PDFontLike, PDVectorFo
      * @throws IOException If the text could not be encoded.
      */
     protected abstract byte[] encode(int unicode) throws IOException;
+
+    @Override
+    public boolean isInherited() {
+        return this.inherited;
+    }
+
+    public void setInherited(boolean inherited) {
+        this.inherited = inherited;
+    }
+
 }
