@@ -192,6 +192,24 @@ public class COSDictionary extends COSBase implements COSUpdateInfo
         return retval;
     }
 
+	/**
+     *
+     * This will get an object from the dictionary. This will NOT dereference
+     * the COS object.
+     *
+     * @param key is the key corresponding to requested object.
+     *
+     * @return the object with the requested key.
+     */
+    public COSBase get(COSName key)
+    {
+        COSBase retval = items.get(key);
+        if (retval instanceof COSNull)
+        {
+            retval = null;
+        }
+        return retval;
+    }
     /**
      * This will set an item in the dictionary. If value is null then the result will be the same as removeItem( key ).
      *

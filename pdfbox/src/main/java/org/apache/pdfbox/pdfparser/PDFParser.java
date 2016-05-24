@@ -369,8 +369,17 @@ public class PDFParser extends COSParser
         for(Map.Entry<COSObject, PDField> signatureFieldEnrty : signatureFields.entrySet()) {
             COSObjectKey key = new COSObjectKey(signatureFieldEnrty.getKey());
             PDField signatureField = signatureFieldEnrty.getValue();
-            long[] actualByteRange =
-                    signatureParser.getByteRange(this.getDocument().getXrefTable().get(key));
+            long fieldOffset = this.getDocument().getXrefTable().get(key);
+            long[] actualByteRange;
+            if(fieldOffset < 0) {
+                COSObject reference = (COSObject)
+                        signatureField.getCOSObject().get(COSName.V);
+                actualByteRange = signatureParser.getByteRangeBySignatureOffset(
+                        this.getDocument().getXrefTable().get(new COSObjectKey(reference)));
+            } else {
+                actualByteRange =
+                        signatureParser.getByteRangeByFieldOffset(fieldOffset);
+            }
             int [] byteRange =
                     ((PDSignatureField) signatureField).getSignature().getByteRange();
             boolean isByteRangeCorrect = true;

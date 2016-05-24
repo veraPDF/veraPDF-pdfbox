@@ -144,9 +144,20 @@ public class SignatureParser extends BaseParser {
 	 *
 	 * @return array of 4 longs, which is byte range array.
 	 */
-	public long[] getByteRange(long fieldOffset) throws IOException {
+	public long[] getByteRangeByFieldOffset(long fieldOffset) throws IOException {
+		pdfSource.seek(fieldOffset);
+		skipID();
 		calculateSignatureOffset(fieldOffset);
 		pdfSource.seek(signatureDictionaryOffset);
+		byteRange[0] = 0;
+		parseDictionary(false);
+		byteRange[3] = getOffsetOfNextEOF(byteRange[2]) - byteRange[2] + 1;
+		return byteRange;
+	}
+
+	public long[] getByteRangeBySignatureOffset(long signatureOffset) throws IOException {
+		pdfSource.seek(signatureOffset);
+		skipID();
 		byteRange[0] = 0;
 		parseDictionary(false);
 		byteRange[3] = getOffsetOfNextEOF(byteRange[2]) - byteRange[2] + 1;
@@ -226,6 +237,17 @@ public class SignatureParser extends BaseParser {
 		long result = pdfSource.getPosition() + buffer.length - 1;
 		pdfSource.seek(currentOffset + document.getHeaderOffset());
 		return result;
+	}
+
+	private void skipID() throws IOException {
+		parseDirObject();
+		skipSpaces();
+		parseDirObject();
+		skipSpaces();
+		readExpectedChar('o');
+		readExpectedChar('b');
+		readExpectedChar('j');
+		skipSpaces();
 	}
 
 }
