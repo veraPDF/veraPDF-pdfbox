@@ -22,12 +22,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNumber;
-import org.apache.pdfbox.cos.COSString;
+
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.COSArrayList;
@@ -278,6 +274,24 @@ public final class PDAcroForm implements COSObjectable
             }
         }
         return retval;
+    }
+
+	/**
+     * Get signature fields.
+     *
+     * @return map of signature fields where key is COSObject, containing
+     * reference to field, value is signature field itself.
+     */
+    public Map<COSObject, PDField> getSignatureFields() {
+        Map<COSObject, PDField> signatureFields = new HashMap<COSObject, PDField>();
+        COSArray cosFields = (COSArray) dictionary.getDictionaryObject(COSName.FIELDS);
+        List<PDField> fields = getFields();
+        for (int i = 0; i < cosFields.size(); i++) {
+            if(fields.get(i).getFieldType().equals("Sig")) {
+                signatureFields.put((COSObject) cosFields.get(i), fields.get(i));
+            }
+        }
+        return signatureFields;
     }
 
     /**

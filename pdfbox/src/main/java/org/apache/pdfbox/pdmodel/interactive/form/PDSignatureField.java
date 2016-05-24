@@ -41,6 +41,9 @@ public class PDSignatureField extends PDTerminalField
      * @throws IOException If there is an error while resolving partial name for the signature field
      *         or getting the widget object.
      */
+
+    private boolean isSignatureWithCorrectByteRange;
+
     public PDSignatureField(PDAcroForm acroForm) throws IOException
     {
         super(acroForm);
@@ -217,5 +220,20 @@ public class PDSignatureField extends PDTerminalField
             // TODO: implement appearance generation for signatures
             throw new UnsupportedOperationException("not implemented");
         }
+    }
+
+	/**
+     * @return true if byte range of contained signature is correct.
+     */
+    public boolean isSignatureWithCorrectByteRange() {
+        return isSignatureWithCorrectByteRange;
+    }
+
+	/**
+     * @param signatureWithCorrectByteRange is true if byte range of contained
+     * signature is correct.
+     */
+    public void setSignatureWithCorrectByteRange(boolean signatureWithCorrectByteRange) {
+        isSignatureWithCorrectByteRange = signatureWithCorrectByteRange;
     }
 }
