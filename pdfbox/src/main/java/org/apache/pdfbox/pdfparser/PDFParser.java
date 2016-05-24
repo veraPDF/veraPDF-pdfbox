@@ -19,10 +19,7 @@ package org.apache.pdfbox.pdfparser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,6 +32,9 @@ import org.apache.pdfbox.pdmodel.encryption.DecryptionMaterial;
 import org.apache.pdfbox.pdmodel.encryption.PDEncryption;
 import org.apache.pdfbox.pdmodel.encryption.PublicKeyDecryptionMaterial;
 import org.apache.pdfbox.pdmodel.encryption.StandardDecryptionMaterial;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
 
 public class PDFParser extends COSParser
 {
@@ -187,7 +187,10 @@ public class PDFParser extends COSParser
             getDocument().setLastTrailer(getLastTrailer());
             getDocument().setFirstPageTrailer(getFirstTrailer());
         }
-        return new PDDocument( getDocument(), pdfSource, accessPermission );
+        PDDocument document = new PDDocument( getDocument(),
+                pdfSource, accessPermission );
+        checkByteRanges(document);
+        return document;
     }
 
     /**
@@ -357,4 +360,27 @@ public class PDFParser extends COSParser
         }
     }
 
+    protected void checkByteRanges(PDDocument document) throws IOException {
+        PDAcroForm acroForm = document.getDocumentCatalog().getAcroForm();
+        acroForm.setCacheFields(true);
+        SignatureParser signatureParser = new SignatureParser(this.pdfSource,
+                this.document);
+        Map<COSObject, PDField> signatureFields = acroForm.getSignatureFields();
+        for(Map.Entry<COSObject, PDField> signatureFieldEnrty : signatureFields.entrySet()) {
+            COSObjectKey key = new COSObjectKey(signatureFieldEnrty.getKey());
+            PDField signatureField = signatureFieldEnrty.getValue();
+            long[] actualByteRange =
+                    signatureParser.getByteRange(this.getDocument().getXrefTable().get(key));
+            int [] byteRange =
+                    ((PDSignatureField) signatureField).getSignature().getByteRange();
+            boolean isByteRangeCorrect = true;
+            for(int i = 0; i < 3; ++i) {
+                if(byteRange[i] != actualByteRange[i]) {
+                    isByteRangeCorrect = false;
+                }
+            }
+            ((PDSignatureField) acroForm.getField(
+                    signatureField.getFullyQualifiedName())).setSignatureWithCorrectByteRange(isByteRangeCorrect);
+        }
+    }
 }
