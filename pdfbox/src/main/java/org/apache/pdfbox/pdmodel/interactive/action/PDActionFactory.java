@@ -112,6 +112,18 @@ public final class PDActionFactory
 			{
 				retval = new PDActionThread(action);
 			}
+            else if (PDActionGoTo3DView.SUB_TYPE.equals(type)) {
+                retval = new PDActionGoTo3DView(action);
+            }
+            else if (PDActionRendition.SUB_TYPE.equals(type)) {
+                retval = new PDActionRendition(action);
+            }
+            else if (PDActionSetOCGState.SUB_TYPE.equals(type)) {
+                retval = new PDActionSetOCGState(action);
+            }
+            else if (PDActionTrans.SUB_TYPE.equals(type)) {
+                retval = new PDActionTrans(action);
+            }
         }
         return retval;
     }
