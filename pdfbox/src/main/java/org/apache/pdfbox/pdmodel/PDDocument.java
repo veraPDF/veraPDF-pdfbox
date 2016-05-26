@@ -144,6 +144,13 @@ public class PDDocument implements Closeable
     }
 
     /**
+     * @return random access stream with pdf file.
+     */
+    public RandomAccessRead getPdfSource() {
+        return pdfSource;
+    }
+
+    /**
      * This will add a page to the document. This is a convenience method, that will add the page to the root of the
      * hierarchy and set the parent of the page to the root.
      * 
