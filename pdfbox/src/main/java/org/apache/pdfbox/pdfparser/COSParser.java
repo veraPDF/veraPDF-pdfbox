@@ -708,8 +708,6 @@ public class COSParser extends BaseParser
             // not previously parsed
             // ---- read offset or object stream object number from xref table
             Long offsetOrObjstmObNr = xrefTrailerResolver.getXrefTable().get(objKey);
-            //this is required to support pdf files with junk before header
-            offsetOrObjstmObNr += this.document.getHeaderOffset();
 
             // sanity test to circumvent loops with broken documents
             if (requireExistingNotCompressedObj
@@ -726,6 +724,8 @@ public class COSParser extends BaseParser
             }
             else if (offsetOrObjstmObNr > 0)
             {
+                //this is required to support pdf files with junk before header
+                offsetOrObjstmObNr += this.document.getHeaderOffset();
                 // offset of indirect object in file
                 parseFileObject(offsetOrObjstmObNr, objKey, objNr, objGenNr, pdfObject);
             }
