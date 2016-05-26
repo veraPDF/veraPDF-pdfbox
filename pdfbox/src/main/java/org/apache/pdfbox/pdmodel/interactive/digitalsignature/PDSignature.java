@@ -291,6 +291,16 @@ public class PDSignature implements COSObjectable
     }
 
     /**
+     * Get contents as string form dictionary.
+     *
+     * @return string with key Contents in signature dictionary as byte array.
+     */
+    public byte[] getContents() {
+        COSString string = (COSString) this.dictionary.getDictionaryObject(COSName.CONTENTS);
+        return string.getBytes();
+    }
+
+    /**
      * Will return the embedded signature between the byterange gap.
      *
      * @param pdfFile The signed pdf file as InputStream
