@@ -462,10 +462,10 @@ final class FontMapper
         
         // look up the PostScript name
         FontInfo info = fontInfoByName.get(postScriptName);
-        if (info != null && info.getFormat() == format)
-        {
-            return info;
-        }
+//        if (info != null && info.getFormat() == format)
+//        {
+//            return info;
+//        }
         return null;
     }
     
