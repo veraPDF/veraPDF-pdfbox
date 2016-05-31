@@ -16,15 +16,11 @@
  */
 package org.apache.pdfbox.cos;
 
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.util.DateConverter;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * This class represents a dictionary where name/value pairs reside.
@@ -1460,12 +1456,15 @@ public class COSDictionary extends COSBase implements COSUpdateInfo
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(Object obj) { // TODO: test that
+    public boolean equals(Object obj) {
         if(this == obj) {
             return true;
         }
-        if(obj == null || getClass() != obj.getClass()) {
+        if(obj == null) {
             return false;
+        }
+        if(obj instanceof COSObject) {
+            return this.equals(((COSObject) obj).getObject());
         }
         COSDictionary that = (COSDictionary) obj;
 

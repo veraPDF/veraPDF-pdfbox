@@ -16,27 +16,13 @@
  */
 package org.apache.pdfbox.cos;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Map;
-
 import org.apache.pdfbox.filter.DecodeResult;
 import org.apache.pdfbox.filter.Filter;
 import org.apache.pdfbox.filter.FilterFactory;
-import org.apache.pdfbox.io.IOUtils;
-import org.apache.pdfbox.io.RandomAccess;
-import org.apache.pdfbox.io.RandomAccessBuffer;
-import org.apache.pdfbox.io.RandomAccessReadInputStream;
-import org.apache.pdfbox.io.RandomAccessFileOutputStream;
-import org.apache.pdfbox.io.RandomAccessRead;
-import org.apache.pdfbox.io.RandomAccessReadWrapper;
-import org.apache.pdfbox.io.ScratchFile;
+import org.apache.pdfbox.io.*;
+
+import java.io.*;
+import java.util.Map;
 
 /**
  * This class represents a stream object in a PDF document.
@@ -704,22 +690,22 @@ public class COSStream extends COSDictionary implements Closeable
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(Object obj) { // TODO: test that
+    public boolean equals(Object obj) {
         if(this == obj) {
             return true;
         }
-        if(obj == null || getClass() != obj.getClass()) {
+        if(obj == null) {
             return false;
+        }
+        if(obj instanceof COSObject) {
+            return this.equals(((COSObject) obj).getObject());
         }
         COSStream that = (COSStream) obj;
 
-        if(this.size() != that.size()) {
-            return false;
-        }
-
         for(Map.Entry<COSName, COSBase> entry : this.entrySet()) {
             if(entry.getKey().equals(COSName.FILTER) ||
-                    entry.getKey().equals(COSName.DECODE_PARMS)) {
+                    entry.getKey().equals(COSName.DECODE_PARMS) ||
+                    entry.getKey().equals(COSName.LENGTH)) {
                 continue;
             }
             COSBase cosBase = that.items.get(entry.getKey());
@@ -727,9 +713,23 @@ public class COSStream extends COSDictionary implements Closeable
                 return false;
             }
         }
+
+        for(Map.Entry<COSName, COSBase> entry : that.entrySet()) {
+            if(entry.getKey().equals(COSName.FILTER) ||
+                    entry.getKey().equals(COSName.DECODE_PARMS) ||
+                    entry.getKey().equals(COSName.LENGTH)) {
+                continue;
+            }
+            COSBase cosBase = this.items.get(entry.getKey());
+            if(!entry.getValue().equals(cosBase)) {
+                return false;
+            }
+        }
+
         try {
-            RandomAccessRead thisRead = this.getFilteredRandomAccess();
-            RandomAccessRead thatRead = that.getFilteredRandomAccess();
+            RandomAccessRead thisRead = this.getUnfilteredRandomAccess();
+            RandomAccessRead thatRead = that.getUnfilteredRandomAccess();
+
             if(thisRead.length() != thatRead.length()) {
                 return false;
             }

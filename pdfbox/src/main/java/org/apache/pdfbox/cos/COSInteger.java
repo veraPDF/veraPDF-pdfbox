@@ -106,6 +106,9 @@ public final class COSInteger extends COSNumber
     @Override
     public boolean equals(Object o)
     {
+        if(o instanceof COSObject) {
+            return this.equals(((COSObject) o).getObject());
+        }
         return o instanceof COSInteger && ((COSInteger)o).intValue() == intValue();
     }
 

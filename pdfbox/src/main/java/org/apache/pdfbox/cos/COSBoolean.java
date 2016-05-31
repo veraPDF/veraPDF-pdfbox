@@ -148,17 +148,20 @@ public final class COSBoolean extends COSBase
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (obj == null) {
             return false;
         }
-
-        COSBoolean that = (COSBoolean) o;
-
-        return value == that.value;
-
+        if(obj instanceof COSObject) {
+            return this.equals(((COSObject) obj).getObject());
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        COSBoolean that = (COSBoolean) obj;
+        return this.value == that.value;
     }
 }

@@ -82,6 +82,9 @@ public final class COSNull extends COSBase
      */
     @Override
     public boolean equals(Object obj) {
+        if(obj instanceof COSObject) {
+            return this.equals(((COSObject) obj).getObject());
+        }
         if(this == obj) {
             return true;
         }

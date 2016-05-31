@@ -127,6 +127,9 @@ public class COSFloat extends COSNumber
     @Override
     public boolean equals( Object o )
     {
+        if(o instanceof COSObject) {
+            return this.equals(((COSObject) o).getObject());
+        }
         return o instanceof COSFloat && 
                 Float.floatToIntBits(((COSFloat)o).value.floatValue()) == Float.floatToIntBits(value.floatValue());
     }

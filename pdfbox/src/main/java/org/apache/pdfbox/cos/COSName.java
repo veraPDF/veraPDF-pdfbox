@@ -622,6 +622,9 @@ public final class COSName extends COSBase implements Comparable<COSName>
     @Override
     public boolean equals(Object object)
     {
+        if(object instanceof COSObject) {
+            return this.equals(((COSObject) object).getObject());
+        }
         return object instanceof COSName && name.equals(((COSName) object).name);
     }
 

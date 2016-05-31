@@ -121,13 +121,18 @@ public class COSObject extends COSBase implements COSUpdateInfo
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null) {
             return false;
         }
-
-        COSObject cosObject = (COSObject) o;
-
-        return this.baseObject.equals(cosObject.baseObject);
+        if(getClass() == o.getClass()) {
+            COSObject cosObject = (COSObject) o;
+            return this.baseObject.equals(cosObject.baseObject);
+        }
+        if(o instanceof COSBase) {  // Actually comparing base object
+            return this.baseObject.equals(o);
+        } else {
+            return false;
+        }
     }
 
     /** 
