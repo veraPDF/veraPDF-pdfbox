@@ -264,4 +264,25 @@ public class COSStreamArray extends COSStream
         streams = tmp;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        COSStreamArray that = (COSStreamArray) o;
+
+        return streams != null ? streams.equals(that.streams) : that.streams == null;
+
+    }
+
 }

@@ -24,6 +24,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
 
 import org.apache.pdfbox.filter.DecodeResult;
 import org.apache.pdfbox.filter.Filter;
@@ -697,5 +698,49 @@ public class COSStream extends COSDictionary implements Closeable
         {
             filteredBuffer.close();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) { // TODO: test that
+        if(this == obj) {
+            return true;
+        }
+        if(obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        COSStream that = (COSStream) obj;
+
+        if(this.size() != that.size()) {
+            return false;
+        }
+
+        for(Map.Entry<COSName, COSBase> entry : this.entrySet()) {
+            if(entry.getKey().equals(COSName.FILTER) ||
+                    entry.getKey().equals(COSName.DECODE_PARMS)) {
+                continue;
+            }
+            COSBase cosBase = that.items.get(entry.getKey());
+            if(!entry.getValue().equals(cosBase)) {
+                return false;
+            }
+        }
+        try {
+            RandomAccessRead thisRead = this.getFilteredRandomAccess();
+            RandomAccessRead thatRead = that.getFilteredRandomAccess();
+            if(thisRead.length() != thatRead.length()) {
+                return false;
+            }
+            for(int i = 0; i < thisRead.length(); ++i) {
+                if(thisRead.read() != thatRead.read()) {
+                    return false;
+                }
+            }
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
     }
 }

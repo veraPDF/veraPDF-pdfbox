@@ -143,4 +143,22 @@ public final class COSBoolean extends COSBase
             output.write( FALSE_BYTES );
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        COSBoolean that = (COSBoolean) o;
+
+        return value == that.value;
+
+    }
 }

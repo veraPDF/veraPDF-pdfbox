@@ -557,4 +557,20 @@ public class COSArray extends COSBase implements Iterable<COSBase>
         }
         return retList;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) { // TODO: test that
+        if(this == obj) {
+            return true;
+        }
+        if(obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        COSArray that = (COSArray) obj;
+
+        return this.objects.equals(that.objects);
+    }
 }

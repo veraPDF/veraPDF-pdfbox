@@ -113,6 +113,23 @@ public class COSObject extends COSBase implements COSUpdateInfo
         return "COSObject{" + Long.toString(objectNumber) + ", " + Integer.toString(generationNumber) + "}";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        COSObject cosObject = (COSObject) o;
+
+        return this.baseObject.equals(cosObject.baseObject);
+    }
+
     /** 
      * Getter for property objectNumber.
      * @return Value of property objectNumber.

@@ -1456,4 +1456,19 @@ public class COSDictionary extends COSBase implements COSUpdateInfo
         return retVal.toString();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) { // TODO: test that
+        if(this == obj) {
+            return true;
+        }
+        if(obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        COSDictionary that = (COSDictionary) obj;
+
+        return that.entrySet().equals(this.entrySet());
+    }
 }
