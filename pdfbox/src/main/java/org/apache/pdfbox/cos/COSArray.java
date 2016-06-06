@@ -310,7 +310,7 @@ public class COSArray extends COSBase implements Iterable<COSBase>
         {
             set( index, null );
         }
-    }   
+    }
 
     /**
      * Get the value of the array as a string.
@@ -556,5 +556,26 @@ public class COSArray extends COSBase implements Iterable<COSBase>
             retList.add(get(i));
         }
         return retList;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if(obj instanceof COSObject) {
+            return this.equals(((COSObject) obj).getObject());
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        COSArray that = (COSArray) obj;
+        return this.objects.equals(that.objects);
     }
 }

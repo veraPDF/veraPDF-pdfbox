@@ -16,23 +16,14 @@
  */
 package org.apache.pdfbox.pdmodel.common;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.SequenceInputStream;
-import java.util.List;
-import java.util.Vector;
-
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSStream;
-import org.apache.pdfbox.cos.ICOSVisitor;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.io.RandomAccessBuffer;
 import org.apache.pdfbox.io.RandomAccessRead;
 import org.apache.pdfbox.io.SequenceRandomAccessRead;
+
+import java.io.*;
+import java.util.List;
+import java.util.Vector;
 
 /**
  * This will take an array of streams and sequence them together.
@@ -262,6 +253,30 @@ public class COSStreamArray extends COSStream
         tmp.addAll(streams);
         streams.clear();
         streams = tmp;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if(o instanceof COSObject) {
+            return this.equals(((COSObject) o).getObject());
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
+
+        COSStreamArray that = (COSStreamArray) o;
+
+        return streams != null ? streams.equals(that.streams) : that.streams == null;
+
     }
 
 }

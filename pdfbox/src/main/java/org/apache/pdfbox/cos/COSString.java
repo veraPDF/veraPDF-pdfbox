@@ -282,6 +282,9 @@ public final class COSString extends COSBase
     @Override
     public boolean equals(Object obj)
     {
+        if(obj instanceof COSObject) {
+            return this.equals(((COSObject) obj).getObject());
+        }
         if (obj instanceof COSString)
         {
             COSString strObj = (COSString) obj;
