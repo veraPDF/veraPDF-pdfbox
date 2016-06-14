@@ -736,7 +736,9 @@ public class COSParser extends BaseParser
                 parseObjectStream((int) -offsetOrObjstmObNr);
             }
         }
-        return pdfObject.getObject();
+        COSBase object = pdfObject.getObject();
+        object.setKey(objKey);
+        return object;
     }
 
     private void parseFileObject(Long offsetOrObjstmObNr, final COSObjectKey objKey, long objNr, int objGenNr, final COSObject pdfObject) throws IOException
