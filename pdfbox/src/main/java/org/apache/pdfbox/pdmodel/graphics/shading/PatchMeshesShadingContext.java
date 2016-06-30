@@ -15,8 +15,16 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
-import java.awt.Point;
-import java.awt.Rectangle;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSStream;
+import org.apache.pdfbox.pdmodel.common.PDRange;
+import org.apache.pdfbox.util.Matrix;
+
+import javax.imageio.stream.ImageInputStream;
+import javax.imageio.stream.MemoryCacheImageInputStream;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.ColorModel;
@@ -26,14 +34,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.imageio.stream.ImageInputStream;
-import javax.imageio.stream.MemoryCacheImageInputStream;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSStream;
-import org.apache.pdfbox.pdmodel.common.PDRange;
-import org.apache.pdfbox.util.Matrix;
 
 /**
  * This class is extended in Type6ShadingContext and Type7ShadingContext. This
@@ -144,7 +144,7 @@ abstract class PatchMeshesShadingContext extends TriangleBasedShadingContext
                             implicitCornerColor = current.getFlag3Color();
                             break;
                         default:
-                            LOG.warn("bad flag: " + flag);
+                            LOG.debug("bad flag: " + flag);
                             break;
                     }
                 }

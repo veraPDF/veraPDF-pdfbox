@@ -85,12 +85,12 @@ public class PDCIDFontType2 extends PDCIDFont
             }
             catch (NullPointerException e) // TTF parser is buggy
             {
-                LOG.warn("Could not read embedded TTF for font " + getBaseFont(), e);
+                LOG.debug("Could not read embedded TTF for font " + getBaseFont(), e);
                 fontIsDamaged = true;
             }
             catch (IOException e)
             {
-                LOG.warn("Could not read embedded TTF for font " + getBaseFont(), e);
+                LOG.debug("Could not read embedded TTF for font " + getBaseFont(), e);
                 fontIsDamaged = true;
             }
         }
@@ -119,12 +119,12 @@ public class PDCIDFontType2 extends PDCIDFont
             catch (NullPointerException e) // TTF parser is buggy
             {
                 fontIsDamaged = true;
-                LOG.warn("Could not read embedded OTF for font " + getBaseFont(), e);
+                LOG.debug("Could not read embedded OTF for font " + getBaseFont(), e);
             }
             catch (IOException e)
             {
                 fontIsDamaged = true;
-                LOG.warn("Could not read embedded OTF for font " + getBaseFont(), e);
+                LOG.debug("Could not read embedded OTF for font " + getBaseFont(), e);
             }
         }
         isEmbedded = ttfFont != null;
@@ -147,7 +147,7 @@ public class PDCIDFontType2 extends PDCIDFont
 
             if (mapping.isFallback())
             {
-                LOG.warn("Using fallback for CID-keyed TrueType font " + getBaseFont());
+                LOG.debug("Using fallback for CID-keyed TrueType font " + getBaseFont());
             }
         }
         ttf = ttfFont;
@@ -264,12 +264,12 @@ public class PDCIDFontType2 extends PDCIDFont
                 String unicode = parent.toUnicode(code);
                 if (unicode == null)
                 {
-                    LOG.warn("Failed to find a character mapping for " + code + " in " + getName());
+                    LOG.debug("Failed to find a character mapping for " + code + " in " + getName());
                     return 0;
                 }
                 else if (unicode.length() > 1)
                 {
-                    LOG.warn("Trying to map multi-byte character using 'cmap', result will be poor");
+                    LOG.debug("Trying to map multi-byte character using 'cmap', result will be poor");
                 }
                 
                 // a non-embedded font always has a cmap (otherwise ExternalFonts won't load it)

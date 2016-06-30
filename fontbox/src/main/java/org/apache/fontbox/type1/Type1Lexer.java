@@ -19,10 +19,11 @@
 
 package org.apache.fontbox.type1;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
 
 /**
  * Lexer for the ASCII portions of an Adobe Type 1 font.
@@ -148,7 +149,7 @@ class Type1Lexer
                 }
                 else if (c == 0)
                 {
-                    LOG.warn("NULL byte in font, skipped");
+                    LOG.debug("NULL byte in font, skipped");
                     skip = true;
                 }
                 else

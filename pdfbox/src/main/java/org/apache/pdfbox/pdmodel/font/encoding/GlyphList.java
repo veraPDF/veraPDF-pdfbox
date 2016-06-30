@@ -137,7 +137,7 @@ public final class GlyphList
 
                     if (nameToUnicode.containsKey(name))
                     {
-                        LOG.warn("duplicate value for " + name + " -> " + parts[1] + " " +
+                        LOG.debug("duplicate value for " + name + " -> " + parts[1] + " " +
                                  nameToUnicode.get(name));
                     }
 
@@ -231,7 +231,7 @@ public final class GlyphList
                         int codePoint = Integer.parseInt(name.substring(chPos, chPos + 4), 16);
                         if (codePoint > 0xD7FF && codePoint < 0xE000)
                         {
-                            LOG.warn("Unicode character name with disallowed code area: " + name);
+                            LOG.debug("Unicode character name with disallowed code area: " + name);
                         }
                         else
                         {
@@ -242,7 +242,7 @@ public final class GlyphList
                 }
                 catch (NumberFormatException nfe)
                 {
-                    LOG.warn("Not a number in Unicode character name: " + name);
+                    LOG.debug("Not a number in Unicode character name: " + name);
                 }
             }
             else if (name.startsWith("u") && name.length() == 5)
@@ -253,7 +253,7 @@ public final class GlyphList
                     int codePoint = Integer.parseInt(name.substring(1), 16);
                     if (codePoint > 0xD7FF && codePoint < 0xE000)
                     {
-                        LOG.warn("Unicode character name with disallowed code area: " + name);
+                        LOG.debug("Unicode character name with disallowed code area: " + name);
                     }
                     else
                     {
@@ -262,7 +262,7 @@ public final class GlyphList
                 }
                 catch (NumberFormatException nfe)
                 {
-                    LOG.warn("Not a number in Unicode character name: " + name);
+                    LOG.debug("Not a number in Unicode character name: " + name);
                 }
             }
             nameToUnicode.put(name, unicode);

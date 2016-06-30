@@ -120,7 +120,7 @@ public abstract class PDFont implements COSObjectable, PDFontLike, PDInheritable
             toUnicodeCMap = readCMap(toUnicode);
             if (toUnicodeCMap != null && !toUnicodeCMap.hasUnicodeMappings())
             {
-                LOG.warn("Invalid ToUnicode CMap in font " + getName());
+                LOG.debug("Invalid ToUnicode CMap in font " + getName());
             }
         }
         else

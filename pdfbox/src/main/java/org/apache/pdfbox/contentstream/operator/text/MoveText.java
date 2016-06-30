@@ -16,8 +16,6 @@
  */
 package org.apache.pdfbox.contentstream.operator.text;
 
-import java.util.List;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.contentstream.operator.MissingOperandException;
@@ -26,6 +24,8 @@ import org.apache.pdfbox.contentstream.operator.OperatorProcessor;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSNumber;
 import org.apache.pdfbox.util.Matrix;
+
+import java.util.List;
 
 /**
  * Td: Move text position.
@@ -46,7 +46,7 @@ public class MoveText extends OperatorProcessor
         Matrix textLineMatrix = context.getTextLineMatrix();
         if (textLineMatrix == null)
         {
-            LOG.warn("TextLineMatrix is null, " + getName() + " operator will be ignored");
+            LOG.debug("TextLineMatrix is null, " + getName() + " operator will be ignored");
             return;
         }        
         

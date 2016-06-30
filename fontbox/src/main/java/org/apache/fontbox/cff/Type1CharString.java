@@ -16,7 +16,12 @@
  */
 package org.apache.fontbox.cff;
 
-import java.awt.Point;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.fontbox.encoding.StandardEncoding;
+import org.apache.fontbox.type1.Type1CharStringReader;
+
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Point2D;
@@ -24,11 +29,6 @@ import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.fontbox.encoding.StandardEncoding;
-import org.apache.fontbox.type1.Type1CharStringReader;
 
 /**
  * This class represents and renders a Type 1 CharString.
@@ -272,7 +272,7 @@ public class Type1CharString
         else
         {
             // indicates an invalid charstring
-            LOG.warn("Unknown charstring command: " + command.getKey());
+            LOG.debug("Unknown charstring command: " + command.getKey());
         }
         return null;
     }
@@ -299,8 +299,8 @@ public class Type1CharString
 
             if (flexPoints.size() < 7)
             {
-                LOG.warn("flex without moveTo in font " + fontName + ", glyph " + glyphName +
-                         ", command " + commandCount);
+                LOG.debug("flex without moveTo in font " + fontName + ", glyph " + glyphName +
+                        ", command " + commandCount);
                 return;
             }
 
@@ -358,7 +358,7 @@ public class Type1CharString
         float y = (float)current.getY() + dy.floatValue();
         if (path.getCurrentPoint() == null)
         {
-            LOG.warn("rlineTo without initial moveTo in font " + fontName + ", glyph " + glyphName);
+            LOG.debug("rlineTo without initial moveTo in font " + fontName + ", glyph " + glyphName);
             path.moveTo(x, y);
         }
         else
@@ -382,7 +382,7 @@ public class Type1CharString
         float y3 = y2 + dy3.floatValue();
         if (path.getCurrentPoint() == null)
         {
-            LOG.warn("rrcurveTo without initial moveTo in font " + fontName + ", glyph " + glyphName);
+            LOG.debug("rrcurveTo without initial moveTo in font " + fontName + ", glyph " + glyphName);
             path.moveTo(x3, y3);
         }
         else
@@ -399,7 +399,7 @@ public class Type1CharString
     {
         if (path.getCurrentPoint() == null)
         {
-            LOG.warn("closepath without initial moveTo in font " + fontName + ", glyph " + glyphName);
+            LOG.debug("closepath without initial moveTo in font " + fontName + ", glyph " + glyphName);
         }
         else
         {
@@ -427,7 +427,7 @@ public class Type1CharString
             }
             catch (IOException e)
             {
-                LOG.warn("invalid seac character in glyph " + glyphName + " of font " + fontName);
+                LOG.debug("invalid seac character in glyph " + glyphName + " of font " + fontName);
             }
         }
         // accent character
@@ -444,7 +444,7 @@ public class Type1CharString
             }
             catch (IOException e)
             {
-                LOG.warn("invalid seac character in glyph " + glyphName + " of font " + fontName);
+                LOG.debug("invalid seac character in glyph " + glyphName + " of font " + fontName);
             }
         }
     }

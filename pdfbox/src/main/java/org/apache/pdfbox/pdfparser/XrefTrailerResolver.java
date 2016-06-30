@@ -16,22 +16,14 @@
  */
 package org.apache.pdfbox.pdfparser;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSObjectKey;
+
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * This class will collect all XRef/trailer objects and creates correct
@@ -162,7 +154,7 @@ public class XrefTrailerResolver
         if ( curXrefTrailerObj == null )
         {
             // should not happen...
-            LOG.warn( "Cannot add XRef entry for '" + objKey.getNumber() + "' because XRef start was not signalled." );
+            LOG.debug("Cannot add XRef entry for '" + objKey.getNumber() + "' because XRef start was not signalled.");
             return;
         }
         curXrefTrailerObj.xrefTable.put( objKey, offset );
@@ -178,7 +170,7 @@ public class XrefTrailerResolver
         if ( curXrefTrailerObj == null )
         {
             // should not happen...
-            LOG.warn( "Cannot add trailer because XRef start was not signalled." );
+            LOG.debug("Cannot add trailer because XRef start was not signalled.");
             return;
         }
         curXrefTrailerObj.trailer = trailer;
@@ -213,7 +205,7 @@ public class XrefTrailerResolver
     {
         if ( resolvedXrefTrailer != null )
         {
-            LOG.warn( "Method must be called only ones with last startxref value." );
+            LOG.debug("Method must be called only ones with last startxref value.");
             return;
         }
 
@@ -226,7 +218,7 @@ public class XrefTrailerResolver
         if ( curObj == null )
         {
             // no XRef at given position
-            LOG.warn( "Did not found XRef object at specified startxref position " + startxrefBytePosValue );
+            LOG.debug("Did not found XRef object at specified startxref position " + startxrefBytePosValue);
 
             // use all objects in byte position order (last entries overwrite previous ones)
             xrefSeqBytePos.addAll( bytePosToXrefMap.keySet() );
@@ -250,7 +242,7 @@ public class XrefTrailerResolver
                 curObj = bytePosToXrefMap.get( prevBytePos );
                 if ( curObj == null )
                 {
-                    LOG.warn( "Did not found XRef object pointed to by 'Prev' key at position " + prevBytePos );
+                    LOG.debug("Did not found XRef object pointed to by 'Prev' key at position " + prevBytePos);
                     break;
                 }
                 xrefSeqBytePos.add( prevBytePos );

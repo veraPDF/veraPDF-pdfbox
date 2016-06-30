@@ -16,21 +16,12 @@
  */
 package org.apache.pdfbox.pdmodel.common;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSString;
+import org.apache.pdfbox.cos.*;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * This class represents a node in a name tree.
@@ -234,7 +225,7 @@ public abstract class PDNameTreeNode<T extends COSObjectable> implements COSObje
             }
             else
             {
-                LOG.warn("NameTreeNode does not have \"names\" nor \"kids\" objects.");
+                LOG.debug("NameTreeNode does not have \"names\" nor \"kids\" objects.");
             }
         }
         return retval;

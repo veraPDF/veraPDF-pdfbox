@@ -18,20 +18,17 @@
  */
 package org.apache.pdfbox.rendering;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.fontbox.ttf.HeaderTable;
+import org.apache.fontbox.ttf.TrueTypeFont;
+import org.apache.pdfbox.pdmodel.font.*;
+
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.fontbox.ttf.HeaderTable;
-import org.apache.fontbox.ttf.TrueTypeFont;
-import org.apache.pdfbox.pdmodel.font.PDCIDFontType2;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
-import org.apache.pdfbox.pdmodel.font.PDType0Font;
-import org.apache.pdfbox.pdmodel.font.PDVectorFont;
 
 /**
  * This class provides a glyph to GeneralPath conversion for TrueType and OpenType fonts.
@@ -129,12 +126,12 @@ final class TTFGlyph2D implements Glyph2D
                 {
                     int cid = ((PDType0Font) font).codeToCID(code);
                     String cidHex = String.format("%04x", cid);
-                    LOG.warn("No glyph for " + code + " (CID " + cidHex + ") in font " +
+                    LOG.debug("No glyph for " + code + " (CID " + cidHex + ") in font " +
                             font.getName());
                 }
                 else
                 {
-                    LOG.warn("No glyph for " + code + " in font " + font.getName());
+                    LOG.debug("No glyph for " + code + " in font " + font.getName());
                 }
             }
             

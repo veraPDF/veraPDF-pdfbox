@@ -16,13 +16,13 @@
  */
 package org.apache.fontbox.cff;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * This class represents a converter for a mapping into a Type 1 sequence.
@@ -146,7 +146,7 @@ public class Type1CharStringParser
 
                 if (results.size() > 0)
                 {
-                    LOG.warn("Value left on the PostScript stack in glyph " + glyphName + " of font " + fontName);
+                    LOG.debug("Value left on the PostScript stack in glyph " + glyphName + " of font " + fontName);
                 }
             }
             else if (b0 >= 0 && b0 <= 31)

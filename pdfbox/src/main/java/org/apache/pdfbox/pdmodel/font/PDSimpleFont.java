@@ -16,25 +16,20 @@
  */
 package org.apache.pdfbox.pdmodel.font;
 
-import java.awt.geom.GeneralPath;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.fontbox.FontBoxFont;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.pdmodel.font.encoding.BuiltInEncoding;
-import org.apache.pdfbox.pdmodel.font.encoding.DictionaryEncoding;
-import org.apache.pdfbox.pdmodel.font.encoding.Encoding;
-import org.apache.pdfbox.pdmodel.font.encoding.GlyphList;
-import org.apache.pdfbox.pdmodel.font.encoding.MacRomanEncoding;
-import org.apache.pdfbox.pdmodel.font.encoding.StandardEncoding;
-import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
+import org.apache.pdfbox.pdmodel.font.encoding.*;
+
+import java.awt.geom.GeneralPath;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A simple font. Simple fonts use a PostScript encoding vector.
@@ -106,7 +101,7 @@ public abstract class PDSimpleFont extends PDFont
                 this.encoding = Encoding.getInstance(encodingName);
                 if (this.encoding == null)
                 {
-                    LOG.warn("Unknown encoding: " + encodingName.getName());
+                    LOG.debug("Unknown encoding: " + encodingName.getName());
                     this.encoding = readEncodingFromFont(); // fallback
                 }
             }
@@ -360,12 +355,12 @@ public abstract class PDSimpleFont extends PDFont
             noUnicode.add(code);
             if (name != null)
             {
-                LOG.warn("No Unicode mapping for " + name + " (" + code + ") in font " +
+                LOG.debug("No Unicode mapping for " + name + " (" + code + ") in font " +
                         getName());
             }
             else
             {
-                LOG.warn("No Unicode mapping for character code " + code + " in font " +
+                LOG.debug("No Unicode mapping for character code " + code + " in font " +
                         getName());
             }
         }

@@ -16,12 +16,12 @@
  */
 package org.apache.fontbox.ttf;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Comparator;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * A 'kern' table in a true type font.
@@ -156,7 +156,7 @@ public class KerningSubtable
         }
         else
         {
-            LOG.warn("No kerning subtable data available due to an unsupported kerning subtable version");
+            LOG.debug("No kerning subtable data available due to an unsupported kerning subtable version");
         }
         return kerning;
     }
@@ -172,7 +172,7 @@ public class KerningSubtable
     {
         if (pairs == null)
         {
-            LOG.warn("No kerning subtable data available due to an unsupported kerning subtable version");
+            LOG.debug("No kerning subtable data available due to an unsupported kerning subtable version");
             return 0;
         }
         return pairs.getKerning(l, r);

@@ -16,7 +16,17 @@
  */
 package org.apache.pdfbox.filter;
 
-import java.awt.Graphics;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.cos.COSDictionary;
+import org.apache.pdfbox.cos.COSInteger;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSStream;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
@@ -24,15 +34,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.SequenceInputStream;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSInteger;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSStream;
 
 /**
  * Decompresses data encoded using the JBIG2 standard, reproducing the original
@@ -97,7 +98,7 @@ final class JBIG2Filter extends Filter
             {
                 if (bits.intValue() != 1)
                 {
-                    LOG.warn("Attempting to handle a JBIG2 with more than 1-bit depth");
+                    LOG.debug("Attempting to handle a JBIG2 with more than 1-bit depth");
                 }
                 BufferedImage packedImage = new BufferedImage(image.getWidth(), image.getHeight(),
                         BufferedImage.TYPE_BYTE_BINARY);

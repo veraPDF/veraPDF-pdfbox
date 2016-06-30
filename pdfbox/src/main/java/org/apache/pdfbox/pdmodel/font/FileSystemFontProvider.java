@@ -16,6 +16,16 @@
  */
 package org.apache.pdfbox.pdmodel.font;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.fontbox.FontBoxFont;
+import org.apache.fontbox.cff.CFFCIDFont;
+import org.apache.fontbox.cff.CFFFont;
+import org.apache.fontbox.ttf.*;
+import org.apache.fontbox.type1.Type1Font;
+import org.apache.fontbox.util.autodetect.FontFileFinder;
+import org.apache.pdfbox.io.IOUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,20 +33,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.fontbox.FontBoxFont;
-import org.apache.fontbox.cff.CFFCIDFont;
-import org.apache.fontbox.cff.CFFFont;
-import org.apache.fontbox.ttf.NamingTable;
-import org.apache.fontbox.ttf.OTFParser;
-import org.apache.fontbox.ttf.OpenTypeFont;
-import org.apache.fontbox.ttf.TTFParser;
-import org.apache.fontbox.ttf.TrueTypeCollection;
-import org.apache.fontbox.ttf.TrueTypeFont;
-import org.apache.fontbox.type1.Type1Font;
-import org.apache.fontbox.util.autodetect.FontFileFinder;
-import org.apache.pdfbox.io.IOUtils;
 
 /**
  * A FontProvider which searches for fonts on the local filesystem.
@@ -246,7 +242,7 @@ final class FileSystemFontProvider extends FontProvider
 
             if (nameTable == null)
             {
-                LOG.warn("Missing 'name' table in font " + file);
+                LOG.debug("Missing 'name' table in font " + file);
             }
             else
             {
@@ -284,7 +280,7 @@ final class FileSystemFontProvider extends FontProvider
                 }
                 else
                 {
-                    LOG.warn("Missing 'name' entry for PostScript name in font " + file);
+                    LOG.debug("Missing 'name' entry for PostScript name in font " + file);
                 }
             }
         }

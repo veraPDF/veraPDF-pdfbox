@@ -128,12 +128,12 @@ public class PDTrueTypeFont extends PDSimpleFont implements PDVectorFont
                 }
                 catch (NullPointerException e) // TTF parser is buggy
                 {
-                    LOG.warn("Could not read embedded TTF for font " + getBaseFont(), e);
+                    LOG.debug("Could not read embedded TTF for font " + getBaseFont(), e);
                     fontIsDamaged = true;
                 }
                 catch (IOException e)
                 {
-                    LOG.warn("Could not read embedded TTF for font " + getBaseFont(), e);
+                    LOG.debug("Could not read embedded TTF for font " + getBaseFont(), e);
                     fontIsDamaged = true;
                 }
             }
@@ -150,7 +150,7 @@ public class PDTrueTypeFont extends PDSimpleFont implements PDVectorFont
 
             if (mapping.isFallback())
             {
-                LOG.warn("Using fallback font '" + ttfFont + "' for '" + getBaseFont() + "'");
+                LOG.debug("Using fallback font '" + ttfFont + "' for '" + getBaseFont() + "'");
             }
         }
         ttf = ttfFont;
@@ -505,7 +505,7 @@ public class PDTrueTypeFont extends PDSimpleFont implements PDVectorFont
 
         if (gid == 0)
         {
-            LOG.warn("Can't map code " + code + " in font " + getBaseFont());
+            LOG.debug("Can't map code " + code + " in font " + getBaseFont());
         }
 
         return gid;

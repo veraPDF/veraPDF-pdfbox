@@ -16,19 +16,10 @@
  */
 package org.apache.pdfbox.pdmodel.font;
 
-import java.awt.geom.AffineTransform;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Point2D;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.fontbox.FontBoxFont;
 import org.apache.fontbox.EncodedFont;
+import org.apache.fontbox.FontBoxFont;
 import org.apache.fontbox.type1.DamagedFontException;
 import org.apache.fontbox.type1.Type1Font;
 import org.apache.fontbox.util.BoundingBox;
@@ -42,6 +33,16 @@ import org.apache.pdfbox.pdmodel.font.encoding.StandardEncoding;
 import org.apache.pdfbox.pdmodel.font.encoding.Type1Encoding;
 import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
 import org.apache.pdfbox.util.Matrix;
+
+import java.awt.geom.AffineTransform;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Point2D;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A PostScript Type 1 Font.
@@ -122,7 +123,7 @@ public class PDType1Font extends PDSimpleFont
             {
                 fontName = "?";
             }
-            LOG.warn("Using fallback font " + fontName + " for base font " + getBaseFont());
+            LOG.debug("Using fallback font " + fontName + " for base font " + getBaseFont());
         }
         isEmbedded = false;
         isDamaged = false;
@@ -203,7 +204,7 @@ public class PDType1Font extends PDSimpleFont
                 }
                 catch (DamagedFontException e)
                 {
-                    LOG.warn("Can't read damaged embedded Type1 font " + fd.getFontName());
+                    LOG.debug("Can't read damaged embedded Type1 font " + fd.getFontName());
                     fontIsDamaged = true;
                 }
                 catch (IOException e)
@@ -229,7 +230,7 @@ public class PDType1Font extends PDSimpleFont
             
             if (mapping.isFallback())
             {
-                LOG.warn("Using fallback font " + genericFont.getName() + " for " + getBaseFont());
+                LOG.debug("Using fallback font " + genericFont.getName() + " for " + getBaseFont());
             }
         }
         readEncoding();
@@ -269,7 +270,7 @@ public class PDType1Font extends PDSimpleFont
 
         if (length1 - offset != 0 && offset > 0)
         {
-            LOG.warn("Ignored invalid Length1 for Type 1 font " + getName());
+            LOG.debug("Ignored invalid Length1 for Type 1 font " + getName());
             return offset;
         }
 

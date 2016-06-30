@@ -208,7 +208,7 @@ public class COSParser extends BaseParser
                     if (pdfSource.getPosition() == trailerOffset)
                     {
                         // warn only the first time
-                        LOG.warn("Expected trailer object at position " + trailerOffset
+                        LOG.debug("Expected trailer object at position " + trailerOffset
                                 + ", keep trying");
                     }
                     readLine();
@@ -861,7 +861,7 @@ public class COSParser extends BaseParser
         {
             if (isLenient)
             {
-                LOG.warn("Object (" + readObjNr + ":" + readObjGen + ") at offset "
+                LOG.debug("Object (" + readObjNr + ":" + readObjGen + ") at offset "
                         + offsetOrObjstmObNr + " does not end with 'endobj' but with '"
                         + endObjectKey + "'");
             }
@@ -1010,7 +1010,7 @@ public class COSParser extends BaseParser
             {
                 if (isLenient)
                 {
-                   LOG.warn("The stream doesn't provide any stream length, using fallback readUntilEnd, at offset "
+                   LOG.debug("The stream doesn't provide any stream length, using fallback readUntilEnd, at offset "
                         + pdfSource.getPosition());
                 }
                 else
@@ -1039,7 +1039,7 @@ public class COSParser extends BaseParser
             String endStream = readString();
             if (endStream.equals("endobj") && isLenient)
             {
-                LOG.warn("stream ends with 'endobj' instead of 'endstream' at offset "
+                LOG.debug("stream ends with 'endobj' instead of 'endstream' at offset "
                         + pdfSource.getPosition());
                 if (validationParsing) {
                     stream.setEndstreamKeywordEOLCompliant(Boolean.FALSE);
@@ -1049,7 +1049,7 @@ public class COSParser extends BaseParser
             }
             else if (endStream.length() > 9 && isLenient && endStream.substring(0,9).equals(ENDSTREAM_STRING))
             {
-                LOG.warn("stream ends with '" + endStream + "' instead of 'endstream' at offset "
+                LOG.debug("stream ends with '" + endStream + "' instead of 'endstream' at offset "
                         + pdfSource.getPosition());
                 if (validationParsing) {
                     stream.setEndstreamKeywordEOLCompliant(Boolean.FALSE);
@@ -1083,7 +1083,7 @@ public class COSParser extends BaseParser
                 pdfSource.rewind(1);
             }
         } else if (whiteSpace != 10) {
-            LOG.warn("Stream at " + pdfSource.getPosition() + " offset has no EOL marker.");
+            LOG.debug("Stream at " + pdfSource.getPosition() + " offset has no EOL marker.");
             stream.setStreamKeywordCRLFCompliant(Boolean.FALSE);
             pdfSource.rewind(1);
         }
@@ -1108,7 +1108,7 @@ public class COSParser extends BaseParser
 		} else if (secondSymbol == 13) {
 			eolCount = 1;
 		} else {
-			LOG.warn("End of stream at " + pdfSource.getPosition() + " offset has no contain EOL marker.");
+			LOG.debug("End of stream at " + pdfSource.getPosition() + " offset has no contain EOL marker.");
 			stream.setEndstreamKeywordEOLCompliant(Boolean.FALSE);
 		}
 
@@ -1249,7 +1249,7 @@ public class COSParser extends BaseParser
         if (expectedEndOfStream > fileLen)
         {
             streamLengthIsValid = false;
-            LOG.warn("The end of the stream is out of range, using workaround to read the stream, "
+            LOG.debug("The end of the stream is out of range, using workaround to read the stream, "
                     + "stream start position: " + originOffset + ", length: " + streamLength
                     + ", expected end position: " + expectedEndOfStream);
         }
@@ -1260,7 +1260,7 @@ public class COSParser extends BaseParser
             if (!isString(ENDSTREAM))
             {
                 streamLengthIsValid = false;
-                LOG.warn("The end of the stream doesn't point to the correct offset, using workaround to read the stream, "
+                LOG.debug("The end of the stream doesn't point to the correct offset, using workaround to read the stream, "
                         + "stream start position: " + originOffset + ", length: " + streamLength
                         + ", expected end position: " + expectedEndOfStream);
             }
@@ -1430,7 +1430,7 @@ public class COSParser extends BaseParser
                 if (objectOffset != null && objectOffset >= 0
                         && !checkObjectKeys(objectKey, objectOffset)) {
                     objectsToRemove.add(objectKey);
-                    LOG.warn("Object " + objectKey + " has invalid offset");
+                    LOG.debug("Object " + objectKey + " has invalid offset");
                 }
             }
             for (COSObjectKey key : objectsToRemove) {
@@ -2035,7 +2035,7 @@ public class COSParser extends BaseParser
 			if (header.length() < headerMarker.length() + 3) {
 				// No version number at all, set to 1.4 as default
 				header = headerMarker + defaultVersion;
-				LOG.warn("No version found, set to " + defaultVersion + " as default.");
+				LOG.debug("No version found, set to " + defaultVersion + " as default.");
 			} else if (validationParsing) {
 				// trying to parse header version if it has some garbage
 				Integer pos = null;
@@ -2065,7 +2065,7 @@ public class COSParser extends BaseParser
         }
         catch (NumberFormatException exception)
         {
-            LOG.warn("Can't parse the header version.", exception);
+            LOG.debug("Can't parse the header version.", exception);
         }
         this.document.setVersion(headerVersion);
         if (this.validationParsing) {
@@ -2154,7 +2154,7 @@ public class COSParser extends BaseParser
 
         if (str.startsWith("trailer"))
         {
-            LOG.warn("skipping empty xref table");
+            LOG.debug("skipping empty xref table");
             return false;
         }
 
@@ -2192,7 +2192,7 @@ public class COSParser extends BaseParser
                 String[] splitString = currentLine.split("\\s");
                 if (splitString.length < 3)
                 {
-                    LOG.warn("invalid xref line: " + currentLine);
+                    LOG.debug("invalid xref line: " + currentLine);
                     break;
                 }
                 /* This supports the corrupt table as reported in
@@ -2317,7 +2317,7 @@ public class COSParser extends BaseParser
                     object.getKey().getGeneration(),
                     pdfObject);
         } else {
-            LOG.warn("Linearization dictionary is missed in document");
+            LOG.debug("Linearization dictionary is missed in document");
             return ;
         }
 

@@ -16,10 +16,6 @@
  */
 package org.apache.pdfbox.pdfparser;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.cos.COSBase;
@@ -29,6 +25,10 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.io.RandomAccessBuffer;
 import org.apache.pdfbox.io.RandomAccessFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class FDFParser extends COSParser
 {
@@ -85,7 +85,7 @@ public class FDFParser extends COSParser
             }
             catch (NumberFormatException nfe)
             {
-                LOG.warn("System property " + SYSPROP_EOFLOOKUPRANGE
+                LOG.debug("System property " + SYSPROP_EOFLOOKUPRANGE
                         + " does not contain an integer value, but: '" + eofLookupRangeStr + "'");
             }
         }

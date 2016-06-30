@@ -227,7 +227,7 @@ public abstract class BaseParser
             else
             {
                 // invalid dictionary, we were expecting a /Name, read until the end or until we can recover
-                LOG.warn("Invalid dictionary, found: '" + c + "' but expected: '/'");
+                LOG.debug("Invalid dictionary, found: '" + c + "' but expected: '/'");
                 if (readUntilEndOfCOSDictionary())
                 {
                     // we couldn't recover
@@ -308,7 +308,7 @@ public abstract class BaseParser
 
         if (value == null)
         {
-            LOG.warn("Bad Dictionary Declaration " + pdfSource);
+            LOG.debug("Bad Dictionary Declaration " + pdfSource);
         }
         else
         {
@@ -730,7 +730,7 @@ public abstract class BaseParser
             else
             {
                 //it could be a bad object in the array which is just skipped
-                LOG.warn("Corrupt object reference at offset " + pdfSource.getPosition());
+                LOG.debug("Corrupt object reference at offset " + pdfSource.getPosition());
 
                 // This could also be an "endobj" or "endstream" which means we can assume that
                 // the array has ended.
