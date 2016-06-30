@@ -16,6 +16,11 @@
  */
 package org.apache.pdfbox.cos;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.io.ScratchFile;
+import org.apache.pdfbox.pdfparser.PDFObjectStreamParser;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -23,10 +28,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.io.ScratchFile;
-import org.apache.pdfbox.pdfparser.PDFObjectStreamParser;
 
 /**
  * This is the in-memory representation of the PDF document.  You need to call
@@ -277,7 +278,7 @@ public class COSDocument extends COSBase implements Closeable
                 }
                 catch (ClassCastException e)
                 {
-                    LOG.warn(e, e);
+                    LOG.debug(e, e);
                 }
             }
         }
@@ -332,7 +333,7 @@ public class COSDocument extends COSBase implements Closeable
                 }
                 catch (ClassCastException e)
                 {
-                    LOG.warn(e, e);
+                    LOG.debug(e, e);
                 }
             }
         }
@@ -609,7 +610,7 @@ public class COSDocument extends COSBase implements Closeable
         {
             if (warnMissingClose) 
             {
-                LOG.warn( "Warning: You did not close a PDF Document" );
+                LOG.debug("Warning: You did not close a PDF Document");
             }
             close();
         }

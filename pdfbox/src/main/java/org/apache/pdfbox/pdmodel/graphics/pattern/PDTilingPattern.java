@@ -178,7 +178,7 @@ public class PDTilingPattern extends PDAbstractPattern implements PDContentStrea
         if (dict instanceof COSStream) {
             return ((COSStream) getCOSObject());
         }
-        LOG.warn("Invalid Tiling Pattern object type. Assuming the pattern has no content.");
+        LOG.debug("Invalid Tiling Pattern object type. Assuming the pattern has no content.");
         return null;
     }
 

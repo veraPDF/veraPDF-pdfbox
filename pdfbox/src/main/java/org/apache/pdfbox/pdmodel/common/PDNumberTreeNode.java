@@ -16,21 +16,13 @@
  */
 package org.apache.pdfbox.pdmodel.common;
 
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSInteger;
-import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.*;
+
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.util.*;
 
 /**
  * This class represents a PDF Number tree. See the PDF Reference 1.7 section
@@ -160,7 +152,7 @@ public class PDNumberTreeNode implements COSObjectable
             }
             else
             {
-                LOG.warn("NumberTreeNode does not have \"nums\" nor \"kids\" objects.");
+                LOG.debug("NumberTreeNode does not have \"nums\" nor \"kids\" objects.");
             }
         }
         return retval;

@@ -16,11 +16,12 @@
  */
 package org.apache.pdfbox.io;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * A temporary file which can hold multiple buffers of temporary data. A new temporary file is created for each new
@@ -58,7 +59,7 @@ public class ScratchFile implements Closeable
         {
             if (!file.delete())
             {
-                LOG.warn("Error deleting scratch file: " + file.getAbsolutePath());
+                LOG.debug("Error deleting scratch file: " + file.getAbsolutePath());
             }
             throw e;
         }

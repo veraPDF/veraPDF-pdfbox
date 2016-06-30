@@ -106,7 +106,7 @@ public final class COSString extends COSBase
             {
                 if (FORCE_PARSING)
                 {
-                    LOG.warn("Encountered a malformed hex string");
+                    LOG.debug("Encountered a malformed hex string");
                     bytes.write('?'); // todo: what does Acrobat do? Any example PDFs?
                 }
                 else

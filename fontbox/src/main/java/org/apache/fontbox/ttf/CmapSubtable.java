@@ -16,14 +16,15 @@
  */
 package org.apache.fontbox.ttf;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * A "cmap" subtable.
@@ -249,13 +250,13 @@ public class CmapSubtable
                 long glyphIndex = startGlyph + j;
                 if (glyphIndex >= numGlyphs)
                 {
-                    LOG.warn("Format 12 cmap contains an invalid glyph index");
+                    LOG.debug("Format 12 cmap contains an invalid glyph index");
                     break;
                 }
 
                 if (firstCode + j > 0x10FFFF)
                 {
-                    LOG.warn("Format 12 cmap contains character beyond UCS-4");
+                    LOG.debug("Format 12 cmap contains character beyond UCS-4");
                 }
 
                 glyphIdToCharacterCode[(int) glyphIndex] = (int) (firstCode + j);
@@ -282,7 +283,7 @@ public class CmapSubtable
 
             if (glyphId > numGlyphs)
             {
-                LOG.warn("Format 13 cmap contains an invalid glyph index");
+                LOG.debug("Format 13 cmap contains an invalid glyph index");
                 break;
             }
 
@@ -306,7 +307,7 @@ public class CmapSubtable
 
                 if (firstCode + j > 0x10FFFF)
                 {
-                    LOG.warn("Format 13 cmap contains character beyond UCS-4");
+                    LOG.debug("Format 13 cmap contains character beyond UCS-4");
                 }
 
                 glyphIdToCharacterCode[(int) glyphId] = (int) (firstCode + j);
@@ -326,7 +327,7 @@ public class CmapSubtable
     {
         // Unicode Variation Sequences (UVS)
         // see http://blogs.adobe.com/CCJKType/2013/05/opentype-cmap-table-ramblings.html
-        LOG.warn("Format 14 cmap table is not supported and will be ignored");
+        LOG.debug("Format 14 cmap table is not supported and will be ignored");
     }
 
     /**
@@ -417,7 +418,7 @@ public class CmapSubtable
          */
         if (tmpGlyphToChar.isEmpty())
         {
-            LOG.warn("cmap format 4 subtable is empty");
+            LOG.debug("cmap format 4 subtable is empty");
             return;
         }
         glyphIdToCharacterCode = newGlyphIdToCharacterCode(Collections.max(tmpGlyphToChar.keySet()) + 1);

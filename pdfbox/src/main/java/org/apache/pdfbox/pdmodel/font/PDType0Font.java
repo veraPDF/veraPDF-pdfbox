@@ -16,11 +16,6 @@
  */
 package org.apache.pdfbox.pdmodel.font;
 
-import java.awt.geom.GeneralPath;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.fontbox.cmap.CMap;
@@ -32,6 +27,12 @@ import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.Vector;
+
+import java.awt.geom.GeneralPath;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * A Composite (Type 0) font.
@@ -177,7 +178,7 @@ public class PDType0Font extends PDFont implements PDVectorFont
             }
             else if (!cMap.hasCIDMappings())
             {
-                LOG.warn("Invalid Encoding CMap in font " + getName());
+                LOG.debug("Invalid Encoding CMap in font " + getName());
             }
         }
         
@@ -412,7 +413,7 @@ public class PDType0Font extends PDFont implements PDVectorFont
         {
             // if no value has been produced, there is no way to obtain Unicode for the character.
             String cid = "CID+" + codeToCID(code);
-            LOG.warn("No Unicode mapping for " + cid + " (" + code + ") in font " + getName());
+            LOG.debug("No Unicode mapping for " + cid + " (" + code + ") in font " + getName());
             return null;
         }
     }

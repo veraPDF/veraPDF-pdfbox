@@ -16,13 +16,14 @@
  */
 package org.apache.pdfbox.rendering;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.pdmodel.font.PDSimpleFont;
+
 import java.awt.geom.GeneralPath;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.pdmodel.font.PDSimpleFont;
 
 /**
  * Glyph to GeneralPath conversion for Type 1 PFB and CFF, and TrueType fonts with a 'post' table.
@@ -59,7 +60,7 @@ final class Type1Glyph2D implements Glyph2D
             String name = font.getEncoding().getName(code);
             if (!font.hasGlyph(name))
             {
-                LOG.warn("No glyph for " + code + " (" + name + ") in font " + font.getName());
+                LOG.debug("No glyph for " + code + " (" + name + ") in font " + font.getName());
             }
 
             // todo: can this happen? should it be encapsulated?

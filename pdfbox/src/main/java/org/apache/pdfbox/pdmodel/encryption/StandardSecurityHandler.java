@@ -16,6 +16,17 @@
  */
 package org.apache.pdfbox.pdmodel.encryption;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSString;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.util.Charsets;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,18 +37,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
- 
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.util.Charsets;
 
 /**
  * The standard security handler. This security handler protects document with password.
@@ -298,7 +297,7 @@ public final class StandardSecurityHandler extends SecurityHandler
             
             if (perms[9] != 'a' || perms[10] != 'd' || perms[11] != 'b')
             {
-                LOG.warn("Verification of permissions failed (constant)");
+                LOG.debug("Verification of permissions failed (constant)");
             }
             
             int permsP = perms[0] & 0xFF | perms[1] & 0xFF << 8 | perms[2] & 0xFF << 16 |
@@ -306,13 +305,13 @@ public final class StandardSecurityHandler extends SecurityHandler
             
             if (permsP != dicPermissions)
             {
-                LOG.warn("Verification of permissions failed (" + permsP +
+                LOG.debug("Verification of permissions failed (" + permsP +
                         " != " + dicPermissions + ")");
             }
             
             if (encryptMetadata && perms[8] != 'T' || !encryptMetadata && perms[8] != 'F')
             {
-                LOG.warn("Verification of permissions failed (EncryptMetadata)");
+                LOG.debug("Verification of permissions failed (EncryptMetadata)");
             }
         }
         catch (GeneralSecurityException e)
@@ -1153,7 +1152,7 @@ public final class StandardSecurityHandler extends SecurityHandler
         {
             if (Cipher.getMaxAllowedKeyLength("AES") != Integer.MAX_VALUE)
             {
-                LOG.warn("JCE unlimited strength jurisdiction policy files are not installed");
+                LOG.debug("JCE unlimited strength jurisdiction policy files are not installed");
             }
         }
         catch (NoSuchAlgorithmException ex)

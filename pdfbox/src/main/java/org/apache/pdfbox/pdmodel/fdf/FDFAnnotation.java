@@ -16,24 +16,9 @@
  */
 package org.apache.pdfbox.pdmodel.fdf;
 
-import java.awt.Color;
-import java.io.IOException;
-import java.util.Calendar;
-
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.cos.COSArray;
-import org.apache.pdfbox.cos.COSBase;
-import org.apache.pdfbox.cos.COSDictionary;
-import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSNumber;
-import org.apache.pdfbox.cos.COSStream;
-import org.apache.pdfbox.cos.COSString;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
@@ -44,6 +29,14 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.awt.*;
+import java.io.IOException;
+import java.util.Calendar;
 
 /**
  * This represents an FDF annotation that is part of the FDF document.
@@ -356,7 +349,7 @@ public abstract class FDFAnnotation implements COSObjectable
             }
             else
             {
-                LOG.warn("Unknown or unsupported annotation type '"
+                LOG.debug("Unknown or unsupported annotation type '"
                         + fdfDic.getNameAsString(COSName.SUBTYPE) + "'");
             }
         }

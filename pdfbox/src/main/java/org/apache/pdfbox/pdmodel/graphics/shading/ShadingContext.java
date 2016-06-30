@@ -15,19 +15,20 @@
  */
 package org.apache.pdfbox.pdmodel.graphics.shading;
 
-import java.awt.Transparency;
-import java.awt.color.ColorSpace;
-import java.awt.geom.AffineTransform;
-import java.awt.image.ColorModel;
-import java.awt.image.ComponentColorModel;
-import java.awt.image.DataBuffer;
-import java.io.IOException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColorSpace;
 import org.apache.pdfbox.util.Matrix;
+
+import java.awt.*;
+import java.awt.color.ColorSpace;
+import java.awt.geom.AffineTransform;
+import java.awt.image.ColorModel;
+import java.awt.image.ComponentColorModel;
+import java.awt.image.DataBuffer;
+import java.io.IOException;
 
 /**
  * A base class to handle what is common to all shading types.
@@ -122,7 +123,7 @@ public abstract class ShadingContext
         maxBBoxY = Math.max(bboxTab[1], bboxTab[3]);
         if (minBBoxX >= maxBBoxX || minBBoxY >= maxBBoxY)
         {
-            LOG.warn("empty BBox is ignored");
+            LOG.debug("empty BBox is ignored");
             bboxRect = null;
         }
     }

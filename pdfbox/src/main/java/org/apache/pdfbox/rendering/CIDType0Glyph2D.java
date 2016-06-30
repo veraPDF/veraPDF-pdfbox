@@ -16,13 +16,14 @@
  */
 package org.apache.pdfbox.rendering;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.pdmodel.font.PDCIDFontType0;
+
 import java.awt.geom.GeneralPath;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.pdfbox.pdmodel.font.PDCIDFontType0;
 
 /**
  * GeneralPath conversion for CFF CIDFont.
@@ -62,7 +63,7 @@ final class CIDType0Glyph2D implements Glyph2D
             {
                 int cid = font.getParent().codeToCID(code);
                 String cidHex = String.format("%04x", cid);
-                LOG.warn("No glyph for " + code + " (CID " + cidHex + ") in font " + fontName);
+                LOG.debug("No glyph for " + code + " (CID " + cidHex + ") in font " + fontName);
             }
 
             GeneralPath path = font.getPath(code);

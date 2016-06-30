@@ -16,15 +16,15 @@
  */
 package org.apache.pdfbox.contentstream.operator.graphics;
 
-import java.io.IOException;
-import java.util.List;
-import java.awt.geom.Point2D;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.pdfbox.contentstream.operator.Operator;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSNumber;
-import org.apache.pdfbox.contentstream.operator.Operator;
+
+import java.awt.geom.Point2D;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * l Append straight line segment to path.
@@ -46,7 +46,7 @@ public class LineTo extends GraphicsOperatorProcessor
 
         if (context.getCurrentPoint() == null)
         {
-            LOG.warn("LineTo (" + pos.x + "," + pos.y + ") without initial MoveTo");
+            LOG.debug("LineTo (" + pos.x + "," + pos.y + ") without initial MoveTo");
             context.moveTo(pos.x, pos.y);
         }
         else

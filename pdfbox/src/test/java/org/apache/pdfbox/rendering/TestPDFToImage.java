@@ -16,21 +16,17 @@
  */
 package org.apache.pdfbox.rendering;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import javax.imageio.ImageIO;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.pdmodel.PDDocument;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
 
 /**
  * Test suite for rendering.
@@ -271,7 +267,7 @@ public class TestPDFToImage extends TestCase
             if (outFiles.length == 0)
             {
                 failed = true;
-                LOG.warn("*** TEST FAILURE *** Output missing for file: " + file.getName());
+                LOG.debug("*** TEST FAILURE *** Output missing for file: " + file.getName());
             }
             for (File outFile : outFiles)
             {
@@ -280,7 +276,7 @@ public class TestPDFToImage extends TestCase
                 if (!inFile.exists())
                 {
                     failed = true;
-                    LOG.warn("*** TEST FAILURE *** Input missing for file: " + inFile.getName());
+                    LOG.debug("*** TEST FAILURE *** Input missing for file: " + inFile.getName());
                 }
                 else if (!filesAreIdentical(outFile, inFile))
                 {
@@ -290,7 +286,7 @@ public class TestPDFToImage extends TestCase
                     if (bim3 != null)
                     {
                         failed = true;
-                        LOG.warn("*** TEST FAILURE *** Input and output not identical for file: " + inFile.getName());
+                        LOG.debug("*** TEST FAILURE *** Input and output not identical for file: " + inFile.getName());
                         ImageIO.write(bim3, "png", new File(outFile.getAbsolutePath() + "-diff.png"));
                         System.err.println("Files differ: "  + inFile.getAbsolutePath() + "\n" +
                                            "              " + outFile.getAbsolutePath());
