@@ -16,18 +16,6 @@
  */
 package org.apache.pdfbox.pdmodel.font;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.fontbox.FontBoxFont;
@@ -37,6 +25,11 @@ import org.apache.fontbox.ttf.OpenTypeFont;
 import org.apache.fontbox.ttf.TTFParser;
 import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.fontbox.type1.Type1Font;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.*;
 
 /**
  * Font mapper, locates non-embedded fonts via a pluggable FontProvider.
@@ -337,7 +330,7 @@ final class FontMapper
             if (ttf == null)
             {
                 // we have to return something here as TTFs aren't strictly required on the system
-                log.error("Using last-resort fallback for TTF font '" + fontName + "'");
+                log.debug("Using last-resort fallback for TTF font '" + fontName + "'");
                 ttf = lastResortFont;
             }
             return new FontMapping<TrueTypeFont>(ttf, true);
@@ -366,7 +359,7 @@ final class FontMapper
             if (font == null)
             {
                 // we have to return something here as TTFs aren't strictly required on the system
-                log.error("Using last-resort fallback for font '" + fallbackName + "'");
+                log.debug("Using last-resort fallback for font '" + fallbackName + "'");
                 font = lastResortFont;
             }
             return new FontMapping<FontBoxFont>(font, true);
