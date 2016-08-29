@@ -35,6 +35,8 @@ import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A set of resources available at the page/pages/stream level.
@@ -45,6 +47,8 @@ import java.util.Collections;
 public class PDResources implements COSObjectable
 {
     private final COSDictionary resources;
+
+    private final Map<COSName, PDColorSpace> cachedColorSpaces = new HashMap<COSName, PDColorSpace>();
 
     /**
      * Constructor for embedding.
@@ -116,15 +120,22 @@ public class PDResources implements COSObjectable
     public PDColorSpace getColorSpace(COSName name,
 									  boolean wasDefault) throws IOException
     {
+        if (cachedColorSpaces.containsKey(name)) {
+            return cachedColorSpaces.get(name);
+        }
         // get the instance
         COSBase object = get(COSName.COLORSPACE, name);
         if (object != null)
         {
-            return PDColorSpace.create(object, this, wasDefault);
+            PDColorSpace colorSpace = PDColorSpace.create(object, this, wasDefault);
+            cachedColorSpaces.put(name, colorSpace);
+            return colorSpace;
         }
         else
         {
-            return PDColorSpace.create(name, this, wasDefault);
+            PDColorSpace colorSpace = PDColorSpace.create(name, this, wasDefault);
+            cachedColorSpaces.put(name, colorSpace);
+            return colorSpace;
         }
     }
 
