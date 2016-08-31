@@ -48,7 +48,13 @@ public class PDResources implements COSObjectable
 {
     private final COSDictionary resources;
 
+    private final Map<COSName, PDFont> cachedFonts = new HashMap<COSName, PDFont>();
     private final Map<COSName, PDColorSpace> cachedColorSpaces = new HashMap<COSName, PDColorSpace>();
+    private final Map<COSName, PDExtendedGraphicsState> cachedExtGStates = new HashMap<COSName, PDExtendedGraphicsState>();
+    private final Map<COSName, PDShading> cachedShadings  = new HashMap<COSName, PDShading>();
+    private final Map<COSName, PDAbstractPattern> cachedPatterns  = new HashMap<COSName, PDAbstractPattern>();
+    private final Map<COSName, PDPropertyList> cachedPropertiesLists  = new HashMap<COSName, PDPropertyList>();
+    private final Map<COSName, PDXObject> cachedXObjects  = new HashMap<COSName, PDXObject>();
 
     /**
      * Constructor for embedding.
@@ -92,12 +98,17 @@ public class PDResources implements COSObjectable
      */
     public PDFont getFont(COSName name) throws IOException
     {
+        if (cachedFonts.containsKey(name)) {
+            return cachedFonts.get(name);
+        }
         COSDictionary dict = (COSDictionary)get(COSName.FONT, name);
         if (dict == null)
         {
             return null;
         }
-        return PDFontFactory.createFont(dict);
+        PDFont font = PDFontFactory.createFont(dict);
+        cachedFonts.put(name, font);
+        return font;
     }
 
 	/**
@@ -157,12 +168,17 @@ public class PDResources implements COSObjectable
      */
     public PDExtendedGraphicsState getExtGState(COSName name)
     {
+        if (cachedExtGStates.containsKey(name)) {
+            return cachedExtGStates.get(name);
+        }
         COSDictionary dict = (COSDictionary)get(COSName.EXT_G_STATE, name);
         if (dict == null)
         {
             return null;
         }
-        return new PDExtendedGraphicsState(dict);
+        PDExtendedGraphicsState state = new PDExtendedGraphicsState(dict);
+        cachedExtGStates.put(name, state);
+        return state;
     }
 
     /**
@@ -173,12 +189,17 @@ public class PDResources implements COSObjectable
      */
     public PDShading getShading(COSName name) throws IOException
     {
+        if (cachedShadings.containsKey(name)) {
+            return cachedShadings.get(name);
+        }
         COSDictionary dict = (COSDictionary)get(COSName.SHADING, name);
         if (dict == null)
         {
             return null;
         }
-        return PDShading.create(dict);
+        PDShading shading = PDShading.create(dict);
+        cachedShadings.put(name, shading);
+        return shading;
     }
 
     /**
@@ -189,12 +210,17 @@ public class PDResources implements COSObjectable
      */
     public PDAbstractPattern getPattern(COSName name) throws IOException
     {
+        if (cachedPatterns.containsKey(name)) {
+            return cachedPatterns.get(name);
+        }
         COSDictionary dict = (COSDictionary)get(COSName.PATTERN, name);
         if (dict == null)
         {
             return null;
         }
-        return PDAbstractPattern.create(dict);
+        PDAbstractPattern pattern = PDAbstractPattern.create(dict);
+        cachedPatterns.put(name, pattern);
+        return pattern;
     }
 
     /**
@@ -204,12 +230,17 @@ public class PDResources implements COSObjectable
      */
     public PDPropertyList getProperties(COSName name)
     {
+        if (cachedPropertiesLists.containsKey(name)) {
+            return cachedPropertiesLists.get(name);
+        }
         COSDictionary dict = (COSDictionary)get(COSName.PROPERTIES, name);
         if (dict == null)
         {
             return null;
         }
-        return PDPropertyList.create(dict);
+        PDPropertyList propertyList = PDPropertyList.create(dict);
+        cachedPropertiesLists.put(name, propertyList);
+        return propertyList;
     }
 
     /**
@@ -220,7 +251,11 @@ public class PDResources implements COSObjectable
      */
     public PDXObject getXObject(COSName name) throws IOException
     {
+        if (cachedXObjects.containsKey(name)) {
+            return cachedXObjects.get(name);
+        }
         COSBase value = get(COSName.XOBJECT, name);
+        PDXObject xObject;
         if (value == null)
         {
             return null;
@@ -231,12 +266,14 @@ public class PDResources implements COSObjectable
             // add the object number to create an unique identifier
             String id = name.getName();
             id += "#" + object.getObjectNumber();
-            return PDXObject.createXObject(object.getObject(), id, this);
+            xObject = PDXObject.createXObject(object.getObject(), id, this);
         }
         else
         {
-            return PDXObject.createXObject(value, name.getName(), this);
+            xObject = PDXObject.createXObject(value, name.getName(), this);
         }
+        cachedXObjects.put(name, xObject);
+        return xObject;
     }
 
     /**
