@@ -324,7 +324,7 @@ public class PDPageTree implements COSObjectable, Iterable<PDPage>
         private void visitPage(COSDictionary current)
         {
             index++;
-            found = searched.equals(current);
+            found = searched.getKey().equals(current.getKey());
         }
     }
 
