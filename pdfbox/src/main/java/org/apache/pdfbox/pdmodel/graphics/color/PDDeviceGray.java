@@ -31,7 +31,15 @@ import java.io.IOException;
 public final class PDDeviceGray extends PDDeviceColorSpace
 {
     /** The single instance of this class. */
-    public static final PDDeviceGray INSTANCE = new PDDeviceGray();
+    public static PDDeviceGray INSTANCE;
+    public static PDDeviceGray INHERITED_INSTANCE;
+    static
+    {
+        INSTANCE = new PDDeviceGray();
+        INSTANCE.setInherited(false);
+        INHERITED_INSTANCE = new PDDeviceGray();
+        INHERITED_INSTANCE.setInherited(true);
+    }
     
     private final PDColor initialColor = new PDColor(new float[] { 0 }, this);
 
