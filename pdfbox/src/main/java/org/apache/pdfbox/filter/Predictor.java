@@ -32,7 +32,7 @@ public final class Predictor
     {
     }
     
-    static void decodePredictor(int predictor, int colors, int bitsPerComponent, int columns, InputStream in, OutputStream out)
+    public static void decodePredictor(int predictor, int colors, int bitsPerComponent, int columns, InputStream in, OutputStream out)
             throws IOException
     {
         if (predictor == 1)

@@ -70,13 +70,8 @@ public class CFFType1Font extends CFFFont implements EncodedFont
     @Override
     public boolean hasGlyph(String name)
     {
-        int sid = charset.getSID(name);
-        Integer gid = charset.getGIDForSID(sid);
-        if (gid == null) {
-            return false;
-        } else {
-            return true;
-        }
+        Integer sid = charset.getSID(name);
+        return sid != null && charset.getGIDForSID(sid) != null;
     }
 
 
@@ -110,11 +105,16 @@ public class CFFType1Font extends CFFFont implements EncodedFont
     public int nameToGID(String name)
     {
         // some fonts have glyphs beyond their encoding, so we look up by charset SID
-        int sid = charset.getSID(name);
-        Integer gid = charset.getGIDForSID(sid);
-        if (gid == null) {
-            return 0;
-        } else return gid;
+        Integer sid = charset.getSID(name);
+        if(sid != null)
+        {
+            Integer gid = charset.getGIDForSID(sid);
+            if (gid != null)
+            {
+                return gid;
+            }
+        }
+        return 0;
     }
 
     /**

@@ -144,18 +144,13 @@ public abstract class CFFCharset
      * @param name PostScript glyph name
      * @return SID
      */
-    int getSID(String name)
+    Integer getSID(String name)
     {
         if (isCIDFont)
         {
             throw new IllegalStateException("Not a Type 1-equivalent font");
         }
-        Integer sid = nameToSid.get(name);
-        if (sid == null)
-        {
-            return 0;
-        }
-        return sid;
+        return nameToSid.get(name);
     }
 
     /**
