@@ -155,7 +155,7 @@ public class PDCIDFontType0 extends PDCIDFont
     }
 
     private boolean doubleEquals(double one, double two) {
-        return (one - two) < EPSILON;
+        return Math.abs(one - two) < EPSILON;
     }
 
     @Override

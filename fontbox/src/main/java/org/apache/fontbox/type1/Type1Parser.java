@@ -20,8 +20,6 @@ package org.apache.fontbox.type1;
 import org.apache.fontbox.encoding.BuiltInEncoding;
 import org.apache.fontbox.encoding.StandardEncoding;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -63,12 +61,6 @@ final class Type1Parser
         parseASCII(segment1);
         if (segment2.length > 0)
         {
-            File f4 = new File("/home/shemyakovsergey/4.txt");
-            if (!f4.exists()) {
-                FileOutputStream stream1 = new FileOutputStream(f4);
-                stream1.write(segment2);
-                stream1.close();
-            }
             parseBinary(segment2);
         }
         return font;
