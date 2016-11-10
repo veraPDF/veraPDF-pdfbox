@@ -43,6 +43,7 @@ import java.util.Map;
 public class PDCIDFontType0 extends PDCIDFont
 {
     private static final Log LOG = LogFactory.getLog(PDCIDFontType0.class);
+    private static final double EPSILON = 0.000001;
 
     private final CFFCIDFont cidFont;  // Top DICT that uses CIDFont operators
     private final FontBoxFont t1Font; // Top DICT that does not use CIDFont operators
@@ -54,6 +55,7 @@ public class PDCIDFontType0 extends PDCIDFont
     private Float avgWidth = null;
     private Matrix fontMatrix;
     private final AffineTransform fontMatrixTransform;
+    private boolean isFontMatrixDefault;
 
     /**
      * Constructor.
@@ -139,8 +141,23 @@ public class PDCIDFontType0 extends PDCIDFont
         }
         fontMatrixTransform = getFontMatrix().createAffineTransform();
         fontMatrixTransform.scale(1000, 1000);
+            this.isFontMatrixDefault = isFontMatrixDefault();
     }
-    
+
+    private boolean isFontMatrixDefault()
+    {
+        return doubleEquals(fontMatrix.getValue(0, 0), 0.001) &&
+                doubleEquals(fontMatrix.getValue(0, 1), 0) &&
+                doubleEquals(fontMatrix.getValue(0, 2), 0) &&
+                doubleEquals(fontMatrix.getValue(1, 0), 0) &&
+                doubleEquals(fontMatrix.getValue(1, 1), 0.001) &&
+                doubleEquals(fontMatrix.getValue(1, 2), 0);
+    }
+
+    private boolean doubleEquals(double one, double two) {
+        return Math.abs(one - two) < EPSILON;
+    }
+
     @Override
     public Matrix getFontMatrix()
     {
@@ -345,10 +362,16 @@ public class PDCIDFontType0 extends PDCIDFont
         {
             width = t1Font.getWidth(getGlyphName(code));
         }
-        
-        Point2D p = new Point2D.Float(width, 0);
-        fontMatrixTransform.transform(p, p);
-        return (float)p.getX();
+
+        if(!isFontMatrixDefault)
+        {
+            Point2D p = new Point2D.Float(width, 0);
+            fontMatrixTransform.transform(p, p);
+            return (float) p.getX();
+        } else
+            {
+            return width;
+        }
     }
 
     @Override

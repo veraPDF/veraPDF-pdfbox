@@ -311,15 +311,8 @@ public abstract class PDCIDFont implements COSObjectable, PDFontLike, PDVectorFo
             {
                 return w;
             }
-            else
-            {
-                return getDefaultWidth();
-            }
         }
-        else
-        {
-            return getWidthFromFont(code);
-        }
+        return getDefaultWidth();
     }
 
     @Override
