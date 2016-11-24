@@ -18,6 +18,7 @@ package org.apache.pdfbox.cos;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 
 /**
  * This class represents a boolean value in the PDF document.

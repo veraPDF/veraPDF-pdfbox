@@ -17,10 +17,7 @@
 package org.apache.pdfbox.cos;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 
@@ -575,7 +572,39 @@ public class COSArray extends COSBase implements Iterable<COSBase>
         if (getClass() != obj.getClass()) {
             return false;
         }
+        List<COSBasePair> checkedObjects = new LinkedList<COSBasePair>();
+        return this.equals(obj, checkedObjects);
+    }
+
+    boolean equals(Object obj, List<COSBasePair> checkedObjects) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if(obj instanceof COSObject) {
+            return this.equals(((COSObject) obj).getObject());
+        }
+        if (COSBasePair.listContainsPair(checkedObjects, this, (COSBase) obj)) {
+            return true;    // Not necessary true, but we should behave as it is
+        }
+        COSBasePair.addPairToList(checkedObjects, this, (COSBase) obj);
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
         COSArray that = (COSArray) obj;
-        return this.objects.equals(that.objects);
+        if (that.size() != this.size()) {
+            return false;
+        }
+        for (int i = 0; i < this.size(); ++i) {
+            COSBase cosBase1 = this.get(i);
+            COSBase cosBase2 = that.get(i);
+            COSBasePair.addPairToList(checkedObjects, cosBase1, cosBase2);
+            if (!cosBase1.equals(cosBase2, checkedObjects)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

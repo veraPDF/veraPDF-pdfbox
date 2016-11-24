@@ -1466,8 +1466,43 @@ public class COSDictionary extends COSBase implements COSUpdateInfo
         if(obj instanceof COSObject) {
             return this.equals(((COSObject) obj).getObject());
         }
-        COSDictionary that = (COSDictionary) obj;
+        List<COSBasePair> checkedObjects = new LinkedList<COSBasePair>();
+        return this.equals(obj, checkedObjects);
+    }
 
-        return that.entrySet().equals(this.entrySet());
+    boolean equals(Object obj, List<COSBasePair> checkedObjects) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if(obj instanceof COSObject) {
+            return this.equals(((COSObject) obj).getObject());
+        }
+        if (COSBasePair.listContainsPair(checkedObjects, this, (COSBase) obj)) {
+            return true;    // Not necessary true, but we should behave as it is
+        }
+        COSBasePair.addPairToList(checkedObjects, this, (COSBase) obj);
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        COSDictionary that = (COSDictionary) obj;
+        if (that.size() != this.size()) {
+            return false;
+        }
+        Set<COSName> set1 = this.keySet();
+        if (!set1.equals(that.keySet())) {
+            return false;
+        }
+        for (COSName name : set1) {
+            COSBase cosBase1 = this.getDictionaryObject(name);
+            COSBase cosBase2 = that.getDictionaryObject(name);
+            COSBasePair.addPairToList(checkedObjects, cosBase1, cosBase2);
+            if (!cosBase1.equals(cosBase2, checkedObjects)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -22,7 +22,9 @@ import org.apache.pdfbox.filter.FilterFactory;
 import org.apache.pdfbox.io.*;
 
 import java.io.*;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class represents a stream object in a PDF document.
@@ -722,6 +724,67 @@ public class COSStream extends COSDictionary implements Closeable
             }
             COSBase cosBase = this.items.get(entry.getKey());
             if(!entry.getValue().equals(cosBase)) {
+                return false;
+            }
+        }
+
+        try {
+            RandomAccessRead thisRead = this.getUnfilteredRandomAccess();
+            RandomAccessRead thatRead = that.getUnfilteredRandomAccess();
+
+            if(thisRead.length() != thatRead.length()) {
+                return false;
+            }
+            for(int i = 0; i < thisRead.length(); ++i) {
+                if(thisRead.read() != thatRead.read()) {
+                    return false;
+                }
+            }
+        } catch (IOException e) {
+            return false;
+        }
+        return true;
+    }
+
+    boolean equals(Object obj, List<COSBasePair> checkedObjects) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if(obj instanceof COSObject) {
+            return this.equals(((COSObject) obj).getObject());
+        }
+        if (COSBasePair.listContainsPair(checkedObjects, this, (COSBase) obj)) {
+            return true;    // Not necessary true, but we should behave as it is
+        }
+        COSBasePair.addPairToList(checkedObjects, this, (COSBase) obj);
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        COSStream that = (COSStream) obj;
+
+        for(Map.Entry<COSName, COSBase> entry : this.entrySet()) {
+            if(entry.getKey().equals(COSName.FILTER) ||
+                    entry.getKey().equals(COSName.DECODE_PARMS) ||
+                    entry.getKey().equals(COSName.LENGTH)) {
+                continue;
+            }
+            COSBase cosBase = that.items.get(entry.getKey());
+            if(!entry.getValue().equals(cosBase, checkedObjects)) {
+                return false;
+            }
+        }
+
+        for(Map.Entry<COSName, COSBase> entry : that.entrySet()) {
+            if(entry.getKey().equals(COSName.FILTER) ||
+                    entry.getKey().equals(COSName.DECODE_PARMS) ||
+                    entry.getKey().equals(COSName.LENGTH)) {
+                continue;
+            }
+            COSBase cosBase = this.items.get(entry.getKey());
+            if(!entry.getValue().equals(cosBase, checkedObjects)) {
                 return false;
             }
         }
