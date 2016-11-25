@@ -600,7 +600,6 @@ public class COSArray extends COSBase implements Iterable<COSBase>
         for (int i = 0; i < this.size(); ++i) {
             COSBase cosBase1 = this.get(i);
             COSBase cosBase2 = that.get(i);
-            COSBasePair.addPairToList(checkedObjects, cosBase1, cosBase2);
             if (!cosBase1.equals(cosBase2, checkedObjects)) {
                 return false;
             }

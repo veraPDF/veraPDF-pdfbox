@@ -22,6 +22,7 @@ import org.apache.pdfbox.filter.FilterFactory;
 import org.apache.pdfbox.io.*;
 
 import java.io.*;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -702,48 +703,8 @@ public class COSStream extends COSDictionary implements Closeable
         if(obj instanceof COSObject) {
             return this.equals(((COSObject) obj).getObject());
         }
-        COSStream that = (COSStream) obj;
-
-        for(Map.Entry<COSName, COSBase> entry : this.entrySet()) {
-            if(entry.getKey().equals(COSName.FILTER) ||
-                    entry.getKey().equals(COSName.DECODE_PARMS) ||
-                    entry.getKey().equals(COSName.LENGTH)) {
-                continue;
-            }
-            COSBase cosBase = that.items.get(entry.getKey());
-            if(!entry.getValue().equals(cosBase)) {
-                return false;
-            }
-        }
-
-        for(Map.Entry<COSName, COSBase> entry : that.entrySet()) {
-            if(entry.getKey().equals(COSName.FILTER) ||
-                    entry.getKey().equals(COSName.DECODE_PARMS) ||
-                    entry.getKey().equals(COSName.LENGTH)) {
-                continue;
-            }
-            COSBase cosBase = this.items.get(entry.getKey());
-            if(!entry.getValue().equals(cosBase)) {
-                return false;
-            }
-        }
-
-        try {
-            RandomAccessRead thisRead = this.getUnfilteredRandomAccess();
-            RandomAccessRead thatRead = that.getUnfilteredRandomAccess();
-
-            if(thisRead.length() != thatRead.length()) {
-                return false;
-            }
-            for(int i = 0; i < thisRead.length(); ++i) {
-                if(thisRead.read() != thatRead.read()) {
-                    return false;
-                }
-            }
-        } catch (IOException e) {
-            return false;
-        }
-        return true;
+        List<COSBasePair> checkedObjects = new LinkedList<COSBasePair>();
+        return this.equals(obj, checkedObjects);
     }
 
     boolean equals(Object obj, List<COSBasePair> checkedObjects) {

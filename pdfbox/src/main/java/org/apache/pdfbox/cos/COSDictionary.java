@@ -1498,7 +1498,6 @@ public class COSDictionary extends COSBase implements COSUpdateInfo
         for (COSName name : set1) {
             COSBase cosBase1 = this.getDictionaryObject(name);
             COSBase cosBase2 = that.getDictionaryObject(name);
-            COSBasePair.addPairToList(checkedObjects, cosBase1, cosBase2);
             if (!cosBase1.equals(cosBase2, checkedObjects)) {
                 return false;
             }
