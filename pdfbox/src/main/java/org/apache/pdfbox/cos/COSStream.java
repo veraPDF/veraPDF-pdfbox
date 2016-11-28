@@ -22,7 +22,10 @@ import org.apache.pdfbox.filter.FilterFactory;
 import org.apache.pdfbox.io.*;
 
 import java.io.*;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class represents a stream object in a PDF document.
@@ -700,6 +703,27 @@ public class COSStream extends COSDictionary implements Closeable
         if(obj instanceof COSObject) {
             return this.equals(((COSObject) obj).getObject());
         }
+        List<COSBasePair> checkedObjects = new LinkedList<COSBasePair>();
+        return this.equals(obj, checkedObjects);
+    }
+
+    boolean equals(Object obj, List<COSBasePair> checkedObjects) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if(obj instanceof COSObject) {
+            return this.equals(((COSObject) obj).getObject());
+        }
+        if (COSBasePair.listContainsPair(checkedObjects, this, (COSBase) obj)) {
+            return true;    // Not necessary true, but we should behave as it is
+        }
+        COSBasePair.addPairToList(checkedObjects, this, (COSBase) obj);
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
         COSStream that = (COSStream) obj;
 
         for(Map.Entry<COSName, COSBase> entry : this.entrySet()) {
@@ -709,7 +733,7 @@ public class COSStream extends COSDictionary implements Closeable
                 continue;
             }
             COSBase cosBase = that.items.get(entry.getKey());
-            if(!entry.getValue().equals(cosBase)) {
+            if(!entry.getValue().equals(cosBase, checkedObjects)) {
                 return false;
             }
         }
@@ -721,7 +745,7 @@ public class COSStream extends COSDictionary implements Closeable
                 continue;
             }
             COSBase cosBase = this.items.get(entry.getKey());
-            if(!entry.getValue().equals(cosBase)) {
+            if(!entry.getValue().equals(cosBase, checkedObjects)) {
                 return false;
             }
         }
