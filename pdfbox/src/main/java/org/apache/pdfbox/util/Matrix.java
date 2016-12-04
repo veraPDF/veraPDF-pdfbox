@@ -30,6 +30,8 @@ import java.awt.geom.Point2D;
  */
 public final class Matrix implements Cloneable
 {
+    private static final double EPSILON = 0.000001;
+
     static final float[] DEFAULT_SINGLE =
     {
         1,0,0,  //  a  b  0     sx hy 0    note: hx and hy are reversed vs. the PDF spec as we use
@@ -675,5 +677,18 @@ public final class Matrix implements Cloneable
         sb.append(single[6] + ",");
         sb.append(single[7] + "]");
         return sb.toString();
+    }
+
+    public static boolean isFontMatrixDefault(Matrix fontMatrix) {
+        return  doubleEquals(fontMatrix.getValue(0, 0), 0.001) &&
+                doubleEquals(fontMatrix.getValue(0, 1), 0) &&
+                doubleEquals(fontMatrix.getValue(0, 2), 0) &&
+                doubleEquals(fontMatrix.getValue(1, 0), 0) &&
+                doubleEquals(fontMatrix.getValue(1, 1), 0.001) &&
+                doubleEquals(fontMatrix.getValue(1, 2), 0);
+    }
+
+    private static boolean doubleEquals(double one, double two) {
+        return Math.abs(one - two) < EPSILON;
     }
 }
