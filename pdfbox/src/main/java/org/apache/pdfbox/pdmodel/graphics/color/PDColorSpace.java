@@ -147,15 +147,15 @@ public abstract class PDColorSpace implements COSObjectable, PDInheritableResour
 			}
 			else if (name == COSName.DEVICEN)
 			{
-				return new PDDeviceN(array);
+				return new PDDeviceN(array, resources);
 			}
 			else if (name == COSName.INDEXED || name == COSName.I)
 			{
-				return new PDIndexed(array);
+				return new PDIndexed(array, resources);
 			}
 			else if (name == COSName.SEPARATION)
 			{
-				return new PDSeparation(array);
+				return new PDSeparation(array, resources);
 			}
 			else if (name == COSName.ICCBASED)
 			{
