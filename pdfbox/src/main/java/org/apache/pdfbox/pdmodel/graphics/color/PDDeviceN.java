@@ -32,6 +32,7 @@ import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSNull;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.COSArrayList;
 import org.apache.pdfbox.pdmodel.common.function.PDFunction;
 
@@ -82,10 +83,22 @@ public class PDDeviceN extends PDSpecialColorSpace
      * Creates a new DeviceN color space from the given COS array.
      * @param deviceN an array containing the color space information
      */
-    public PDDeviceN(COSArray deviceN) throws IOException
+    public PDDeviceN(COSArray deviceN) throws IOException {
+        this(deviceN, null);
+    }
+
+    /**
+     * Creates a new DeviceN color space from the given COS array and resources.
+     * @param deviceN an array containing the color space information
+     */
+    public PDDeviceN(COSArray deviceN, PDResources resources) throws IOException
     {
         array = deviceN;
-        alternateColorSpace = PDColorSpace.create(array.getObject(ALTERNATE_CS));
+        if (resources != null) {
+            alternateColorSpace = PDColorSpace.create(array.getObject(ALTERNATE_CS), resources);
+        } else {
+            alternateColorSpace = PDColorSpace.create(array.getObject(ALTERNATE_CS));
+        }
         tintTransform = PDFunction.create(array.getObject(TINT_TRANSFORM));
 
         if (array.size() > DEVICEN_ATTRIBUTES)
