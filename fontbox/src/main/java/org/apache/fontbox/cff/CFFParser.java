@@ -110,7 +110,7 @@ public class CFFParser
         IndexData globalSubrIndex = readIndexData(input);
 
         if (topDictIndex.getCount() == 0) {
-            throw new IOException();
+            throw new IOException("Error in cff font program parsing: top DICT INDEX is empty.");
         }
         List<CFFFont> fonts = new ArrayList<CFFFont>();
         for (int i = 0; i < nameIndex.getCount(); i++)
