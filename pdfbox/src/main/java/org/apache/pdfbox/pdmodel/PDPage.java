@@ -428,6 +428,13 @@ public class PDPage implements COSObjectable, PDContentStream
     }
 
     /**
+     * @return true if this page has inheritable attribute rotation set.
+     */
+    public boolean hasRotation() {
+        return PDPageTree.getInheritableAttribute(page, COSName.ROTATE) != null;
+    }
+
+    /**
      * This will set the rotation for this page.
      * 
      * @param rotation The new rotation for this page in degrees.

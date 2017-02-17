@@ -406,8 +406,8 @@ public class CmapSubtable
                             if (!tmpGlyphToChar.containsKey(glyphIndex))
                             {
                                 tmpGlyphToChar.put(glyphIndex, j);
-                                characterCodeToGlyphId.put(j, glyphIndex);
                             }
+                            characterCodeToGlyphId.put(j, glyphIndex);
                         }
                     }
                 }
