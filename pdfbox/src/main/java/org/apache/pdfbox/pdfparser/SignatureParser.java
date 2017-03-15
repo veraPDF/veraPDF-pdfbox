@@ -156,17 +156,17 @@ public class SignatureParser extends BaseParser {
     /**
      * Scans stream until next %%EOF is found.
      *
-     * @param currentOffset byte offset of position, from which scanning strats
-     * @return number of byte that contains 'F' in %%EOF
+     * @param currentOffset byte offset of position, from which scanning starts
+     * @return offset of byte that contains 'F' in %%EOF
      * @throws IOException
      */
     private long getOffsetOfNextEOF(long currentOffset) throws IOException {
         byte[] buffer = new byte[EOF_STRING.length];
         pdfSource.seek(currentOffset + document.getHeaderOffset());
-        pdfSource.read(buffer);
+        readFiveBytes(pdfSource, buffer);
         pdfSource.rewind(buffer.length - 1);
         while (!Arrays.equals(buffer, EOF_STRING)) {    //TODO: does it need to be optimized?
-            pdfSource.read(buffer);
+            readFiveBytes(pdfSource, buffer);
             if (pdfSource.isEOF()) {
                 pdfSource.seek(currentOffset + document.getHeaderOffset());
                 return pdfSource.length();
@@ -189,4 +189,15 @@ public class SignatureParser extends BaseParser {
         skipSpaces();
     }
 
+    private static int readFiveBytes(RandomAccessRead stream, byte[] buf) throws IOException {
+        int totalRead = stream.read(buf, 0,5);
+        while (totalRead != 5) {
+            int read = stream.read(buf, totalRead, 5 - totalRead);
+            if (read == -1) {
+                return totalRead;
+            }
+            totalRead += read;
+        }
+        return 5;
+    }
 }
