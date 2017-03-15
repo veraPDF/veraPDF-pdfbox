@@ -163,10 +163,10 @@ public class SignatureParser extends BaseParser {
     private long getOffsetOfNextEOF(long currentOffset) throws IOException {
         byte[] buffer = new byte[EOF_STRING.length];
         pdfSource.seek(currentOffset + document.getHeaderOffset());
-        readFiveBytes(pdfSource, buffer);
+        readWholeBuffer(pdfSource, buffer);
         pdfSource.rewind(buffer.length - 1);
         while (!Arrays.equals(buffer, EOF_STRING)) {    //TODO: does it need to be optimized?
-            readFiveBytes(pdfSource, buffer);
+            readWholeBuffer(pdfSource, buffer);
             if (pdfSource.isEOF()) {
                 pdfSource.seek(currentOffset + document.getHeaderOffset());
                 return pdfSource.length();
@@ -189,15 +189,15 @@ public class SignatureParser extends BaseParser {
         skipSpaces();
     }
 
-    private static int readFiveBytes(RandomAccessRead stream, byte[] buf) throws IOException {
-        int totalRead = stream.read(buf, 0,5);
-        while (totalRead != 5) {
-            int read = stream.read(buf, totalRead, 5 - totalRead);
+    private static int readWholeBuffer(RandomAccessRead stream, byte[] buf) throws IOException {
+        int totalRead = stream.read(buf, 0, buf.length);
+        while (totalRead != buf.length) {
+            int read = stream.read(buf, totalRead, buf.length - totalRead);
             if (read == -1) {
                 return totalRead;
             }
             totalRead += read;
         }
-        return 5;
+        return buf.length;
     }
 }
