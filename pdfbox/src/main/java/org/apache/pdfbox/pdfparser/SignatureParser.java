@@ -97,7 +97,7 @@ public class SignatureParser extends BaseParser {
         skipID();
         byteRange[0] = 0;
         parseDictionary();
-        byteRange[3] = getOffsetOfNextEOF(byteRange[2]) - byteRange[2] + 1;
+        byteRange[3] = getOffsetOfNextEOF(byteRange[2]) - byteRange[2];
         return byteRange;
     }
 
@@ -173,9 +173,9 @@ public class SignatureParser extends BaseParser {
             }
             pdfSource.rewind(buffer.length - 1);
         }
-        long result = pdfSource.getPosition() + buffer.length - 1;
+        long result = pdfSource.getPosition() + buffer.length - 1;  // offset of byte after 'F'
         pdfSource.seek(currentOffset + document.getHeaderOffset());
-        return result;
+        return result - 1;
     }
 
     private void skipID() throws IOException {
