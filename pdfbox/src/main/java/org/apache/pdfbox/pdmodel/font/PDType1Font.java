@@ -374,23 +374,20 @@ public class PDType1Font extends PDSimpleFont
     @Override
     protected Encoding readEncodingFromFont() throws IOException
     {
-        if (getStandard14AFM() != null)
+        // extract from Type1 font/substitute
+        if (genericFont instanceof EncodedFont)
         {
-            // read from AFM
-            return new Type1Encoding(getStandard14AFM());
+            return Type1Encoding.fromFontBox(((EncodedFont) genericFont).getEncoding());
         }
         else
         {
-            // extract from Type1 font/substitute
-            if (genericFont instanceof EncodedFont)
+            if (getStandard14AFM() != null)
             {
-                return Type1Encoding.fromFontBox(((EncodedFont) genericFont).getEncoding());
+                // read from AFM
+                return new Type1Encoding(getStandard14AFM());
             }
-            else
-            {
-                // default (only happens with TTFs)
-                return StandardEncoding.INSTANCE;
-            }
+            // default (only happens with TTFs)
+            return StandardEncoding.INSTANCE;
         }
     }
 
