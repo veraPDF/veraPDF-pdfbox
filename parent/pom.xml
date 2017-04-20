@@ -49,17 +49,15 @@
     </properties>
 
     <distributionManagement>
-        <snapshotRepository>
-          <id>OPF Artefactory</id>
-    			<name>OPF Artefactory-releases</name>
-    			<url>http://artifactory.opf-labs.org/artifactory/vera-pdfbox-local</url>
-        </snapshotRepository>
-        <repository>
-          <id>OPF Artefactory</id>
-    			<name>OPF Artefactory-releases</name>
-    			<url>http://artifactory.opf-labs.org/artifactory/vera-pdfbox-local</url>
-        </repository>
-    </distributionManagement>
+  		<snapshotRepository>
+  			<id>ossrh</id>
+  			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+  		</snapshotRepository>
+  		<repository>
+  			<id>ossrh</id>
+  			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+  		</repository>
+  	</distributionManagement>
 
     <dependencyManagement>
         <dependencies>
