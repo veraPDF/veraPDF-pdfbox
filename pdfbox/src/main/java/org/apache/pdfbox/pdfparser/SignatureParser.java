@@ -165,7 +165,7 @@ public class SignatureParser extends BaseParser {
         pdfSource.seek(currentOffset + document.getHeaderOffset());
         readWholeBuffer(pdfSource, buffer);
         pdfSource.rewind(buffer.length - 1);
-        while (!Arrays.equals(buffer, EOF_STRING)) {    //TODO: does it need to be optimized?
+        while (!isEOFFound(buffer)) {
             readWholeBuffer(pdfSource, buffer);
             if (pdfSource.isEOF()) {
                 pdfSource.seek(currentOffset + document.getHeaderOffset());
@@ -174,8 +174,34 @@ public class SignatureParser extends BaseParser {
             pdfSource.rewind(buffer.length - 1);
         }
         long result = pdfSource.getPosition() + buffer.length - 1;  // offset of byte after 'F'
+        this.pdfSource.seek(this.pdfSource.getPosition() + EOF_STRING.length - 1);
+        if (this.pdfSource.peek() == ASCII_LF) {
+            result++;
+        }
+        if (this.pdfSource.read() == ASCII_CR && this.pdfSource.peek() == ASCII_LF) {
+            result += 2;
+        }
         pdfSource.seek(currentOffset + document.getHeaderOffset());
-        return result - 1;
+        return result;
+    }
+
+    private boolean isEOFFound(byte[] buffer) throws IOException {
+        if (!Arrays.equals(buffer, EOF_STRING)) {
+            return false;
+        }
+        long pointer = this.pdfSource.getPosition();
+        this.pdfSource.rewind(2);
+        int byteBeforeEOF = this.pdfSource.peek();
+        while (byteBeforeEOF != ASCII_LF) {
+            this.pdfSource.rewind(1);
+            byteBeforeEOF = this.pdfSource.peek();
+            if (byteBeforeEOF != ASCII_SPACE) {
+                this.pdfSource.seek(pointer);
+                return false;
+            }
+        }
+        this.pdfSource.seek(pointer);
+        return true;
     }
 
     private void skipID() throws IOException {
