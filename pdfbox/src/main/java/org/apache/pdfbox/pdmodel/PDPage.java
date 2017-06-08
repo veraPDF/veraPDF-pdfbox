@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.contentstream.PDContentStream;
 import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.common.*;
+import org.apache.pdfbox.pdmodel.interactive.action.PDNavigationNode;
 import org.apache.pdfbox.pdmodel.interactive.action.PDPageAdditionalActions;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.pagenavigation.PDThreadBead;
@@ -537,7 +538,7 @@ public class PDPage implements COSObjectable, PDContentStream
      * 
      * @return The Actions for this Page
      */
-    public PDPageAdditionalActions getActions()
+    public PDPageAdditionalActions getAdditionalActions()
     {
         COSDictionary addAct = (COSDictionary) page.getDictionaryObject(COSName.AA);
         if (addAct == null)
@@ -546,6 +547,14 @@ public class PDPage implements COSObjectable, PDContentStream
             page.setItem(COSName.AA, addAct);
         }
         return new PDPageAdditionalActions(addAct);
+    }
+
+    public PDNavigationNode getPresSteps() {
+        COSBase presSteps = this.page.getDictionaryObject(COSName.PRES_STEPS);
+        if (presSteps != null && presSteps instanceof COSDictionary) {
+            return new PDNavigationNode((COSDictionary) presSteps);
+        }
+        return null;
     }
 
     /**
