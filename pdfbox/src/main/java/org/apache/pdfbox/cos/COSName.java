@@ -345,6 +345,7 @@ public final class COSName extends COSBase implements Comparable<COSName>
     public static final COSName MULTIPLY = new COSName("Multiply");
     // N
     public static final COSName N = new COSName("N");
+    public static final COSName NA = new COSName("NA");
     public static final COSName NAME = new COSName("Name");
     public static final COSName NAMES = new COSName("Names");
     public static final COSName NEED_APPEARANCES = new COSName("NeedAppearances");
@@ -384,6 +385,7 @@ public final class COSName extends COSBase implements Comparable<COSName>
     public static final COSName OVERLAY = new COSName("Overlay");
     // P
     public static final COSName P = new COSName("P");
+    public static final COSName PA = new COSName("PA");
     public static final COSName PAGE = new COSName("Page");
     public static final COSName PAGE_LABELS = new COSName("PageLabels");
     public static final COSName PAGE_LAYOUT = new COSName("PageLayout");
@@ -402,6 +404,7 @@ public final class COSName extends COSBase implements Comparable<COSName>
     public static final COSName PG = new COSName("Pg");
     public static final COSName PRE_RELEASE = new COSName("PreRelease");
     public static final COSName PREDICTOR = new COSName("Predictor");
+    public static final COSName PRES_STEPS = new COSName("PresSteps");
     public static final COSName PREV = new COSName("Prev");
     public static final COSName PRINT_AREA = new COSName("PrintArea");
     public static final COSName PRINT_CLIP = new COSName("PrintClip");
