@@ -111,7 +111,11 @@ public abstract class PDField implements COSObjectable
      * @return A non-null string.
      */
     public abstract String getValueAsString();
-    
+
+    public COSBase getV() {
+        return this.dictionary.getDictionaryObject(COSName.V);
+    }
+
     /**
      * sets the field to be read-only.
      * 
