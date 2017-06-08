@@ -22,11 +22,11 @@ public class PDNavigationNode implements COSObjectable {
         return this.object;
     }
 
-    public PDDestinationOrAction getNA() {
+    public PDAction getNA() {
         return getAction(COSName.NA);
     }
 
-    public PDDestinationOrAction getPA() {
+    public PDAction getPA() {
         return getAction(COSName.PA);
     }
 
@@ -38,7 +38,7 @@ public class PDNavigationNode implements COSObjectable {
         return getNavigationNode(COSName.PREV);
     }
 
-    private PDDestinationOrAction getAction(COSName key) {
+    private PDAction getAction(COSName key) {
         COSBase action = this.object.getDictionaryObject(key);
         if (action != null && action instanceof COSDictionary) {
             return PDActionFactory.createAction((COSDictionary) action);
