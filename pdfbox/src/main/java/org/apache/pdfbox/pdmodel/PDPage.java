@@ -538,7 +538,7 @@ public class PDPage implements COSObjectable, PDContentStream
      * 
      * @return The Actions for this Page
      */
-    public PDPageAdditionalActions getAdditionalActions()
+    public PDPageAdditionalActions getActions()
     {
         COSDictionary addAct = (COSDictionary) page.getDictionaryObject(COSName.AA);
         if (addAct == null)
