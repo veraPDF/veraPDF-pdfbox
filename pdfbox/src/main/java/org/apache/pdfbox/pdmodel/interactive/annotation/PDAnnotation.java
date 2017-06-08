@@ -694,7 +694,7 @@ public abstract class PDAnnotation implements COSObjectable
         return null;
     }
 
-    public PDDestinationOrAction getA() {
+    public PDAction getA() {
         COSBase action = this.dictionary.getDictionaryObject(COSName.A);
         if (action != null && action instanceof COSDictionary) {
             return PDActionFactory.createAction((COSDictionary) action);
@@ -702,7 +702,7 @@ public abstract class PDAnnotation implements COSObjectable
         return null;
     }
 
-    public PDDestinationOrAction getAdditionalActions() {
+    public PDAction getAdditionalActions() {
         COSBase aa = this.dictionary.getDictionaryObject(COSName.AA);
         if (aa != null && aa instanceof COSDictionary) {
             return PDActionFactory.createAction((COSDictionary) aa);
