@@ -49,17 +49,17 @@
     </properties>
 
     <distributionManagement>
-        <snapshotRepository>
-          <id>OPF Artefactory</id>
-    			<name>OPF Artefactory-releases</name>
-    			<url>http://artifactory.opf-labs.org/artifactory/vera-pdfbox-local</url>
-        </snapshotRepository>
-        <repository>
-          <id>OPF Artefactory</id>
-    			<name>OPF Artefactory-releases</name>
-    			<url>http://artifactory.opf-labs.org/artifactory/vera-pdfbox-local</url>
-        </repository>
-    </distributionManagement>
+      <snapshotRepository>
+        <id>opf-artefactory</id>
+        <name>OPF Artefactory-releases</name>
+        <url>https://artifactory.openpreservation.org/artifactory/vera-pdfbox-local</url>
+      </snapshotRepository>
+      <repository>
+        <id>opf-artefactory</id>
+        <name>OPF Artefactory-releases</name>
+        <url>https://artifactory.openpreservation.org/artifactory/vera-pdfbox-local</url>
+    </repository>
+   </distributionManagement>
 
     <dependencyManagement>
         <dependencies>
@@ -122,7 +122,7 @@
       <repository>
         <id>OPF Artefactory</id>
         <name>OPF Artefactory-releases</name>
-        <url>http://artifactory.opf-labs.org/artifactory/vera-pdfbox-local</url>
+        <url>http://artifactory.openpreservation.org/artifactory/vera-pdfbox-local</url>
       </repository>
     </repositories>
 
@@ -178,6 +178,18 @@
                     <arguments>-Papache-release,pedantic</arguments>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                 </configuration>
+            </plugin>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-jarsigner-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>sign</id>
+                  <goals>
+                    <goal>sign</goal>
+                  </goals>
+                </execution>
+              </executions>
             </plugin>
             <plugin>
 		        <groupId>org.apache.maven.plugins</groupId>
