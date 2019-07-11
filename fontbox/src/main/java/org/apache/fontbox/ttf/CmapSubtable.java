@@ -345,7 +345,9 @@ public class CmapSubtable
         int[] glyphIdArray = data.readUnsignedShortArray(entryCount);
         for (int i = 0; i < entryCount; i++)
         {
-            glyphIdToCharacterCode[glyphIdArray[i]] = firstCode + i;
+            if (glyphIdArray[i] < numGlyphs) {
+                glyphIdToCharacterCode[glyphIdArray[i]] = firstCode + i;
+            }
             characterCodeToGlyphId.put((firstCode + i), glyphIdArray[i]);
         }
     }
@@ -404,8 +406,8 @@ public class CmapSubtable
                             if (!tmpGlyphToChar.containsKey(glyphIndex))
                             {
                                 tmpGlyphToChar.put(glyphIndex, j);
-                                characterCodeToGlyphId.put(j, glyphIndex);
                             }
+                            characterCodeToGlyphId.put(j, glyphIndex);
                         }
                     }
                 }

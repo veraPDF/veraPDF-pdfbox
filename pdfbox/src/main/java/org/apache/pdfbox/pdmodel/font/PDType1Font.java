@@ -91,6 +91,7 @@ public class PDType1Font extends PDSimpleFont
     private final boolean isDamaged;
     private Matrix fontMatrix;
     private final AffineTransform fontMatrixTransform;
+    private boolean isFontMatrixDefault;
 
     /**
      * Creates a Type 1 standard 14 font for embedding.
@@ -128,6 +129,7 @@ public class PDType1Font extends PDSimpleFont
         isEmbedded = false;
         isDamaged = false;
         fontMatrixTransform = new AffineTransform();
+        this.isFontMatrixDefault = Matrix.isFontMatrixDefault(this.getFontMatrix());
     }
 
     /**
@@ -335,9 +337,13 @@ public class PDType1Font extends PDSimpleFont
         }
         float width = genericFont.getWidth(name);
 
-        Point2D p = new Point2D.Float(width, 0);
-        fontMatrixTransform.transform(p, p);
-        return (float)p.getX();
+        if (!isFontMatrixDefault) {
+            Point2D p = new Point2D.Float(width, 0);
+            fontMatrixTransform.transform(p, p);
+            return (float) p.getX();
+        } else {
+            return width;
+        }
     }
 
     @Override
@@ -368,23 +374,20 @@ public class PDType1Font extends PDSimpleFont
     @Override
     protected Encoding readEncodingFromFont() throws IOException
     {
-        if (getStandard14AFM() != null)
+        // extract from Type1 font/substitute
+        if (genericFont instanceof EncodedFont)
         {
-            // read from AFM
-            return new Type1Encoding(getStandard14AFM());
+            return Type1Encoding.fromFontBox(((EncodedFont) genericFont).getEncoding());
         }
         else
         {
-            // extract from Type1 font/substitute
-            if (genericFont instanceof EncodedFont)
+            if (getStandard14AFM() != null)
             {
-                return Type1Encoding.fromFontBox(((EncodedFont) genericFont).getEncoding());
+                // read from AFM
+                return new Type1Encoding(getStandard14AFM());
             }
-            else
-            {
-                // default (only happens with TTFs)
-                return StandardEncoding.INSTANCE;
-            }
+            // default (only happens with TTFs)
+            return StandardEncoding.INSTANCE;
         }
     }
 

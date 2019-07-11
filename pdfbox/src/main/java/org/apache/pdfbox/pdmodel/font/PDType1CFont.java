@@ -56,6 +56,7 @@ public class PDType1CFont extends PDSimpleFont
     private Float avgWidth = null;
     private Matrix fontMatrix;
     private final AffineTransform fontMatrixTransform;
+    private boolean isFontMatrixDefault;
 
     private final CFFType1Font cffFont; // embedded font
     private final FontBoxFont genericFont; // embedded or system font for rendering
@@ -126,6 +127,7 @@ public class PDType1CFont extends PDSimpleFont
         readEncoding();
         fontMatrixTransform = getFontMatrix().createAffineTransform();
         fontMatrixTransform.scale(1000, 1000);
+        this.isFontMatrixDefault = Matrix.isFontMatrixDefault(this.getFontMatrix());
     }
 
     @Override
@@ -251,9 +253,13 @@ public class PDType1CFont extends PDSimpleFont
         String name = codeToName(code);
         float width = genericFont.getWidth(name);
 
-        Point2D p = new Point2D.Float(width, 0);
-        fontMatrixTransform.transform(p, p);
-        return (float)p.getX();
+        if (!isFontMatrixDefault) {
+            Point2D p = new Point2D.Float(width, 0);
+            fontMatrixTransform.transform(p, p);
+            return (float) p.getX();
+        } else {
+            return width;
+        }
     }
 
     @Override

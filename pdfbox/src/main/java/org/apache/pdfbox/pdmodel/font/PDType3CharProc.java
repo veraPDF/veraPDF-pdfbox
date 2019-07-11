@@ -18,7 +18,7 @@
 package org.apache.pdfbox.pdmodel.font;
 
 import org.apache.pdfbox.contentstream.PDContentStream;
-import org.apache.pdfbox.cos.COSStream;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -60,6 +60,10 @@ public final class PDType3CharProc implements COSObjectable, PDContentStream
     @Override
     public PDResources getResources()
     {
+        COSBase res = charStream.getItem(COSName.RESOURCES);
+        if (res != null && res instanceof COSDictionary) {
+            return new PDResources((COSDictionary) res);
+        }
         return font.getResources();
     }
 

@@ -19,6 +19,7 @@ package org.apache.pdfbox.cos;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * The base object that all objects in the PDF document will extend.
@@ -84,5 +85,9 @@ public abstract class COSBase implements COSObjectable
 
     public void setKey(COSObjectKey key) {
         this.key = key;
+    }
+
+    boolean equals(Object obj, List<COSBasePair> checkedObjects) {
+        return this.equals(obj);
     }
 }

@@ -102,7 +102,7 @@ public abstract class BaseParser
     protected static final byte ASCII_CR = 13;
     private static final byte ASCII_ZERO = 48;
     private static final byte ASCII_NINE = 57;
-    private static final byte ASCII_SPACE = 32;
+    protected static final byte ASCII_SPACE = 32;
 
     /**
      * When true pdfbox parses the document without all auto-healing methods

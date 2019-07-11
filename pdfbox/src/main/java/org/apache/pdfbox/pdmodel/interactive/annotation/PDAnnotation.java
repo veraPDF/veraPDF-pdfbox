@@ -23,6 +23,9 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.COSObjectable;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.graphics.color.*;
+import org.apache.pdfbox.pdmodel.interactive.action.PDAction;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionFactory;
+import org.apache.pdfbox.pdmodel.interactive.action.PDAnnotationAdditionalActions;
 
 import java.io.IOException;
 
@@ -687,6 +690,22 @@ public abstract class PDAnnotation implements COSObjectable
         if (p != null)
         {
             return new PDPage(p);
+        }
+        return null;
+    }
+
+    public PDAction getA() {
+        COSBase action = this.dictionary.getDictionaryObject(COSName.A);
+        if (action != null && action instanceof COSDictionary) {
+            return PDActionFactory.createAction((COSDictionary) action);
+        }
+        return null;
+    }
+
+    public PDAnnotationAdditionalActions getAdditionalActions() {
+        COSBase aa = this.dictionary.getDictionaryObject(COSName.AA);
+        if (aa != null && aa instanceof COSDictionary) {
+            new PDAnnotationAdditionalActions((COSDictionary) aa);
         }
         return null;
     }
