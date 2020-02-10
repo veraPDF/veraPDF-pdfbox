@@ -90,7 +90,7 @@ public final class InstructionSequenceBuilder extends Parser.AbstractSyntaxHandl
             Matcher m = INTEGER_PATTERN.matcher(token);
             if (m.matches())
             {
-                getCurrentSequence().addInteger(parseInt(token));
+                getCurrentSequence().addLong(parseInt(token));
                 return;
             }
 
@@ -108,17 +108,21 @@ public final class InstructionSequenceBuilder extends Parser.AbstractSyntaxHandl
     }
 
     /**
-     * Parses a value of type "int".
+     * Parses a value of type "int" and "long".
      * @param token the token to be parsed
      * @return the parsed value
      */
-    public static int parseInt(String token)
+    public static long parseInt(String token)
     {
         if (token.startsWith("+"))
         {
             token = token.substring(1);
         }
-        return Integer.parseInt(token);
+        return Long.parseLong(token) > Integer.MAX_VALUE
+               ? Long.parseLong(token)
+               : Integer.parseInt(token);
+
+
     }
 
     /**

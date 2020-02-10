@@ -47,6 +47,14 @@ public class InstructionSequence
     }
 
     /**
+     * Adds a long value.
+     * @param value the value
+     */
+    public void addLong(long value) {
+        this.instructions.add(value);
+    }
+
+    /**
      * Adds a real value.
      * @param value the value
      */
