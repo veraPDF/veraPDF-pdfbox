@@ -18,9 +18,12 @@
 # This file allows PDFBox to be built with Travis CI https://travis-ci.org/
 
 language: java
+sudo: required
+dist: trusty
 
 jdk:
-  - oraclejdk7
+  - openjdk8
+  - oraclejdk8
 
 before_install:
   - sudo apt-get update -qq
