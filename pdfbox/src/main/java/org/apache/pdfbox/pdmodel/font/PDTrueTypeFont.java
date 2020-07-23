@@ -430,7 +430,7 @@ public class PDTrueTypeFont extends PDSimpleFont implements PDVectorFont
         extractCmapTable();
         int gid = 0;
 
-        if (!isSymbolic()) // non-symbolic
+        if (!isSymbolic() && encoding != null) // non-symbolic
         {
             String name = encoding.getName(code);
             if (name.equals(".notdef"))
