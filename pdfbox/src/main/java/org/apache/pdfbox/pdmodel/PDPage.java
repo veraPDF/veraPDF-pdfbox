@@ -150,7 +150,7 @@ public class PDPage implements COSObjectable, PDContentStream
             }
         }
 
-        return null;
+        return pageResources;
     }
 
     public PDResources getInheritedResources() {
