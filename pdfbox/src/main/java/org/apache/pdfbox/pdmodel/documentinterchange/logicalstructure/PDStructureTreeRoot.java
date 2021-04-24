@@ -148,7 +148,7 @@ public class PDStructureTreeRoot extends PDStructureNode
         COSDictionary parentTreeDic = (COSDictionary) this.getCOSObject().getDictionaryObject(COSName.PARENT_TREE);
         if (parentTreeDic != null)
         {
-            return new PDNumberTreeNode(parentTreeDic, COSBase.class);
+            return new PDNumberTreeNode(parentTreeDic, PDParentTreeValue.class);
         }
         return null;
     }
