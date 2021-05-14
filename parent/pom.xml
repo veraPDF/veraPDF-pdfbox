@@ -23,6 +23,7 @@
     <parent>
         <artifactId>oss-parent</artifactId>
         <groupId>org.sonatype.oss</groupId>
+        <relativePath></relativePath>
         <version>7</version>
     </parent>
 
