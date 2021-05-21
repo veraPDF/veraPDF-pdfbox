@@ -146,6 +146,19 @@
             </build>
         </profile>
     <profile>
+      <id>verapdf</id>
+      <distributionManagement>
+        <snapshotRepository>
+          <id>opf-artefactory</id>
+          <url>https://artifactory.openpreservation.org/artifactory/vera-pdfbox-local/</url>
+        </snapshotRepository>
+        <repository>
+          <id>opf-artefactory</id>
+          <url>https://artifactory.openpreservation.org/artifactory/vera-pdfbox-local/</url>
+        </repository>
+      </distributionManagement>
+    </profile>
+    <profile>
       <id>release-sign-artifacts</id>
       <activation>
         <property>
